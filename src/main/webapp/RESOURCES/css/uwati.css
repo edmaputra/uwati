@@ -1,0 +1,240 @@
+@CHARSET "UTF-8";
+
+body {
+	background: #e9e9e9;
+	color: #666666;
+	font-family: 'RobotoDraft', 'Roboto', sans-serif;
+	font-size: 14px;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+.halamanlogin {
+	display: none;
+}
+
+.judul {
+	padding: 50px 0;
+	text-align: center;
+	letter-spacing: 2px;
+}
+
+.judul h1 {
+	margin: 0 0 20px;
+	font-size: 48px;
+	font-weight: 300;
+}
+
+.judul span {
+	font-size: 12px;
+}
+
+.loginform-modul {
+	position: relative;
+	background: #ffffff;
+	max-width: 390px;
+	width: 100%;
+	border-top: 5px solid #FFD777;
+	box-shadow: 0 0 3px rgba(0, 0, 0, 0.1);
+	margin: 0 auto;
+}
+
+.loginform-modul .loginform {
+	padding: 40px;
+}
+
+.loginform-modul h2 {
+	margin: 0 0 20px;
+	color: #33b5e5;
+	font-size: 16px;
+	font-weight: 400;
+	line-height: 1;
+}
+
+.loginform-modul input {
+	outline: none;
+	display: block;
+	width: 100%;
+	border: 1px solid #d9d9d9;
+	margin: 0 0 20px;
+	padding: 10px 15px;
+	box-sizing: border-box;
+	font-wieght: 400;
+	-webkit-transition: 0.3s ease;
+	transition: 0.3s ease;
+}
+
+.loginform-modul input:focus {
+	border: 1px solid #33b5e5;
+	color: #333333;
+}
+
+.loginform-modul .tombol {
+	cursor: pointer;
+	background: #FFD777;
+	width: 100%;
+	border: 0;
+	padding: 10px 15px;
+	color: #797272;
+	-webkit-transition: 0.3s ease;
+	transition: 0.3s ease;
+}
+
+.loginform-modul .tombol:hover {
+	background: #c4a000;
+}
+
+.loginform-modul .judulapp {
+	background: #f2f2f2;
+	width: 100%;
+	padding: 15px 40px;
+	box-sizing: border-box;
+	color: #666666;
+	font-size: 8px;
+	text-align: right;
+}
+
+.loginform-modul .judulapp a {
+	color: #333333;
+	text-decoration: none;
+}
+
+.btnHide {
+	display: none;
+}
+
+.lb-sm {
+	font-size: 10px;
+}
+
+.kolom-keterangan {
+	background-color: green;
+	color: white;
+}
+
+.keterangan-beli {
+	background-color: #f57900;
+	color: white;
+}
+
+.kolom-pencarian {
+	padding: 10px;
+}
+
+table.tabel-keterangan tr td {
+	font-size: 12pt;
+}
+
+table.tabel-keterangan tr td input {
+	text-align: right;	
+	color: white;
+	font-size: 12pt;
+	background-color: green;
+	border: none;
+	border-color: transparent;
+}
+
+table.tabel-beli tr td input {
+	text-align: right;	
+	color: white;
+	font-size: 12pt;
+	background-color: #f57900;
+	border: none;
+	border-color: transparent;
+}
+
+input.input-angka {
+	text-align: right;
+}
+
+button.btn-wrap{
+	white-space: normal;
+}
+
+.jualObat {
+	background: url(../images/uwati/jualobat.jpg) no-repeat center top;
+	text-align: center;
+	background-position: center center;
+}
+.jualObat i {
+	color: white;
+	margin-top: 45px;
+}
+.jualObat h2 {
+	color: white;
+	font-weight: 900;
+}
+.jualObat h4 {
+	color: white;
+	font-weight: 900;
+	letter-spacing: 1px;
+} 
+.jualObat h4 a {
+	color: white;
+}
+
+.beli-obat {
+	background: url(../images/uwati/beliobat.jpg) no-repeat center top;
+	text-align: center;
+	background-position: center center;
+}
+.beli-obat i {
+	color: white;
+	margin-top: 45px;
+}
+.beli-obat h2 {
+	color: white;
+	font-weight: 900;
+}
+.beli-obat h4 {
+	color: white;
+	font-weight: 900;
+	letter-spacing: 1px;
+} 
+.beli-obat h4 a {
+	color: white;
+}
+
+.retur-obat {
+	background: url(../images/uwati/returobat.jpg) no-repeat center top;
+	text-align: center;
+	background-position: center center;
+}
+.retur-obat i {
+	color: white;
+	margin-top: 45px;
+}
+.retur-obat h2 {
+	color: white;
+	font-weight: 900;
+}
+.retur-obat h4 {
+	color: white;
+	font-weight: 900;
+	letter-spacing: 1px;
+} 
+.retur-obat h4 a {
+	color: white;
+}
+
+.laporan {
+	background: url(../images/uwati/laporan.jpg) no-repeat center top;
+	text-align: center;
+	background-position: center center;
+}
+.laporan i {
+	color: white;
+	margin-top: 45px;
+}
+.laporan h2 {
+	color: white;
+	font-weight: 900;
+}
+.laporan h4 {
+	color: white;
+	font-weight: 900;
+	letter-spacing: 1px;
+} 
+.laporan h4 a {
+	color: white;
+}

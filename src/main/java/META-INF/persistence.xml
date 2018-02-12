@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence version="2.1" xmlns="http://xmlns.jcp.org/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence http://xmlns.jcp.org/xml/ns/persistence/persistence_2_1.xsd">
+	<persistence-unit name="java-uwati">		
+		<class>id.edmaputra.uwati.entity.DasarEntity</class>
+		<class>id.edmaputra.uwati.entity.DasarTransaksiEntity</class>
+		<class>id.edmaputra.uwati.entity.pengguna.Pengguna</class>
+		<class>id.edmaputra.uwati.entity.pengguna.Role</class>		
+		<class>id.edmaputra.uwati.entity.master.Satuan</class>
+		<class>id.edmaputra.uwati.entity.master.Apotek</class>
+		<class>id.edmaputra.uwati.entity.master.Kategori</class>
+		<class>id.edmaputra.uwati.entity.master.Karyawan</class>
+		<class>id.edmaputra.uwati.entity.master.Pelanggan</class>
+		<class>id.edmaputra.uwati.entity.master.obat.Obat</class>
+		<class>id.edmaputra.uwati.entity.master.obat.ObatDetail</class>
+		<class>id.edmaputra.uwati.entity.master.obat.ObatStok</class>
+		<class>id.edmaputra.uwati.entity.master.obat.ObatExpired</class>
+		<class>id.edmaputra.uwati.entity.transaksi.Pembelian</class>
+		<class>id.edmaputra.uwati.entity.transaksi.PembelianDetail</class>
+		<class>id.edmaputra.uwati.entity.transaksi.Penjualan</class>
+		<class>id.edmaputra.uwati.entity.transaksi.PenjualanDetail</class>
+		<class>id.edmaputra.uwati.entity.transaksi.PenjualanDetailRacikan</class>
+		<class>id.edmaputra.uwati.entity.transaksi.ReturPembelian</class>
+		<class>id.edmaputra.uwati.entity.transaksi.ReturPembelianDetail</class>
+		<class>id.edmaputra.uwati.entity.master.obat.Racikan</class>
+		<class>id.edmaputra.uwati.entity.master.obat.RacikanDetail</class>
+		<class>id.edmaputra.uwati.entity.transaksi.PembelianDetailTemp</class>
+		<class>id.edmaputra.uwati.entity.transaksi.PenjualanDetailTemp</class>
+		<class>id.edmaputra.uwati.entity.transaksi.NomorFaktur</class>
+		<class>id.edmaputra.uwati.entity.pasien.Pasien</class>
+		<class>id.edmaputra.uwati.entity.master.obat.Tindakan</class>
+		<class>id.edmaputra.uwati.entity.pasien.RekamMedis</class>
+		<class>id.edmaputra.uwati.entity.pasien.RekamMedisDetail</class>
+		<class>id.edmaputra.uwati.entity.pasien.RekamMedisDetailTemp</class>
+		<class>id.edmaputra.uwati.entity.master.obat.RacikanDetailTemporary</class>
+		<class>id.edmaputra.uwati.entity.master.obat.CekStok</class>
+		<class>id.edmaputra.uwati.entity.pasien.RekamMedisDiagnosa</class>
+		<class>id.edmaputra.uwati.entity.pasien.RekamMedisDiagnosaTemp</class>
+		<class>id.edmaputra.uwati.entity.master.obat.Diagnosa</class>
+		<class>id.edmaputra.uwati.entity.pasien.KategoriPasien</class>
+		<class>id.edmaputra.uwati.entity.transaksi.BatalPenjualan</class>
+		<class>id.edmaputra.uwati.entity.transaksi.BatalPenjualanDetail</class>
+		<class>id.edmaputra.uwati.entity.transaksi.BatalPenjualanDetailRacikan</class>
+		<class>id.edmaputra.uwati.entity.transaksi.BatalPembelian</class>
+		<class>id.edmaputra.uwati.entity.transaksi.BatalPembelianDetail</class>
+		<class>id.edmaputra.uwati.entity.Bayar</class>
+		<class>id.edmaputra.uwati.entity.transaksi.BayarPembelian</class>
+		<class>id.edmaputra.uwati.entity.transaksi.BayarPenjualan</class>
+		<class>id.edmaputra.uwati.entity.transaksi.ReturPembelianDetailTemp</class>
+		<class>id.edmaputra.uwati.entity.transaksi.BatalReturPembelianDetail</class>
+	</persistence-unit>
+</persistence>
