@@ -37,6 +37,12 @@ public class PenjualanHandler {
 	private Integer jumlah;
 	
 	private String info;
+	
+	private Date waktuPembatalan;
+
+	public Date getWaktuPembatalan() {
+		return waktuPembatalan;
+	}
 
 	public Date getWaktuTransaksi() {
 		return waktuTransaksi;
@@ -171,6 +177,10 @@ public class PenjualanHandler {
 
 	public void setInfo(String info) {
 		this.info = info;
+	}
+
+	public void setWaktuPembatalan(Date waktuPembatalan) {
+		this.waktuPembatalan = waktuPembatalan;		
 	}
 
 }

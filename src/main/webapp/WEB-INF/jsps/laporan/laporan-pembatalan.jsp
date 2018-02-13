@@ -3,7 +3,8 @@
 
 <%@ include file="../../layouts/taglib.jsp"%>
 
-<c:url var="dapatkan" value="/laporan/pembatalan/dapatkan" />
+<c:url var="dapatkanPenjualan" value="/laporan/pembatalan/dapatkan/jual" />
+<c:url var="dapatkanPembelian" value="/laporan/pembatalan/dapatkan/beli" />
 <c:url var="daftar" value="/laporan/pembatalan/daftar" />
 
 <c:url var="pdfUrl" value="/laporan/penjualan/pdf" />
@@ -69,61 +70,69 @@
 	<form class="form style-form" method="post">
 		<div class="modal-body">
 			<div class="row">
-				<div class="form-group col-md-5">
-					<label class="lb-sm">Nomor Faktur</label> <input type="text"
-						readonly="readonly" class="form-control" id="nomor_faktur" />
-				</div>
 				<div class="form-group col-md-3">
-					<label class="lb-sm">Tanggal</label> <input type="text"
-						readonly="readonly" class="form-control" id="tanggal" />
+					<label class="lb-sm">Nomor Faktur</label> <input type="text"
+						readonly="readonly" class="form-control" id="penjualan_nomor_faktur" />
+				</div>
+				<div class="form-group col-md-2">
+					<label class="lb-sm">Tanggal Transaksi</label> <input type="text"
+						readonly="readonly" class="form-control" id="penjualan_tanggal_transaksi" />
+				</div>
+				<div class="form-group col-md-2">
+					<label class="lb-sm">Tanggal Pembatalan</label> <input type="text"
+						readonly="readonly" class="form-control" id="penjualan_tanggal_pembatalan" />
+				</div>				
+				<div class="form-group col-md-5">
+					<label class="lb-sm">Alasan Pembatalan</label> <input type="text"
+						readonly="readonly" class="form-control" id="penjualan_alasan_pembatalan" />
 				</div>
 			</div>
 			<div class="row">
 				<div class="form-group col-md-4">
 					<label class="lb-sm">Kasir</label> <input type="text"
-						readonly="readonly" class="form-control" id="kasir" />
+						readonly="readonly" class="form-control" id="penjualan_kasir" />
 				</div>
 				<div class="form-group col-md-4">
 					<label class="lb-sm">Pasien/Pelanggan</label> <input type="text"
-						readonly="readonly" class="form-control" id="pelanggan" />
+						readonly="readonly" class="form-control" id="penjualan_pelanggan" />
 				</div>
 				<div class="form-group col-md-4">
 					<label class="lb-sm">Dokter</label> <input type="text"
-						readonly="readonly" class="form-control" id="dokter" />
+						readonly="readonly" class="form-control" id="penjualan_dokter" />
 				</div>
 			</div>
 			<div class="row">
 				<div class="form-group col-md-2">
-					<label class="lb-sm">Pembelian</label> <input type="text"
+					<label class="lb-sm">Total (Bruto)</label> <input type="text"
 						readonly="readonly" class="form-control input-angka"
-						id="pembelian" />
+						id="penjualan_total_bruto" />
 				</div>
 				<div class="form-group col-md-2">
 					<label class="lb-sm">Diskon</label> <input type="text"
-						readonly="readonly" class="form-control input-angka" id="diskon" />
+						readonly="readonly" class="form-control input-angka" id="penjualan_diskon" />
 				</div>
 				<div class="form-group col-md-2">
 					<label class="lb-sm">Pajak</label> <input type="text"
-						readonly="readonly" class="form-control input-angka" id="pajak" />
+						readonly="readonly" class="form-control input-angka" id="penjualan_pajak" />
 				</div>
 				<div class="form-group col-md-2">
-					<label class="lb-sm">Total</label> <input type="text"
+					<label class="lb-sm">Total (Netto)</label> <input type="text"
 						readonly="readonly" class="form-control input-angka"
-						id="pembelian_final" />
+						id="penjualan_total_netto" />
 				</div>
 				<div class="form-group col-md-2">
 					<label class="lb-sm">Pembayaran</label> <input type="text"
-						readonly="readonly" class="form-control input-angka" id="bayar" />
+						readonly="readonly" class="form-control input-angka" id="penjualan_bayar" />
 				</div>
 				<div class="form-group col-md-2">
 					<label class="lb-sm">Kembali</label> <input type="text"
-						readonly="readonly" class="form-control input-angka" id="kembali" />
+						readonly="readonly" class="form-control input-angka" id="penjualan_kembali" />
 				</div>
 			</div>
 			<div class="row">
 				<div class="col-md-12">
 					<table class="table table-striped table-advance table-hover"
-						id="tabel_detail" border="1"></table>
+						id="penjualan_tabel_detail" border="1"></table>
 				</div>
 			</div>
 		</div>
@@ -145,43 +154,53 @@
 	<form class="form style-form" method="post">
 		<div class="modal-body">
 			<div class="row">
-				<div class="form-group col-md-5">
-					<label class="lb-sm">Nomor Faktur</label> <input type="text"
-						readonly="readonly" class="form-control" id="nomor_faktur" />
-				</div>
 				<div class="form-group col-md-3">
-					<label class="lb-sm">Tanggal</label> <input type="text"
-						readonly="readonly" class="form-control" id="tanggal" />
+					<label class="lb-sm">Nomor Faktur</label> <input type="text"
+						readonly="readonly" class="form-control" id="pembelian_nomor_faktur" />
+				</div>
+				<div class="form-group col-md-2">
+					<label class="lb-sm">Tanggal Transaksi</label> <input type="text"
+						readonly="readonly" class="form-control" id="pembelian_tanggal_transaksi" />
 				</div>
 				<div class="form-group col-md-4">
 					<label class="lb-sm">Supplier/Distributor</label> <input
-						type="text" readonly="readonly" class="form-control" id="supplier" />
+						type="text" readonly="readonly" class="form-control" id="pembelian_supplier" />
+				</div>
+			</div>
+			<div class="row">
+			<div class="form-group col-md-2">
+					<label class="lb-sm">Tanggal Pembatalan</label> <input type="text"
+						readonly="readonly" class="form-control" id="pembelian_tanggal_pembatalan" />
+				</div>
+				<div class="form-group col-md-5">
+					<label class="lb-sm">Alasan Pembatalan</label> <input type="text"
+						readonly="readonly" class="form-control" id="pembelian_alasan_pembatalan" />
 				</div>
 			</div>
 			<div class="row">
 				<div class="form-group col-md-3">
-					<label class="lb-sm">Pembelian</label> <input type="text"
+					<label class="lb-sm">Total Pembelian (Bruto)</label> <input type="text"
 						readonly="readonly" class="form-control input-angka"
-						id="pembelian" />
+						id="pembelian_total_bruto" />
 				</div>
 				<div class="form-group col-md-3">
 					<label class="lb-sm">Diskon</label> <input type="text"
-						readonly="readonly" class="form-control input-angka" id="diskon" />
+						readonly="readonly" class="form-control input-angka" id="pembelian_diskon" />
 				</div>
 				<div class="form-group col-md-3">
 					<label class="lb-sm">Pajak</label> <input type="text"
-						readonly="readonly" class="form-control input-angka" id="pajak" />
+						readonly="readonly" class="form-control input-angka" id="pembelian_pajak" />
 				</div>
 				<div class="form-group col-md-3">
-					<label class="lb-sm">Total</label> <input type="text"
+					<label class="lb-sm">Total Pembelian (Netto)</label> <input type="text"
 						readonly="readonly" class="form-control input-angka"
-						id="pembelian_final" />
+						id="pembelian_total_netto" />
 				</div>
 			</div>
 			<div class="row">
 				<div class="col-md-12">
 					<table class="table table-striped table-advance table-hover"
-						id="tabel_detail" border="1"></table>
+						id="pembelian_tabel_detail" border="1"></table>
 				</div>
 			</div>
 		</div>
@@ -252,12 +271,21 @@
 		});
 	});
 
-	function getData(ids) {
+	function getDataBatalPembelian(ids) {
 		var data = {
 			id : ids
 		};
-		$.getAjax('${dapatkan}', data, function(result) {
-			isiFieldFromDataResult(result);
+		$.getAjax('${dapatkanPembelian}', data, function(result) {
+			isiDataPembelian(result);
+		}, null);
+	}
+	
+	function getDataBatalPenjualan(ids) {
+		var data = {
+			id : ids
+		};
+		$.getAjax('${dapatkanPenjualan}', data, function(result) {
+			isiDataPenjualan(result);
 		}, null);
 	}
 
@@ -279,21 +307,39 @@
 		}, null);
 	}
 
-	function isiFieldFromDataResult(result) {
-		$('#ids').val(result.id);
-		$('#nomor_faktur').val(result.nomorFaktur);
-		$('#pelanggan').val(result.pelanggan);
-		$('#kasir').val(result.pengguna);
-		$('#dokter').val(result.dokter);
-		$('#tanggal').val(dateFormat(result.waktuTransaksi, 'dd-mm-yyyy'));
-		$('#pembelian').val(result.totalPembelian);
-		$('#diskon').val(result.diskon);
-		$('#pajak').val(result.pajak);
-		$('#pembelian_final').val(result.grandTotal);
-		$('#bayar').val(result.bayar);
-		$('#kembali').val(result.kembali);
-		$('#tabel_detail').empty();
-		$('#tabel_detail').append(result.details);
+	function isiDataPenjualan(result) {		
+		$('#penjualan_nomor_faktur').val(result.nomorFaktur);
+		$('#penjualan_tanggal_transaksi').val(dateFormat(result.waktuTransaksi, 'dd-mm-yyyy'));
+		$('#penjualan_tanggal_pembatalan').val(dateFormat(result.waktuPembatalan, 'dd-mm-yyyy'));
+		$('#penjualan_alasan_pembatalan').val(result.info);
+		$('#penjualan_pelanggan').val(result.pelanggan);
+		$('#penjualan_kasir').val(result.pengguna);
+		$('#penjualan_dokter').val(result.dokter);
+		
+		$('#penjualan_total_bruto').val(result.totalPembelian);
+		$('#penjualan_diskon').val(result.diskon);
+		$('#penjualan_pajak').val(result.pajak);
+		$('#penjualan_total_netto').val(result.grandTotal);
+		$('#penjualan_bayar').val(result.bayar);
+		$('#penjualan_kembali').val(result.kembali);
+		$('#penjualan_tabel_detail').empty();
+		$('#penjualan_tabel_detail').append(result.details);
+	}
+	
+	function isiDataPembelian(result) {		
+		$('#pembelian_nomor_faktur').val(result.nomorFaktur);
+		$('#pembelian_tanggal_transaksi').val(dateFormat(result.waktuTransaksi, 'dd-mm-yyyy'));
+		$('#pembelian_tanggal_pembatalan').val(dateFormat(result.waktuPembatalan, 'dd-mm-yyyy'));
+		$('#pembelian_alasan_pembatalan').val(result.info);
+		$('#pembelian_supplier').val(result.distributor);		
+		
+		
+		$('#pembelian_total_bruto').val(result.totalPembelian);
+		$('#pembelian_diskon').val(result.diskon);
+		$('#pembelian_pajak').val(result.pajak);
+		$('#pembelian_total_netto').val(result.totalPembelianFinal);		
+		$('#pembelian_tabel_detail').empty();
+		$('#pembelian_tabel_detail').append(result.details);
 	}
 
 	function reset() {

@@ -1,5 +1,7 @@
 package id.edmaputra.uwati.view.handler;
 
+import java.util.Date;
+
 public class PembelianDetailHandler {
 
 	private String id;
@@ -57,6 +59,12 @@ public class PembelianDetailHandler {
 	private String bayarDetails;
 	
 	private String idPembelian;
+	
+	private Date waktuPembatalan;
+
+	public Date getWaktuPembatalan() {
+		return waktuPembatalan;
+	}
 
 	public String getId() {
 		return id;
@@ -292,6 +300,11 @@ public class PembelianDetailHandler {
 
 	public void setIdPembelian(String idPembelian) {
 		this.idPembelian = idPembelian;
+	}
+
+	public void setWaktuPembatalan(Date waktuPembatalan) {
+		// TODO Auto-generated method stub
+		this.waktuPembatalan = waktuPembatalan;
 	}
 
 }
