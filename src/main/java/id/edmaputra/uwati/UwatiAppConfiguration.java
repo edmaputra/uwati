@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-import javax.inject.Provider;
-import javax.persistence.EntityManager;
 import javax.sql.DataSource;
 
 import org.apache.commons.dbcp.BasicDataSource;
@@ -27,8 +25,6 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.web.servlet.view.document.AbstractXlsView;
 import org.springframework.web.servlet.view.jasperreports.JasperReportsPdfView;
 
-import com.mysema.query.jpa.impl.JPAQueryFactory;
-
 import id.edmaputra.uwati.builder.LaporanPenjualanExcelBuilder;
 
 @Configuration
@@ -49,8 +45,9 @@ public class UwatiAppConfiguration {
 	public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
 		LocalContainerEntityManagerFactoryBean entityManagerFactory = new LocalContainerEntityManagerFactoryBean();
 		entityManagerFactory.setDataSource(dataSource());
-		entityManagerFactory.setPackagesToScan(new String[] { "id.edmaputra.uwati.entity" });
+		entityManagerFactory.setPackagesToScan(new String[] { "id.edmaputra.uwati.entity" });		
 		entityManagerFactory.setJpaProperties(hibernateProperties());
+		
 		entityManagerFactory.setPersistenceProvider(new HibernatePersistenceProvider());
 		return entityManagerFactory;
 	}
@@ -62,9 +59,9 @@ public class UwatiAppConfiguration {
 		dataSource.setUrl(environment.getRequiredProperty("jdbc.url"));
 		dataSource.setUsername(environment.getRequiredProperty("jdbc.username"));
 		dataSource.setPassword(environment.getRequiredProperty("jdbc.password"));
-		dataSource.setMaxWait(40000);
-		dataSource.setMaxActive(80);
-		dataSource.setMaxIdle(20);
+//		dataSource.setMaxWait(40000);
+//		dataSource.setMaxActive(80);
+//		dataSource.setMaxIdle(20);
 		return dataSource;
 	}
 
@@ -74,6 +71,7 @@ public class UwatiAppConfiguration {
 		properties.put("hibernate.show_sql", environment.getRequiredProperty("hibernate.show_sql"));
 		properties.put("hibernate.format_sql", environment.getRequiredProperty("hibernate.format_sql"));
 		properties.put("hibernate.hbm2ddl.auto", environment.getRequiredProperty("hibernate.hbm2ddl.auto"));
+		System.out.println(properties.getProperty("hibernate.show_sql"));
 		return properties;
 	}
 

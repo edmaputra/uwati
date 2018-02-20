@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
 import id.edmaputra.uwati.service.obat.ObatService;
+import id.edmaputra.uwati.support.Converter;
 import id.edmaputra.uwati.support.LogSupport;
 import id.edmaputra.uwati.view.Html;
 import id.edmaputra.uwati.view.HtmlElement;
@@ -57,7 +58,7 @@ public class NotifikasiController {
 			List<Object[]> daftar = null;
 			String htmlTabel = "";
 			int totalDaftar = 0;
-
+			System.out.println(limitPertama(halaman)+"==="+limitKedua(halaman));
 			if (tabel.equals("#tabel_obat_sudah_kadaluarsa")) {
 				totalDaftar = obatService.countObatSudahKadaluarsa();
 				daftar = obatService.obatSudahKadaluarsa(limitPertama(halaman), limitKedua(halaman));
@@ -75,7 +76,7 @@ public class NotifikasiController {
 			el.setTabel(htmlTabel);
 
 			if (!daftar.isEmpty()) {
-				int total = (totalDaftar / TOTAL_HALAMAN) + 1; 
+				int total = (totalDaftar / TOTAL_HALAMAN); 
 				int current = halaman;
 				int next = current + 1;
 				int prev = current - 1;
@@ -107,8 +108,15 @@ public class NotifikasiController {
 		for (int k = 0; k < list.size(); k++) {
 			String row = "";
 			row += Html.td(Table.nullCell(list.get(k)[0].toString()));
-			row += Html.td(Table.nullCell(list.get(k)[1].toString()));
-			if (i == 1) {
+			if (i == 0) {
+				Converter.stringToDate(tgl);
+				row += Html.td(Table.nullCell(list.get(k)[1].toString()));				
+			}
+			if (i == 1) {					
+				row += Html.td(Table.nullCell(list.get(k)[1].toString()));
+				row += Html.td(Table.nullCell(list.get(k)[2].toString()));
+			}
+			if (i == 2) {			
 				row += Html.td(Table.nullCell(list.get(k)[2].toString()));
 			}
 			data += Html.tr(row);
@@ -169,7 +177,7 @@ public class NotifikasiController {
 	}
 
 	private int limitKedua(int halaman) {
-		int h = TOTAL_HALAMAN - 1;		
+		int h = TOTAL_HALAMAN;
 		return h;
 	}
 }
