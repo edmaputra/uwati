@@ -8,6 +8,7 @@
 <div class="showback">
 	<div class="row">
 		<div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+			<h4 style="color: maroon; font-weight: bold;">Obat Sudah Kadaluarsa</h4>
 			<table class="table table-striped table-advance table-hover"
 				id="tabel_obat_sudah_kadaluarsa">
 			</table>
@@ -16,6 +17,7 @@
 	</div>
 	<div class="row">
 		<div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+			<h4 style="color: maroon; font-weight: bold;">Obat Akan Kadaluarsa</h4>
 			<table class="table table-striped table-advance table-hover"
 				id="tabel_obat_akan_kadaluarsa">
 			</table>
@@ -24,6 +26,7 @@
 	</div>
 	<div class="row">
 		<div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+			<h4 style="color: maroon; font-weight: bold;">Stok Obat Akan Habis</h4>
 			<table class="table table-striped table-advance table-hover"
 				id="tabel_obat_akan_habis">
 			</table>
@@ -56,6 +59,6 @@
 		refresh(1, '#tabel_obat_sudah_kadaluarsa', '#nav_obat_sudah_kadaluarsa');
 		refresh(1, '#tabel_obat_akan_kadaluarsa', '#nav_obat_akan_kadaluarsa');
 		refresh(1, '#tabel_obat_akan_habis', '#nav_obat_akan_habis');
-		
+
 	});
 </script>

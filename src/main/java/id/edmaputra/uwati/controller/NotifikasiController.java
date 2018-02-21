@@ -1,6 +1,8 @@
 package id.edmaputra.uwati.controller;
 
 import java.security.Principal;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -9,7 +11,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -18,7 +19,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
 import id.edmaputra.uwati.service.obat.ObatService;
-import id.edmaputra.uwati.support.Converter;
 import id.edmaputra.uwati.support.LogSupport;
 import id.edmaputra.uwati.view.Html;
 import id.edmaputra.uwati.view.HtmlElement;
@@ -58,7 +58,7 @@ public class NotifikasiController {
 			List<Object[]> daftar = null;
 			String htmlTabel = "";
 			int totalDaftar = 0;
-			System.out.println(limitPertama(halaman)+"==="+limitKedua(halaman));
+			
 			if (tabel.equals("#tabel_obat_sudah_kadaluarsa")) {
 				totalDaftar = obatService.countObatSudahKadaluarsa();
 				daftar = obatService.obatSudahKadaluarsa(limitPertama(halaman), limitKedua(halaman));
@@ -76,7 +76,11 @@ public class NotifikasiController {
 			el.setTabel(htmlTabel);
 
 			if (!daftar.isEmpty()) {
-				int total = (totalDaftar / TOTAL_HALAMAN); 
+				int total = totalDaftar / TOTAL_HALAMAN;
+				int modTotal = totalDaftar % TOTAL_HALAMAN;
+				if (modTotal != 0) {
+					total = total + 1;
+				}
 				int current = halaman;
 				int next = current + 1;
 				int prev = current - 1;
@@ -109,11 +113,10 @@ public class NotifikasiController {
 			String row = "";
 			row += Html.td(Table.nullCell(list.get(k)[0].toString()));
 			if (i == 0) {
-				Converter.stringToDate(tgl);
-				row += Html.td(Table.nullCell(list.get(k)[1].toString()));				
+				row += Html.td(Table.nullCell(formatTanggal(list.get(k)[1].toString())));				
 			}
 			if (i == 1) {					
-				row += Html.td(Table.nullCell(list.get(k)[1].toString()));
+				row += Html.td(Table.nullCell(formatTanggal(list.get(k)[1].toString())));
 				row += Html.td(Table.nullCell(list.get(k)[2].toString()));
 			}
 			if (i == 2) {			
@@ -179,5 +182,18 @@ public class NotifikasiController {
 	private int limitKedua(int halaman) {
 		int h = TOTAL_HALAMAN;
 		return h;
+	}
+	
+	private String formatTanggal(String tanggal) {
+		SimpleDateFormat sumber = new SimpleDateFormat("yyyy-MM-dd");
+		SimpleDateFormat myFormat = new SimpleDateFormat("dd-MM-yyyy");
+
+		try {
+		    String reformattedStr = myFormat.format(sumber.parse(tanggal));
+		    return reformattedStr;
+		} catch (ParseException e) {
+		    e.printStackTrace();
+		    return null;
+		}
 	}
 }
