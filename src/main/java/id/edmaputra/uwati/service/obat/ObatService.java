@@ -30,7 +30,7 @@ public class ObatService {
 	}
 	
 	public Obat dapatkanByNama(String nama){
-		return repository.findByNama(nama);
+		return repository.findByNamaContainingIgnoreCase(nama);
 	}
 
 	public Page<Obat> muatDaftar(Integer halaman, BooleanExpression expression) {

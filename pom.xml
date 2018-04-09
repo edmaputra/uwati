@@ -227,6 +227,10 @@
 					<groupId>commons-logging</groupId>
 					<artifactId>commons-logging</artifactId>
 				</exclusion>
+				<exclusion>
+					<groupId>com.lowagie</groupId>
+					<artifactId>itext</artifactId>
+				</exclusion>
 			</exclusions>
 		</dependency>
 
@@ -249,6 +253,24 @@
 			<version>3.15</version>
 		</dependency>
 
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<version>1.16.20</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-validator</artifactId>
+			<version>5.3.6.Final</version>
+		</dependency>
+
+
+		<dependency>
+			<groupId>com.itextpdf</groupId>
+			<artifactId>itextpdf</artifactId>
+			<version>5.5.11</version>
+		</dependency>
 
 
 	</dependencies>
@@ -271,7 +293,7 @@
 				<version>2.2</version>
 				<configuration>
 					<url>http://192.168.1.10:8080/manager/text</url>
-<!-- 					<url>http://192.168.241.100:8080/manager/text</url> -->
+					<!-- <url>http://192.168.241.100:8080/manager/text</url> -->
 					<server>TomcatServer</server>
 					<path>/uwati</path>
 				</configuration>

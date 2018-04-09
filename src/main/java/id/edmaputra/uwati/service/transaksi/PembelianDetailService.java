@@ -53,7 +53,7 @@ public class PembelianDetailService {
 	}
 	
 	public List<PembelianDetail> dapatkanSemua(){
-		return repository.findAll(new Sort(Direction.ASC, "id"));
+		return repository.findAll(new Sort(Direction.ASC, "obat"));
 	}
 	
 	public void hapus(PembelianDetail pembelianDetail) {
@@ -70,5 +70,9 @@ public class PembelianDetailService {
 	
 	public void setStatusReturObat(String obat, String nomorFaktur, String supplier, int status) {
 		repository.setStatusReturObat(obat, nomorFaktur, supplier, status);
+	}
+	
+	public void setStatusReturned(Long id) {
+		repository.setStatusReturned(id);
 	}
 }

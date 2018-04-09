@@ -42,6 +42,9 @@
 <spring:url value="/static/js/jquery.autocomplete.min.js"
 	var="jqueryautocompleteJs" />
 <spring:url value="/static/js/jquery.maskMoney.min.js" var="maskMoney" />
+<spring:url value="/static/js/pdfmake.min.js" var="pdfmake" />
+<spring:url value="/static/js/vfs_fonts.js" var="vfsfonts" />
+<spring:url value="/static/js/excelplus-2.5.min	.js" var="excelplus" />
 <link href="${bootstrapMinCss}" rel="stylesheet" />
 <link href="${bootstrapThemeMinCss}" rel="stylesheet" />
 <link href="${fontawesomeCss}" rel="stylesheet" />
@@ -122,6 +125,9 @@
 	<script type="text/javascript" src="${dateFormatJs}"></script>
 	<script type="text/javascript" src="${jqueryautocompleteJs}"></script>
 	<script type="text/javascript" src="${maskMoney}"></script>
+	<script type="text/javascript" src="${pdfmake}"></script>
+	<script type="text/javascript" src="${vfsfonts}"></script>
+	<script type="text/javascript" src="${excelplus}"></script>
 	<spring:url
 		value="/static/baru/bootstrap-modal-patch/js/bootstrap-modal.js"
 		var="bootstrap-modal-js" />

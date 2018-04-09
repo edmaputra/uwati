@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -168,6 +169,7 @@ public class PenjualanObatController {
 
 	@RequestMapping(value = "/jual", method = RequestMethod.POST)
 	@ResponseBody
+//	@Transactional
 	public PenjualanDetailHandler jual(@RequestBody PenjualanDetailHandler h, BindingResult result, Principal principal,
 			HttpServletRequest request) {
 		Penjualan penjualan = new Penjualan();
@@ -677,6 +679,7 @@ public class PenjualanObatController {
 			HttpServletRequest request, HttpServletResponse response) {
 		try {
 			PenjualanDetailHandler h = new PenjualanDetailHandler();
+			System.out.println(randomId);	
 			List<PenjualanDetailTemp> list = penjualanDetailTempService.dapatkanListByRandomId(randomId);
 			String returnStatusStok = "OKE";
 			String statusStokPerObat = "";
@@ -684,6 +687,7 @@ public class PenjualanObatController {
 			CekStok cekStok = null;
 			for (PenjualanDetailTemp temp : list) {
 				Obat obat = getObat(Long.valueOf(temp.getIdObat()));
+				
 				if (obat.getTipe() == 1) {
 					Racikan r = getRacikan(obat.getNama());
 					for (RacikanDetail rd : r.getRacikanDetail()) {
@@ -726,6 +730,7 @@ public class PenjualanObatController {
 
 	private CekStok periksaEntityCekStok(CekStok cekStok, Obat obat, PenjualanDetailTemp temp, Integer jumlah) {
 		cekStok = cekStokService.dapatkanByRandomIdAndIdObat(temp.getRandomId(), obat.getId().toString());
+		System.out.println("CEK STOK");
 		if (cekStok == null) {
 			cekStok = new CekStok();
 			cekStok.setRandomId(temp.getRandomId());

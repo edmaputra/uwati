@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -295,6 +296,7 @@ public class PembelianObatController {
 
 	@RequestMapping(value = "/beli", method = RequestMethod.POST)
 	@ResponseBody
+	@Transactional
 	public PembelianDetailHandler simpanPembelian(@RequestBody PembelianDetailHandler h, BindingResult result, Principal principal,
 			HttpServletRequest request) {
 		Pembelian pembelian = new Pembelian();
@@ -441,7 +443,9 @@ public class PembelianObatController {
 			pembelianDetail.setJumlah(Integer.valueOf(temp.getJumlah()));
 		}
 		if (temp.getObat() != null) {
-			pembelianDetail.setObat(getObat(temp.getObat()).getNama());
+			Obat o = getObat(temp.getObat());
+			pembelianDetail.setObat(o.getNama());
+			pembelianDetail.setIdObat(o.getId());
 		}
 		if (temp.getPajak() != null) {
 			pembelianDetail.setPajak(new BigDecimal(temp.getPajak().replaceAll("[.,]", "")));
@@ -452,6 +456,7 @@ public class PembelianObatController {
 		if (temp.getTanggalKadaluarsa() != null) {
 			pembelianDetail.setTanggalKadaluarsa(Converter.stringToDate(temp.getTanggalKadaluarsa()));
 		}
+		pembelianDetail.setIsReturned(false);
 		pembelianDetail.setTerakhirDirubah(new Date());		
 		pembelianDetail.setWaktuDibuat(new Date());
 		return pembelianDetail;

@@ -11,7 +11,7 @@ import id.edmaputra.uwati.entity.master.obat.Obat;
 
 public interface ObatRepository extends JpaRepository<Obat, Long>, QueryDslPredicateExecutor<Obat> {
 
-	Obat findByNama(String nama);
+	Obat findByNamaContainingIgnoreCase(String nama);
 
 	@Query(nativeQuery = true, value = "SELECT COUNT(*) FROM obat JOIN obat_expired "
 			+ "ON obat.id = obat_expired.id_obat "

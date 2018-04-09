@@ -40,6 +40,8 @@ public interface PembelianDetailRepository extends JpaRepository<PembelianDetail
 	PembelianDetail findByIdAndPembelian(Long id, Pembelian pembelian);
 
 	PembelianDetail findByObatAndPembelian(String obat, Pembelian pembelian);
-	
+
+	@Query(nativeQuery = true, value = "UPDATE pembelian_detail SET isReturned = 1 WHERE pembelian_detail.id = ?1")
+	void setStatusReturned(Long id);
 
 }

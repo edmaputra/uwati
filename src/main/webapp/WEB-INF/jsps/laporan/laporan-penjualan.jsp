@@ -11,6 +11,7 @@
 <c:url var="cetakResi" value="/laporan/penjualan/resi" />
 
 <c:url var="pdfUrl" value="/laporan/penjualan/pdf" />
+<c:url var="cobajson" value="/laporan/penjualan/cobajson" />
 <c:url var="excel" value="/laporan/penjualan/excel" />
 
 <div class="row">
@@ -46,7 +47,7 @@
 							<a class="btn btn-primary" id="btnCari" style="width: 80px;">Filter</a>
 						</div>
 						<div class="form-group">
-							<a class="btn btn-default" id="btnReset">Reset</a>							
+							<a class="btn btn-default" id="btnReset">Reset</a>
 						</div>
 					</form>
 				</div>
@@ -94,15 +95,10 @@
 					<a href="${excel}" class="btn btn-primary" style="width: 100%;"><i
 						class="fa fa-file-excel-o fa-6" aria-hidden="true"> excel</i></a>
 				</div>
-<%-- 				<form action="${pdfUrl}" class="form-horizontal" method="POST"> --%>
-<!-- 					<div class="col-md-6"> -->
-<!-- 						<input type="hidden" name="id" class="form-control" id="cetakId" -->
-<!-- 							value="1" /> <input type="submit" id="cetak" -->
-<!-- 							class="btn btn-primary" value="cetak"> -->
-<!-- 												<a href="#" class="btn btn-danger" style="width: 100%;"><i -->
-<!-- 													class="fa fa-file-pdf-o fa-6" aria-hidden="true"> pdf</i></a> -->
-<!-- 					</div> -->
-<!-- 				</form> -->
+				<div class="col-md-6">
+					<a target="_blank" class="btn btn-primary" style="width: 100%;" id="pdfButton"><i class="fa fa-file-excel-o fa-6"
+						aria-hidden="true"> PDF</i></a>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -222,20 +218,21 @@
 	</form>
 </div>
 
-<div class="modal fade" id="batal-modal" tabindex="-1" style="display: none;">
+<div class="modal fade" id="batal-modal" tabindex="-1"
+	style="display: none;">
 	<div class="modal-header">
 		<button type="button" class="close" data-dismiss="modal"
 			aria-hidden="true">&times;</button>
 		<h4 class="modal-title" id="myModalLabel">Batalkan Penjualan</h4>
 	</div>
-	
+
 	<form class="form style-form form-batal" method="post">
-	<div class="modal-body">
-		<div class="form-group">
-			<label class="lb-sm">Isi Alasan Pembatalan :</label> 
-			<input type="text" class="form-control" id="info_batal" name="info_batal" />
+		<div class="modal-body">
+			<div class="form-group">
+				<label class="lb-sm">Isi Alasan Pembatalan :</label> <input
+					type="text" class="form-control" id="info_batal" name="info_batal" />
+			</div>
 		</div>
-	</div>
 		<div class="modal-footer">
 			<button type="button" class="btn btn-default btnKeluar"
 				id="keluarModalHapus" data-dismiss="modal">Tidak</button>
@@ -245,10 +242,12 @@
 	</form>
 </div>
 
-<form action="${cetakResi}" class="form-horizontal style-form" id="form_cetak" method="POST" target="_blank" style="visibility: hidden;">
-		<div class="modal-footer">
-			<input type="hidden" name="id" class="form-control" id="cetakId" />			
-		</div>
+<form action="${cetakResi}" class="form-horizontal style-form"
+	id="form_cetak" method="POST" target="_blank"
+	style="visibility: hidden;">
+	<div class="modal-footer">
+		<input type="hidden" name="id" class="form-control" id="cetakId" />
+	</div>
 </form>
 
 <div>
@@ -282,7 +281,7 @@
 		$('#button_rekap').click(function() {
 			getDataRekap();
 		});
-		
+
 		$(".form-batal").validate({
 			rules : {
 				info_batal : {
@@ -297,9 +296,9 @@
 			submitHandler : function(form) {
 				var data = {};
 				data['id'] = $('#hapusId').val();
-				data['info'] = $('#info_batal').val();				
+				data['info'] = $('#info_batal').val();
 				resetBatal();
-				$.postJSON('${batal}', data, function(result) {					
+				$.postJSON('${batal}', data, function(result) {
 					$('#keluarModalHapus').click();
 					$('#gritter-hapus-sukses').click();
 					reset();
@@ -311,6 +310,16 @@
 					refresh(1, tipe, tanggalAwal, tanggalAkhir, cari);
 				});
 			}
+		});
+		
+		$("#pdfButton").on('click', function() {
+			var data = {
+				tanggalAwal : $('#tanggalAwal').val(),
+				tanggalAkhir : $('#tanggalAkhir').val(),
+				tipe : $('#tipe').val()
+			};
+			document.getElementById('pdfButton').setAttribute('href', '${pdfUrl}?tipe=' + data.tipe + '&tanggalAwal='+ data.tanggalAwal+'&tanggalAkhir='+data.tanggalAkhir);
+			
 		});
 	});
 
@@ -337,7 +346,7 @@
 			$('#tabel_detail_rekap').append(result.details);
 		}, null);
 	}
-	
+
 	function setIdUntukCetakResi(ids) {
 		$('#cetakId').val(ids);
 		$('#form_cetak').submit();
@@ -392,8 +401,8 @@
 		$('#tanggalAkhir').val(tanggalAkhir);
 		$('#cari').val(cari);
 	}
-	
-	function resetBatal(){
+
+	function resetBatal() {
 		$('#info_batal').val('');
 	}
 </script>

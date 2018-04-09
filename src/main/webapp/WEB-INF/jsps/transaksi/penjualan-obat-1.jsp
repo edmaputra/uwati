@@ -360,7 +360,6 @@
 					var total_pembelian = parseFloat($("#totalPembelianFinal").val().replace(/\./g, ''));
 					var i = 0;
 					if (total_pembayaran < total_pembelian){
-						console.log('Pesan Utang');
 						var p = "Total Pembayaran lebih kurang dari total Belanja. Transaksi ini akan tercatat sebagai Piutang. <p>Lanjutkan Transaksi ?</p>";
 						$("#pesan-utang").empty();
 						$("#pesan-utang").append(p);
@@ -370,13 +369,11 @@
 							if (i == 1){
 //	 							e.preventDefault();
 								$("#utang-modal").modal('hide');
-								console.log('Bayar utang');
 								$(".form-bayar").submit();	
 							}
 														
 						});
 					} else {
-						console.log('Bayar non utang');
 						$(".form-bayar").submit();
 					}
 					i = 0;
@@ -505,14 +502,12 @@
 							$('#penjualanId').val(result.id);
 							$('#pesan-penjualan').empty();
 							$('#pesan-penjualan').append(result.info);
-							console.log(result.info);
 							$('#cetak-modal').modal('show');
 							resetEditObatData();
 							resetAll();
 							randomId = Math.floor(Math.random() * 1000000);
 						}, function(result) {
 							$('#gritter-edit-gagal').click();
-							console.log(result.info);
 						});
 					}
 				});
@@ -534,7 +529,6 @@
 			refreshDaftarObat(randomId);
 			refreshObat(halamanObat, cariObat);
 		}, function() {
-			console.log(result.info);
 			$('#gritter-tambah-gagal').click();
 		});
 	}
@@ -600,7 +594,6 @@
 			if (result.info != "OKE") {
 				$('#pesan').empty();
 				$('#pesan').append(result.info);
-				console.log(result.info);
 				$('#pesan-modal').modal('show');
 			} else {
 				$("#totalPembelianFinal").val(
@@ -620,9 +613,7 @@
 		};
 		$.postJSON('${hapusObatTerpilihUrl}', data, function(result) {
 			refreshDaftarObat(randomId);
-			console.log(result.info);
 		}, function() {
-			console.log(result.info);
 		});
 	}
 

@@ -8,17 +8,22 @@ import javax.persistence.Lob;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.validation.constraints.NotNull;
+
+import org.hibernate.validator.constraints.NotEmpty;
 
 @MappedSuperclass
 public abstract class DasarTransaksiEntity<T> implements Serializable {
 	
 	private static final long serialVersionUID = -6271581964552598034L;
 
-	@Column(name = "waktu_dibuat", nullable = false)
+	@NotNull(message = "Tanggal Dibuat Null")
+	@Column(name = "waktu_dibuat")
     @Temporal(TemporalType.TIMESTAMP)    
 	private Date waktuDibuat;
 
-    @Column(name = "terakhir_dirubah", nullable = false)
+	@NotNull(message = "Tanggal Terakhir Dirubah Null")
+    @Column(name = "terakhir_dirubah")
     @Temporal(TemporalType.TIMESTAMP)
     private Date terakhirDirubah;
 

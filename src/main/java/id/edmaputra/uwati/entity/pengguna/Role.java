@@ -1,4 +1,4 @@
-package id.edmaputra.uwati.entity.pengguna;
+	package id.edmaputra.uwati.entity.pengguna;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;

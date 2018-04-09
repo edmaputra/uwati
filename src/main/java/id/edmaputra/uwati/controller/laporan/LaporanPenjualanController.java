@@ -1,5 +1,7 @@
 package id.edmaputra.uwati.controller.laporan;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.security.Principal;
 import java.util.ArrayList;
@@ -19,9 +21,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -45,8 +52,6 @@ import id.edmaputra.uwati.entity.transaksi.BatalPenjualanDetailRacikan;
 import id.edmaputra.uwati.entity.transaksi.Penjualan;
 import id.edmaputra.uwati.entity.transaksi.PenjualanDetail;
 import id.edmaputra.uwati.entity.transaksi.PenjualanDetailRacikan;
-import id.edmaputra.uwati.reports.RPenjualan;
-import id.edmaputra.uwati.reports.RPenjualanDetail;
 import id.edmaputra.uwati.reports.Struk;
 import id.edmaputra.uwati.service.ApotekService;
 import id.edmaputra.uwati.service.obat.ObatDetailService;
@@ -127,6 +132,31 @@ public class LaporanPenjualanController {
 			return null;
 		}
 	}
+	
+	@GetMapping(value = "/pdf", produces = MediaType.APPLICATION_PDF_VALUE)	
+	public ResponseEntity<InputStreamResource> pdf(@RequestParam(value = "tipe", defaultValue = "1", required = false) Integer tipe,
+			@RequestParam(value = "tanggalAwal", defaultValue = "", required = false) String tanggalAwal,
+			@RequestParam(value = "tanggalAkhir", defaultValue = "", required = false) String tanggalAkhir) throws IOException {
+		
+		PenjualanPredicateBuilder builder = predicateBuilder(tanggalAwal, tanggalAkhir, tipe, "");	
+		String t = "SEMUA";
+		if (tipe == 0) t = "UMUM";
+		if (tipe == 1) t = "RESEP";
+		BooleanExpression exp = builder.getExpression();
+		List<Penjualan> penjualans = penjualanService.dapatkanList(exp);
+		
+		for (Penjualan p : penjualans) {
+			p.setPenjualanDetail(penjualanDetailService.dapatkanByPenjualan(p));
+		}
+		
+		PdfGenerator pdfGenerator = new PdfGenerator();
+		ByteArrayInputStream bis = pdfGenerator.laporanPenjualan(penjualans, tanggalAwal, tanggalAkhir, t);
+		
+		HttpHeaders headers = new HttpHeaders();
+		headers.add("Content-Disposition", "inline; filename=laporan-penjualan.pdf");
+		
+		return ResponseEntity.ok().headers(headers).contentType(MediaType.APPLICATION_PDF).body(new InputStreamResource(bis));
+	}
 
 	@RequestMapping(value = "/daftar", method = RequestMethod.GET)
 	@ResponseBody
@@ -139,29 +169,7 @@ public class LaporanPenjualanController {
 		try {
 			HtmlElement el = new HtmlElement();
 
-			PenjualanPredicateBuilder builder = new PenjualanPredicateBuilder();
-
-			if (StringUtils.isNotBlank(tanggalAwal) || StringUtils.isNotBlank(tanggalAkhir)) {
-				Date awal = Converter.stringToDate(tanggalAwal);
-				if (StringUtils.isBlank(tanggalAkhir)) {
-					builder.tanggal(awal, awal);
-				} else if (StringUtils.isNotBlank(tanggalAkhir)) {
-					Date akhir = Converter.stringToDate(tanggalAkhir);
-					if (awal.compareTo(akhir) > 0) {
-						builder.tanggal(akhir, awal);
-					} else if (awal.compareTo(akhir) < 0) {
-						builder.tanggal(awal, akhir);
-					}
-				}
-			}
-
-			if (tipe != -1) {
-				builder.tipe(tipe);
-			}
-
-			if (!StringUtils.isBlank(cari)) {
-				builder.cari(cari);
-			}
+			PenjualanPredicateBuilder builder = predicateBuilder(tanggalAwal, tanggalAkhir, tipe, cari);			
 
 			BooleanExpression exp = builder.getExpression();
 			Page<Penjualan> page = penjualanService.muatDaftar(halaman, exp);
@@ -196,6 +204,30 @@ public class LaporanPenjualanController {
 			logger.info(e.getMessage());
 			return null;
 		}
+	}
+	
+	private PenjualanPredicateBuilder predicateBuilder(String tanggalAwal, String tanggalAkhir, Integer tipe, String cari) {
+		PenjualanPredicateBuilder builder = new PenjualanPredicateBuilder();
+		if (StringUtils.isNotBlank(tanggalAwal) || StringUtils.isNotBlank(tanggalAkhir)) {
+			Date awal = Converter.stringToDate(tanggalAwal);
+			if (StringUtils.isBlank(tanggalAkhir)) {
+				builder.tanggal(awal, awal);
+			} else if (StringUtils.isNotBlank(tanggalAkhir)) {
+				Date akhir = Converter.stringToDate(tanggalAkhir);
+				if (awal.compareTo(akhir) > 0) {
+					builder.tanggal(akhir, awal);
+				} else if (awal.compareTo(akhir) < 0) {
+					builder.tanggal(awal, akhir);
+				}
+			}
+		}
+		if (tipe != -1) {
+			builder.tipe(tipe);
+		}
+		if (!StringUtils.isBlank(cari)) {
+			builder.cari(cari);
+		}
+		return builder;
 	}
 	
 	@RequestMapping(value = "/excel-all", method = RequestMethod.GET)	
@@ -273,6 +305,40 @@ public class LaporanPenjualanController {
 			return null;
 		}
 	}
+//	
+//	@GetMapping(value = "coba-pdf")
+//	@ResponseBody
+//	public JsonObjectBuilder cobaPdf() {
+//		
+//		JsonObjectBuilder json = Json.createObjectBuilder();
+//		 json.add("pageSize", "A4");
+//		 
+//		 JsonArray margin = Json.createArrayBuilder()
+//				 .add(0).add(0).add(0).add(0).build();
+//		 json.add("margins", margin);
+//		 json.build();
+//		 System.out.println(json.toString());
+		
+//		Styles styles = new Styles();
+//		Texts texts1 = new Texts("ABC", styles);
+//		Texts texts2 = new Texts("EFG", styles);
+//		List<Texts> t = new ArrayList<>();
+//		t.add(texts1);
+//		t.add(texts2);
+//		
+//		Columns col = new Columns();
+//		col.setColumns(t);
+//		
+//		List<Columns> columns = new ArrayList<>();
+//		columns.add(col);
+//		
+//		
+//		
+//		PdfMakeModel pdfMakeModel = new PdfMakeModel();
+//		pdfMakeModel.setContent(columns);
+//		return pdfMakeModel;
+//		return json;
+//	}
 	
 	@RequestMapping(value = "/batal", method = RequestMethod.POST)
 	@ResponseBody
@@ -484,63 +550,6 @@ public class LaporanPenjualanController {
 		}
 	}
 	
-//	@RequestMapping(value = "/pdf", method = RequestMethod.POST)
-//	public ModelAndView pdf(ModelAndView mav, @RequestParam("id") String id, Principal principal){
-//	public ModelAndView pdf(ModelAndView mav, Principal principal){
-//		try {
-//			
-//			String tanggalAwal = "01-07-2017";
-//			String tanggalAkhir = "02-07-2017";
-//			
-//			PenjualanPredicateBuilder builder = new PenjualanPredicateBuilder();
-//
-//			if (StringUtils.isNotBlank(tanggalAwal) || StringUtils.isNotBlank(tanggalAkhir)) {
-//				Date awal = Converter.stringToDate(tanggalAwal);
-//				if (StringUtils.isBlank(tanggalAkhir)) {
-//					builder.tanggal(awal, awal);
-//				} else if (StringUtils.isNotBlank(tanggalAkhir)) {
-//					Date akhir = Converter.stringToDate(tanggalAkhir);
-//					if (awal.compareTo(akhir) > 0) {
-//						builder.tanggal(akhir, awal);
-//					} else if (awal.compareTo(akhir) < 0) {
-//						builder.tanggal(awal, akhir);
-//					} else if (awal.compareTo(akhir) == 0){
-//						builder.tanggal(awal, awal);
-//					}
-//				}
-//			}
-//			
-//			BooleanExpression exp = builder.getExpression();
-//			List<Penjualan> lists = penjualanService.dapatkanList(exp);
-//			List<RPenjualan> laporan = new ArrayList<>();
-//			for (Penjualan p : lists){
-//				RPenjualan rp = new RPenjualan();
-//				rp.setNomorFaktur(p.getNomorFaktur());
-//				rp.setWaktuTransaksi(Converter.dateToString(p.getWaktuTransaksi()));				
-//				List<RPenjualanDetail> listRpd = new ArrayList<>();				
-//				List<PenjualanDetail> details = penjualanDetailService.dapatkanByPenjualan(p);
-//				for (PenjualanDetail d : details){
-//					RPenjualanDetail rpd = new RPenjualanDetail();
-//					rpd.setObat(d.getObat());
-//					rpd.setHargaJual(d.getHargaJual().toString());
-//					listRpd.add(rpd);
-//				}
-//				rp.setDetails(listRpd);
-//				laporan.add(rp);
-//			}
-//								
-//			Map<String, Object> parameterMap = new HashMap<String, Object>();
-//			JRDataSource JRdataSource = new JRBeanCollectionDataSource(laporan);			
-//			parameterMap.put("datasource", JRdataSource);			
-//			mav = new ModelAndView(pdfPenjualan, parameterMap);			
-//			return mav;
-//		} catch (Exception e) {
-//			logger.info(e.getMessage());
-//			System.out.println(e.getMessage());
-//			return null;
-//		}		
-//	}
-
 	private PenjualanHandler setContent(Penjualan p, PenjualanHandler ph) {
 		ph.setNomorFaktur(p.getNomorFaktur());
 		ph.setPengguna(p.getPengguna());

@@ -2,6 +2,7 @@ package id.edmaputra.uwati.controller.transaksi;
 
 import java.math.BigDecimal;
 import java.security.Principal;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -27,12 +28,16 @@ import org.springframework.web.servlet.ModelAndView;
 import com.mysema.query.types.expr.BooleanExpression;
 
 import id.edmaputra.uwati.entity.master.obat.Obat;
+import id.edmaputra.uwati.entity.master.obat.ObatDetail;
+import id.edmaputra.uwati.entity.master.obat.ObatExpired;
 import id.edmaputra.uwati.entity.master.obat.ObatStok;
 import id.edmaputra.uwati.entity.transaksi.Pembelian;
 import id.edmaputra.uwati.entity.transaksi.PembelianDetail;
 import id.edmaputra.uwati.entity.transaksi.ReturPembelian;
 import id.edmaputra.uwati.entity.transaksi.ReturPembelianDetail;
 import id.edmaputra.uwati.entity.transaksi.ReturPembelianDetailTemp;
+import id.edmaputra.uwati.service.obat.ObatDetailService;
+import id.edmaputra.uwati.service.obat.ObatExpiredService;
 import id.edmaputra.uwati.service.obat.ObatService;
 import id.edmaputra.uwati.service.obat.ObatStokService;
 import id.edmaputra.uwati.service.transaksi.PembelianDetailService;
@@ -69,6 +74,12 @@ public class ReturController {
 
 	@Autowired
 	private ObatStokService obatStokService;
+	
+	@Autowired
+	private ObatDetailService obatDetailService;
+	
+	@Autowired
+	private ObatExpiredService obatExpiredService;
 
 	@Autowired
 	private ReturPembelianDetailTempService tempService;
@@ -182,6 +193,7 @@ public class ReturController {
 			List<PembelianDetail> details = pembelianDetailService.dapatkanByPembelian(get);
 			ph = setContent(get, ph);
 			ph.setDetails(tabelDetails(details));
+			System.out.println("Dapatkan detail retur");
 			return ph;
 		} catch (Exception e) {
 			logger.info(e.getMessage());
@@ -246,7 +258,7 @@ public class ReturController {
 			ph.setHargaBeli(Converter.patternCurrency(get.getHargaBeli()));
 			ph.setJumlah(get.getJumlah().toString());
 			ph.setSubTotal(Converter.patternCurrency(get.getSubTotal()));
-			ph.setIdObat(obatService.dapatkanByNama(get.getObat()).getId());
+			ph.setIdObat(get.getIdObat());
 			return ph;
 		} catch (Exception e) {
 			logger.info(e.getMessage());
@@ -331,6 +343,35 @@ public class ReturController {
 			return h;
 		}
 	}
+	
+	@RequestMapping(value = "/update-id", method = RequestMethod.GET)
+	@ResponseBody
+	@Transactional
+	public List<PembelianDetail> updateIdObat() {
+		try {
+			List<PembelianDetail> notFound = new ArrayList<>();
+			List<PembelianDetail> detail = pembelianDetailService.dapatkanSemua();
+			System.out.println("Size : "+detail.size());
+			for (PembelianDetail d : detail) {
+				System.out.println("Obat Detail : "+ d.getObat());
+				Obat o = getObat(d.getObat());
+				System.out.println("Obat : "+ o.getNama());
+				if (o != null) {
+					d.setIdObat(o.getId());
+					d.setPajak(BigDecimal.ZERO);
+					d.setDiskon(BigDecimal.ZERO);
+					System.out.println("Obat : "+ o.getNama()+" ID : "+d.getIdObat());
+					pembelianDetailService.simpan(d);
+				} else if (o == null) {
+					notFound.add(d);
+				}
+			}
+			return notFound;
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+			return null;
+		}
+	}
 
 	private PembelianDetailHandler setContent(Pembelian p, PembelianDetailHandler ph) {
 		ph.setNomorFaktur(p.getNomorFaktur());
@@ -384,6 +425,8 @@ public class ReturController {
 				detail.setSupplier(pembelian.getSupplier());
 				detail.setPengguna(principal.getName());
 				detail.setIdPembelian(new Long(h.getIdPembelian()));
+				detail.setWaktuDibuat(new Date());
+				detail.setTerakhirDirubah(new Date());
 				returPembelianDetailService.simpan(detail);
 			}
 			
@@ -409,6 +452,7 @@ public class ReturController {
 		Hibernate.initialize(obat.getStok());
 		Integer stokBaru = obat.getStok().get(0).getStok() - jumlah;
 		obat.getStok().get(0).setStok(stokBaru);
+		obat.setTerakhirDirubah(new Date());
 		obatService.simpan(obat);
 	}
 	
@@ -438,6 +482,26 @@ public class ReturController {
 		detail.setWaktuDibuat(new Date());		
 		detail.setTerakhirDirubah(new Date());		
 		return detail;
+	}
+	
+	private Obat getObat(String nama) {
+		Obat get = obatService.dapatkanByNama(nama);
+		if (get != null) {
+			List<ObatDetail> lObatDetail = obatDetailService.temukanByObat(get);
+			get.setDetail(lObatDetail);
+			Hibernate.initialize(get.getDetail());
+
+			List<ObatStok> lObatStok = obatStokService.temukanByObats(get);
+			get.setStok(lObatStok);
+			Hibernate.initialize(get.getStok());
+
+			List<ObatExpired> lObatExpired = obatExpiredService.temukanByObats(get);
+			get.setExpired(lObatExpired);
+			Hibernate.initialize(get.getExpired());
+			return get;
+		} else {
+			return null;
+		}
 	}
 
 }
