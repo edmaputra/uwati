@@ -7,6 +7,7 @@
 <c:url var="daftar" value="/laporan/pembelian/daftar" />
 <c:url var="batal" value="/laporan/pembelian/batal" />
 <c:url var="daftarRekap" value="/laporan/pembelian/dapatkan-rekap" />
+<c:url var="pdfUrl" value="/laporan/pembelian/pdf" />
 
 <div class="row">
 	<div class="col-lg-9">
@@ -81,10 +82,10 @@
 <!-- 					<a href="#" class="btn btn-primary" style="width: 100%;"><i -->
 <!-- 						class="fa fa-file-excel-o fa-6" aria-hidden="true"> excel</i></a> -->
 <!-- 				</div> -->
-<!-- 				<div class="col-md-6"> -->
-<!-- 					<a href="#" class="btn btn-danger" style="width: 100%;"><i -->
-<!-- 						class="fa fa-file-pdf-o fa-6" aria-hidden="true"> pdf</i></a> -->
-<!-- 				</div> -->
+				<div class="col-md-6">
+					<a target="_blank" class="btn btn-primary" style="width: 100%;" id="pdfButton"><i class="fa fa-file-excel-o fa-6"
+						aria-hidden="true"> PDF</i></a>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -235,6 +236,15 @@
 
 		$('#button_rekap').click(function() {
 			getDataRekap();
+		});
+		
+		$("#pdfButton").on('click', function() {
+			var data = {
+				tanggalAwal : $('#tanggalAwal').val(),
+				tanggalAkhir : $('#tanggalAkhir').val()
+			};
+			document.getElementById('pdfButton').setAttribute('href', '${pdfUrl}?tanggalAwal='+ data.tanggalAwal+'&tanggalAkhir='+data.tanggalAkhir);
+			
 		});
 
 		$(".form-batal").validate({

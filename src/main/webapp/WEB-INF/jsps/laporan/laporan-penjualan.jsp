@@ -198,10 +198,7 @@
 					<label class="lb-sm">Tanggal Akhir</label> <input type="text"
 						readonly="readonly" class="form-control" id="rekap_tanggal_akhir" />
 				</div>
-				<!-- 							<div class="form-group col-md-2"> -->
-				<!-- 								<label class="lb-sm">Total Penjualan Obat</label> -->
-				<!-- 								<input type="text" readonly="readonly" class="form-control" id="rekap_total_obat"/> -->
-				<!-- 							</div> -->
+		
 			</div>
 			<div class="row">
 				<div class="col-md-12">

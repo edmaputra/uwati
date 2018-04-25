@@ -151,6 +151,25 @@ button.btn-wrap{
 	white-space: normal;
 }
 
+.pasien {
+	background: url(../images/uwati/pasien.png) no-repeat center top;
+	text-align: center;
+	background-position: center center;
+}
+.pasien i {
+	color: white;
+	margin-top: 45px;
+}
+.pasien h2 {
+	color: white;
+	font-weight: 900;
+}
+.pasien h4 {
+	color: white;
+	font-weight: 900;
+	letter-spacing: 1px;
+} 
+
 .jualObat {
 	background: url(../images/uwati/jualobat.jpg) no-repeat center top;
 	text-align: center;

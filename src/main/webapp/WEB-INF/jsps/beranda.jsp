@@ -30,6 +30,8 @@
 	</div>
 </div>
 
+
+
 <security:authorize
 	access="hasAnyRole('ADMIN','APOTIK') and isAuthenticated()">
 	<div class="row">
@@ -66,6 +68,21 @@
 </div>
 </security:authorize>
 
+<security:authorize
+	access="hasAnyRole('ADMIN','MEDIS') and isAuthenticated()">
+<div class="row">
+	<div class="col-xs-7 col-sm-7 col-md-7 col-lg-7 mb">
+			<a href="<spring:url value="/pasien" />">
+				<div class="pasien pn">
+					<i class="fa fa-user-circle fa-4x"></i>
+					<h2>PASIEN</h2>
+					<h4></h4>
+				</div>
+			</a>
+		</div>
+</div>
+</security:authorize>
+
 <security:authorize access="hasAnyRole('ADMIN') and isAuthenticated()">
 	<div class="row">
 		<div class="col-xs-3 col-sm-3 col-md-3 col-lg-3 mb">
@@ -88,16 +105,6 @@
 			</a>
 		</div>
 
-		<!-- 		<div class="col-xs-3 col-sm-3 col-md-3 col-lg-3 mb"> -->
-		<%-- 		<a href="<spring:url value="/obat-diagnosa" />"> --%>
-		<!-- 			<div class="jualObat pn"> -->
-		<!-- 				<i class="fa fa-copy fa-4x"></i> -->
-		<!-- 				<h2>LAPORAN</h2> -->
-		<!-- 				<h4>OBAT-DIAGNOSA</h4> -->
-		<!-- 			</div> -->
-		<!-- 		</a> -->
-		<!-- 		</div> -->
-
 		<div class="col-xs-3 col-sm-3 col-md-3 col-lg-3 mb">
 			<a href="<spring:url value="/laporan/pasien" />">
 				<div class="laporan pn">
@@ -107,15 +114,5 @@
 				</div>
 			</a>
 		</div>
-
-		<!-- 	<div class="col-md-4 col-sm-4 mb"> -->
-		<%-- 		<a href="<spring:url value="#" />"> --%>
-		<!-- 			<div class="jualObat pn"> -->
-		<!-- 				<i class="fa fa-cloud fa-4x"></i> -->
-		<!-- 				<h2>LAPORAN</h2> -->
-		<!-- 				<h4>PEMBELIAN</h4> -->
-		<!-- 			</div> -->
-		<!-- 		</a> -->
-		<!-- 	</div> -->
 	</div>
 </security:authorize>

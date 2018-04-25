@@ -1,5 +1,7 @@
 package id.edmaputra.uwati.controller.laporan;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.security.Principal;
 import java.util.ArrayList;
@@ -16,9 +18,14 @@ import org.hibernate.Hibernate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -40,6 +47,7 @@ import id.edmaputra.uwati.entity.transaksi.BatalPenjualanDetail;
 import id.edmaputra.uwati.entity.transaksi.BatalPenjualanDetailRacikan;
 import id.edmaputra.uwati.entity.transaksi.Pembelian;
 import id.edmaputra.uwati.entity.transaksi.PembelianDetail;
+import id.edmaputra.uwati.entity.transaksi.Penjualan;
 import id.edmaputra.uwati.entity.transaksi.PenjualanDetail;
 import id.edmaputra.uwati.entity.transaksi.PenjualanDetailRacikan;
 import id.edmaputra.uwati.service.obat.ObatDetailService;
@@ -50,6 +58,7 @@ import id.edmaputra.uwati.service.transaksi.BatalPembelianService;
 import id.edmaputra.uwati.service.transaksi.PembelianDetailService;
 import id.edmaputra.uwati.service.transaksi.PembelianService;
 import id.edmaputra.uwati.specification.PembelianPredicateBuilder;
+import id.edmaputra.uwati.specification.PenjualanPredicateBuilder;
 import id.edmaputra.uwati.support.Converter;
 import id.edmaputra.uwati.support.LogSupport;
 import id.edmaputra.uwati.view.Formatter;
@@ -97,6 +106,29 @@ public class LaporanPembelianController {
 			return null;
 		}
 	}
+	
+	@GetMapping(value = "/pdf", produces = MediaType.APPLICATION_PDF_VALUE)	
+	public ResponseEntity<InputStreamResource> pdf(
+			@RequestParam(value = "tanggalAwal", defaultValue = "", required = false) String tanggalAwal,
+			@RequestParam(value = "tanggalAkhir", defaultValue = "", required = false) String tanggalAkhir) throws IOException {
+		
+		PembelianPredicateBuilder builder = predicateBuilder(tanggalAwal, tanggalAkhir, "");	
+		
+		BooleanExpression exp = builder.getExpression();
+		List<Pembelian> oembelians = pembelianService.dapatkanList(exp);
+		
+		for (Pembelian p : oembelians) {
+			p.setPembelianDetail(pembelianDetailService.dapatkanByPembelian(p));
+		}
+		
+		PdfGenerator pdfGenerator = new PdfGenerator();
+		ByteArrayInputStream bis = pdfGenerator.laporanPembelian(oembelians, tanggalAwal, tanggalAkhir);
+		
+		HttpHeaders headers = new HttpHeaders();
+		headers.add("Content-Disposition", "inline; filename=laporan-pembelian.pdf");
+		
+		return ResponseEntity.ok().headers(headers).contentType(MediaType.APPLICATION_PDF).body(new InputStreamResource(bis));
+	}
 
 	@RequestMapping(value = "/daftar", method = RequestMethod.GET)
 	@ResponseBody
@@ -108,25 +140,7 @@ public class LaporanPembelianController {
 		try {
 			HtmlElement el = new HtmlElement();
 
-			PembelianPredicateBuilder builder = new PembelianPredicateBuilder();
-
-			if (StringUtils.isNotBlank(tanggalAwal) || StringUtils.isNotBlank(tanggalAkhir)) {
-				Date awal = Converter.stringToDate(tanggalAwal);
-				if (StringUtils.isBlank(tanggalAkhir)) {
-					builder.tanggal(awal, awal);
-				} else if (StringUtils.isNotBlank(tanggalAkhir)) {
-					Date akhir = Converter.stringToDate(tanggalAkhir);
-					if (awal.compareTo(akhir) > 0) {
-						builder.tanggal(akhir, awal);
-					} else if (awal.compareTo(akhir) < 0) {
-						builder.tanggal(awal, akhir);
-					}
-				}
-			}
-
-			if (!StringUtils.isBlank(cari)) {
-				builder.cari(cari);
-			}
+			PembelianPredicateBuilder builder = predicateBuilder(tanggalAwal, tanggalAkhir, cari);			
 
 			BooleanExpression exp = builder.getExpression();
 			Page<Pembelian> page = pembelianService.muatDaftar(halaman, exp);
@@ -159,6 +173,27 @@ public class LaporanPembelianController {
 			logger.info(e.getMessage());
 			return null;
 		}
+	}
+	
+	private PembelianPredicateBuilder predicateBuilder(String tanggalAwal, String tanggalAkhir, String cari) {
+		PembelianPredicateBuilder builder = new PembelianPredicateBuilder();
+		if (StringUtils.isNotBlank(tanggalAwal) || StringUtils.isNotBlank(tanggalAkhir)) {
+			Date awal = Converter.stringToDate(tanggalAwal);
+			if (StringUtils.isBlank(tanggalAkhir)) {
+				builder.tanggal(awal, awal);
+			} else if (StringUtils.isNotBlank(tanggalAkhir)) {
+				Date akhir = Converter.stringToDate(tanggalAkhir);
+				if (awal.compareTo(akhir) > 0) {
+					builder.tanggal(akhir, awal);
+				} else if (awal.compareTo(akhir) < 0) {
+					builder.tanggal(awal, akhir);
+				}
+			}
+		}
+		if (!StringUtils.isBlank(cari)) {
+			builder.cari(cari);
+		}
+		return builder;
 	}
 
 	@RequestMapping(value = "/dapatkan-rekap", method = RequestMethod.GET)
