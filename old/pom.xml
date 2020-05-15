@@ -10,7 +10,7 @@
 		<org.springframework.version>4.3.7.RELEASE</org.springframework.version>
 		<tiles.version>3.0.5</tiles.version>
 		<spring.security.version>4.2.2.RELEASE</spring.security.version>
-		<jackson.version>2.7.5</jackson.version>
+		<jackson.version>2.11.0</jackson.version>
 		<hibernate.entitymanager.version>5.2.6.Final</hibernate.entitymanager.version>
 		<querydsl.version>3.7.4</querydsl.version>
 	</properties>
