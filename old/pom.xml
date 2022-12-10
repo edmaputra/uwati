@@ -7,7 +7,7 @@
 	<packaging>war</packaging>
 
 	<properties>
-		<org.springframework.version>4.3.7.RELEASE</org.springframework.version>
+		<org.springframework.version>6.0.0</org.springframework.version>
 		<tiles.version>3.0.5</tiles.version>
 		<spring.security.version>4.2.2.RELEASE</spring.security.version>
 		<jackson.version>2.7.5</jackson.version>
