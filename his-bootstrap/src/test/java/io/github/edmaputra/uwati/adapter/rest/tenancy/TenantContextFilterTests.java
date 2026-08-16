@@ -8,14 +8,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
-import io.github.edmaputra.uwati.bootstrap.tenancy.ThreadLocalTenantContext;
+import io.github.edmaputra.uwati.bootstrap.tenancy.ScopedValueTenantContext;
 import io.github.edmaputra.uwati.core.tenancy.domain.TenantId;
 
 class TenantContextFilterTests {
 
 	@Test
 	void rejectsApiRequestsWithoutATenantHeader() throws Exception {
-		TenantContextFilter filter = new TenantContextFilter(new ThreadLocalTenantContext());
+		TenantContextFilter filter = new TenantContextFilter(new ScopedValueTenantContext());
 		MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/v1/patients");
 		MockHttpServletResponse response = new MockHttpServletResponse();
 
@@ -29,7 +29,7 @@ class TenantContextFilterTests {
 
 	@Test
 	void makesTheHeaderTenantAvailableOnlyDuringTheApiRequest() throws Exception {
-		ThreadLocalTenantContext context = new ThreadLocalTenantContext();
+		ScopedValueTenantContext context = new ScopedValueTenantContext();
 		TenantContextFilter filter = new TenantContextFilter(context);
 		TenantId tenantId = TenantId.generate();
 		MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/v1/patients");

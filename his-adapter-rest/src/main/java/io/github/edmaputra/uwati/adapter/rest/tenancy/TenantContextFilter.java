@@ -41,8 +41,17 @@ public class TenantContextFilter extends OncePerRequestFilter {
 			return;
 		}
 
-		try (TenantContextScope.Scope ignored = tenantContext.open(tenantId)) {
-			filterChain.doFilter(request, response);
+		try {
+			tenantContext.callWithTenant(tenantId, () -> {
+				filterChain.doFilter(request, response);
+				return null;
+			});
+		}
+		catch (IOException | ServletException exception) {
+			throw exception;
+		}
+		catch (Exception exception) {
+			throw new ServletException("Tenant-scoped request execution failed.", exception);
 		}
 	}
 

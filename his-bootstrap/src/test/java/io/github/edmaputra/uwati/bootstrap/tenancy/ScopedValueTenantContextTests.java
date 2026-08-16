@@ -6,20 +6,22 @@ import org.junit.jupiter.api.Test;
 
 import io.github.edmaputra.uwati.core.tenancy.domain.TenantId;
 
-class ThreadLocalTenantContextTests {
+class ScopedValueTenantContextTests {
 
 	@Test
-	void restoresThePreviousTenantWhenScopeCloses() {
-		ThreadLocalTenantContext context = new ThreadLocalTenantContext();
+	void restoresThePreviousTenantAfterNestedScopeCompletes() throws Throwable {
+		ScopedValueTenantContext context = new ScopedValueTenantContext();
 		TenantId firstTenant = TenantId.generate();
 		TenantId secondTenant = TenantId.generate();
 
-		try (var firstScope = context.open(firstTenant)) {
-			try (var secondScope = context.open(secondTenant)) {
+		context.callWithTenant(firstTenant, () -> {
+			context.callWithTenant(secondTenant, () -> {
 				assertThat(context.requireTenantId()).isEqualTo(secondTenant);
-			}
+				return null;
+			});
 			assertThat(context.requireTenantId()).isEqualTo(firstTenant);
-		}
+			return null;
+		});
 
 		assertThat(context.currentTenantId()).isEmpty();
 	}
