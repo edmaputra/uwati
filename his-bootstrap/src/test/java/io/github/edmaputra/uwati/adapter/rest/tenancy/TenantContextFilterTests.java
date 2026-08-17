@@ -43,4 +43,17 @@ class TenantContextFilterTests {
 		assertThat(observedTenantId.get()).isEqualTo(tenantId);
 		assertThat(context.currentTenantId()).isEmpty();
 	}
+
+	@Test
+	void skipsTenantHeaderValidationForPlatformTenantManagementEndpoints() throws Exception {
+		TenantContextFilter filter = new TenantContextFilter(new ScopedValueTenantContext());
+		MockHttpServletRequest request = new MockHttpServletRequest("POST", "/api/platform/tenants");
+		MockHttpServletResponse response = new MockHttpServletResponse();
+		AtomicReference<Boolean> chainCalled = new AtomicReference<>(false);
+
+		filter.doFilter(request, response, (ignoredRequest, ignoredResponse) -> chainCalled.set(true));
+
+		assertThat(chainCalled.get()).isTrue();
+		assertThat(response.getStatus()).isEqualTo(200);
+	}
 }

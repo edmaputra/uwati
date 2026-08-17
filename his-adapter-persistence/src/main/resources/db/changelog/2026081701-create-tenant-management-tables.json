@@ -1,0 +1,350 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "2026081701-create-tenant-management-tables",
+        "author": "copilot",
+        "changes": [
+          {
+            "createTable": {
+              "tableName": "tenants",
+              "columns": [
+                {
+                  "column": {
+                    "name": "id",
+                    "type": "UUID",
+                    "constraints": {
+                      "primaryKey": true,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "legal_name",
+                    "type": "VARCHAR(255)",
+                    "constraints": {
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "display_name",
+                    "type": "VARCHAR(255)",
+                    "constraints": {
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "display_name_normalized",
+                    "type": "VARCHAR(255)",
+                    "constraints": {
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "status",
+                    "type": "VARCHAR(32)",
+                    "constraints": {
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "created_at",
+                    "type": "TIMESTAMP WITH TIME ZONE",
+                    "constraints": {
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "updated_at",
+                    "type": "TIMESTAMP WITH TIME ZONE",
+                    "constraints": {
+                      "nullable": false
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "addUniqueConstraint": {
+              "tableName": "tenants",
+              "columnNames": "display_name_normalized",
+              "constraintName": "uk_tenants_display_name_normalized"
+            }
+          },
+          {
+            "createTable": {
+              "tableName": "tenant_settings",
+              "columns": [
+                {
+                  "column": {
+                    "name": "id",
+                    "type": "BIGSERIAL",
+                    "constraints": {
+                      "primaryKey": true,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "tenant_id",
+                    "type": "UUID",
+                    "constraints": {
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "setting_key",
+                    "type": "VARCHAR(255)",
+                    "constraints": {
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "setting_value",
+                    "type": "VARCHAR(255)",
+                    "constraints": {
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "revision",
+                    "type": "INTEGER",
+                    "constraints": {
+                      "nullable": false
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "addUniqueConstraint": {
+              "tableName": "tenant_settings",
+              "columnNames": "tenant_id,setting_key",
+              "constraintName": "uk_tenant_settings_tenant_key"
+            }
+          },
+          {
+            "createIndex": {
+              "tableName": "tenant_settings",
+              "indexName": "idx_tenant_settings_tenant_id",
+              "columns": [
+                {
+                  "column": {
+                    "name": "tenant_id"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "addForeignKeyConstraint": {
+              "baseTableName": "tenant_settings",
+              "baseColumnNames": "tenant_id",
+              "constraintName": "fk_tenant_settings_tenant",
+              "referencedTableName": "tenants",
+              "referencedColumnNames": "id",
+              "onDelete": "CASCADE"
+            }
+          },
+          {
+            "createTable": {
+              "tableName": "tenant_audit_entries",
+              "columns": [
+                {
+                  "column": {
+                    "name": "id",
+                    "type": "BIGSERIAL",
+                    "constraints": {
+                      "primaryKey": true,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "tenant_id",
+                    "type": "UUID",
+                    "constraints": {
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "event_type",
+                    "type": "VARCHAR(64)",
+                    "constraints": {
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "occurred_at",
+                    "type": "TIMESTAMP WITH TIME ZONE",
+                    "constraints": {
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "details_json",
+                    "type": "TEXT",
+                    "constraints": {
+                      "nullable": false
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "createIndex": {
+              "tableName": "tenant_audit_entries",
+              "indexName": "idx_tenant_audit_entries_tenant_id",
+              "columns": [
+                {
+                  "column": {
+                    "name": "tenant_id"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "addForeignKeyConstraint": {
+              "baseTableName": "tenant_audit_entries",
+              "baseColumnNames": "tenant_id",
+              "constraintName": "fk_tenant_audit_entries_tenant",
+              "referencedTableName": "tenants",
+              "referencedColumnNames": "id",
+              "onDelete": "CASCADE"
+            }
+          },
+          {
+            "createTable": {
+              "tableName": "tenant_document_sequences",
+              "columns": [
+                {
+                  "column": {
+                    "name": "id",
+                    "type": "BIGSERIAL",
+                    "constraints": {
+                      "primaryKey": true,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "tenant_id",
+                    "type": "UUID",
+                    "constraints": {
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "document_type",
+                    "type": "VARCHAR(64)",
+                    "constraints": {
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "facility_scope",
+                    "type": "VARCHAR(64)",
+                    "constraints": {
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "prefix",
+                    "type": "VARCHAR(64)",
+                    "constraints": {
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "next_value",
+                    "type": "BIGINT",
+                    "constraints": {
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "reset_policy",
+                    "type": "VARCHAR(32)",
+                    "constraints": {
+                      "nullable": false
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "addUniqueConstraint": {
+              "tableName": "tenant_document_sequences",
+              "columnNames": "tenant_id,document_type,facility_scope",
+              "constraintName": "uk_tenant_document_sequences_scope"
+            }
+          },
+          {
+            "createIndex": {
+              "tableName": "tenant_document_sequences",
+              "indexName": "idx_tenant_document_sequences_tenant_id",
+              "columns": [
+                {
+                  "column": {
+                    "name": "tenant_id"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "addForeignKeyConstraint": {
+              "baseTableName": "tenant_document_sequences",
+              "baseColumnNames": "tenant_id",
+              "constraintName": "fk_tenant_document_sequences_tenant",
+              "referencedTableName": "tenants",
+              "referencedColumnNames": "id",
+              "onDelete": "CASCADE"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

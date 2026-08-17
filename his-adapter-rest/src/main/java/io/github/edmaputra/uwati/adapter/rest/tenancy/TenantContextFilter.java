@@ -12,21 +12,20 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import io.github.edmaputra.uwati.core.tenancy.application.TenantContextScope;
 import io.github.edmaputra.uwati.core.tenancy.domain.TenantId;
+import lombok.RequiredArgsConstructor;
 
 @Component
+@RequiredArgsConstructor
 public class TenantContextFilter extends OncePerRequestFilter {
 
 	public static final String TENANT_ID_HEADER = "X-Tenant-Id";
 
 	private final TenantContextScope tenantContext;
 
-	public TenantContextFilter(TenantContextScope tenantContext) {
-		this.tenantContext = tenantContext;
-	}
-
 	@Override
 	protected boolean shouldNotFilter(HttpServletRequest request) {
-		return !request.getRequestURI().startsWith("/api/");
+		String requestUri = request.getRequestURI();
+		return !requestUri.startsWith("/api/") || requestUri.startsWith("/api/platform/");
 	}
 
 	@Override

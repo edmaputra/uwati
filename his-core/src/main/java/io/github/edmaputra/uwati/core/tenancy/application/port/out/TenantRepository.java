@@ -8,4 +8,8 @@ import io.github.edmaputra.uwati.core.tenancy.domain.TenantId;
 public interface TenantRepository {
 
 	Optional<Tenant> findById(TenantId tenantId);
+
+	Optional<Tenant> findByDisplayName(String displayName);
+
+	Tenant save(Tenant tenant);
 }
