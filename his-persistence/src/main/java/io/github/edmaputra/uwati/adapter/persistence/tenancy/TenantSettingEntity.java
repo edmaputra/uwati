@@ -11,7 +11,9 @@ import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 
 @Entity
 @Table(
@@ -21,6 +23,8 @@ import lombok.NoArgsConstructor;
 				columnNames = { "tenant_id", "setting_key" }),
 		indexes = @Index(name = "idx_tenant_settings_tenant_id", columnList = "tenant_id"))
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Getter
+@Accessors(fluent = true)
 class TenantSettingEntity {
 
 	@Id
@@ -42,6 +46,11 @@ class TenantSettingEntity {
 	TenantSettingEntity(UUID tenantId, String settingKey, String settingValue, int revision) {
 		this.tenantId = tenantId;
 		this.settingKey = settingKey;
+		this.settingValue = settingValue;
+		this.revision = revision;
+	}
+
+	void update(String settingValue, int revision) {
 		this.settingValue = settingValue;
 		this.revision = revision;
 	}

@@ -8,8 +8,8 @@
 		<artifactId>uwati</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
-	<artifactId>his-adapter-persistence</artifactId>
-	<name>Uwati HIS Persistence Adapter</name>
+	<artifactId>his-rest</artifactId>
+	<name>Uwati HIS REST</name>
 	<dependencies>
 		<dependency>
 			<groupId>io.github.edmaputra</groupId>
@@ -18,16 +18,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-data-jpa</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.liquibase</groupId>
-			<artifactId>liquibase-core</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.postgresql</groupId>
-			<artifactId>postgresql</artifactId>
-			<scope>runtime</scope>
+			<artifactId>spring-boot-starter-webmvc</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.projectlombok</groupId>
