@@ -13,6 +13,11 @@
 	<dependencies>
 		<dependency>
 			<groupId>io.github.edmaputra</groupId>
+			<artifactId>his-core</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.github.edmaputra</groupId>
 			<artifactId>his-adapter-rest</artifactId>
 			<version>${project.version}</version>
 		</dependency>

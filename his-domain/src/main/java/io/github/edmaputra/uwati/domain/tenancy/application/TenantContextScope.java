@@ -1,8 +1,8 @@
-package io.github.edmaputra.uwati.core.tenancy.application;
+package io.github.edmaputra.uwati.domain.tenancy.application;
 
 import java.lang.ScopedValue;
 
-import io.github.edmaputra.uwati.core.tenancy.domain.TenantId;
+import io.github.edmaputra.uwati.domain.tenancy.domain.TenantId;
 
 public interface TenantContextScope extends TenantContext {
 

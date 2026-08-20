@@ -6,9 +6,9 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Component;
 
-import io.github.edmaputra.uwati.core.tenancy.application.port.out.TenantRepository;
-import io.github.edmaputra.uwati.core.tenancy.domain.Tenant;
-import io.github.edmaputra.uwati.core.tenancy.domain.TenantId;
+import io.github.edmaputra.uwati.domain.tenancy.application.port.out.TenantRepository;
+import io.github.edmaputra.uwati.domain.tenancy.domain.Tenant;
+import io.github.edmaputra.uwati.domain.tenancy.domain.TenantId;
 import lombok.RequiredArgsConstructor;
 
 @Component

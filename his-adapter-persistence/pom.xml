@@ -13,7 +13,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>io.github.edmaputra</groupId>
-			<artifactId>his-core</artifactId>
+			<artifactId>his-domain</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>

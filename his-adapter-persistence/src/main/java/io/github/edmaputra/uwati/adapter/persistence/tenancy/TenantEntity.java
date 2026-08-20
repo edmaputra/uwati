@@ -11,7 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
-import io.github.edmaputra.uwati.core.tenancy.domain.TenantStatus;
+import io.github.edmaputra.uwati.domain.tenancy.domain.TenantStatus;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

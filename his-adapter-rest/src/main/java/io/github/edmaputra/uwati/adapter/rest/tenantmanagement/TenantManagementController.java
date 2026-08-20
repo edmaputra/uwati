@@ -10,10 +10,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-import io.github.edmaputra.uwati.core.tenancy.application.port.in.CreateTenantCommand;
-import io.github.edmaputra.uwati.core.tenancy.application.port.in.CreateTenantUseCase;
-import io.github.edmaputra.uwati.core.tenancy.domain.DuplicateTenantDisplayNameException;
-import io.github.edmaputra.uwati.core.tenancy.domain.Tenant;
+import io.github.edmaputra.uwati.domain.tenancy.application.port.in.CreateTenantCommand;
+import io.github.edmaputra.uwati.domain.tenancy.application.port.in.CreateTenantUseCase;
+import io.github.edmaputra.uwati.domain.tenancy.domain.DuplicateTenantDisplayNameException;
+import io.github.edmaputra.uwati.domain.tenancy.domain.Tenant;
 import lombok.RequiredArgsConstructor;
 
 @RestController

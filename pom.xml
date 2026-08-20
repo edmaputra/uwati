@@ -16,9 +16,9 @@
 	<description>Multi-tenant Hospital Information System backend</description>
 	<properties>
 		<java.version>25</java.version>
-		<lombok.version>1.18.38</lombok.version>
 	</properties>
 	<modules>
+		<module>his-domain</module>
 		<module>his-core</module>
 		<module>his-adapter-rest</module>
 		<module>his-adapter-persistence</module>
@@ -35,7 +35,6 @@
 							<path>
 								<groupId>org.projectlombok</groupId>
 								<artifactId>lombok</artifactId>
-								<version>${lombok.version}</version>
 							</path>
 						</annotationProcessorPaths>
 					</configuration>

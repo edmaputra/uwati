@@ -1,4 +1,4 @@
-package io.github.edmaputra.uwati.core.tenancy.domain;
+package io.github.edmaputra.uwati.domain.tenancy.domain;
 
 public enum TenantStatus {
 

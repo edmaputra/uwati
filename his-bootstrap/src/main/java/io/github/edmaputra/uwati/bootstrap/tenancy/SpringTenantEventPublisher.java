@@ -3,8 +3,8 @@ package io.github.edmaputra.uwati.bootstrap.tenancy;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
-import io.github.edmaputra.uwati.core.tenancy.application.port.out.TenantEventPublisher;
-import io.github.edmaputra.uwati.core.tenancy.domain.event.TenantCreated;
+import io.github.edmaputra.uwati.domain.tenancy.application.port.out.TenantEventPublisher;
+import io.github.edmaputra.uwati.domain.tenancy.domain.event.TenantCreated;
 import lombok.RequiredArgsConstructor;
 
 @Component

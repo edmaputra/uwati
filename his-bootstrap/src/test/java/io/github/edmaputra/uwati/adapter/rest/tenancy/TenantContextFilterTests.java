@@ -9,7 +9,7 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import io.github.edmaputra.uwati.bootstrap.tenancy.ScopedValueTenantContext;
-import io.github.edmaputra.uwati.core.tenancy.domain.TenantId;
+import io.github.edmaputra.uwati.domain.tenancy.domain.TenantId;
 
 class TenantContextFilterTests {
 

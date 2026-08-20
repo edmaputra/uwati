@@ -11,15 +11,15 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 
-import io.github.edmaputra.uwati.core.tenancy.application.port.in.CreateTenantCommand;
-import io.github.edmaputra.uwati.core.tenancy.application.port.out.TenantEventPublisher;
-import io.github.edmaputra.uwati.core.tenancy.application.port.out.TenantRepository;
 import io.github.edmaputra.uwati.core.tenancy.application.service.CreateTenantService;
-import io.github.edmaputra.uwati.core.tenancy.domain.DuplicateTenantDisplayNameException;
-import io.github.edmaputra.uwati.core.tenancy.domain.Tenant;
-import io.github.edmaputra.uwati.core.tenancy.domain.TenantId;
-import io.github.edmaputra.uwati.core.tenancy.domain.TenantStatus;
-import io.github.edmaputra.uwati.core.tenancy.domain.event.TenantCreated;
+import io.github.edmaputra.uwati.domain.tenancy.application.port.in.CreateTenantCommand;
+import io.github.edmaputra.uwati.domain.tenancy.application.port.out.TenantEventPublisher;
+import io.github.edmaputra.uwati.domain.tenancy.application.port.out.TenantRepository;
+import io.github.edmaputra.uwati.domain.tenancy.domain.DuplicateTenantDisplayNameException;
+import io.github.edmaputra.uwati.domain.tenancy.domain.Tenant;
+import io.github.edmaputra.uwati.domain.tenancy.domain.TenantId;
+import io.github.edmaputra.uwati.domain.tenancy.domain.TenantStatus;
+import io.github.edmaputra.uwati.domain.tenancy.domain.event.TenantCreated;
 
 class CreateTenantServiceTests {
 

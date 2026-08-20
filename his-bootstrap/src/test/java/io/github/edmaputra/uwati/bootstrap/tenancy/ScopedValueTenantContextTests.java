@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 
-import io.github.edmaputra.uwati.core.tenancy.domain.TenantId;
+import io.github.edmaputra.uwati.domain.tenancy.domain.TenantId;
 
 class ScopedValueTenantContextTests {
 

@@ -6,8 +6,8 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Component;
 
-import io.github.edmaputra.uwati.core.tenancy.application.TenantContextScope;
-import io.github.edmaputra.uwati.core.tenancy.domain.TenantId;
+import io.github.edmaputra.uwati.domain.tenancy.application.TenantContextScope;
+import io.github.edmaputra.uwati.domain.tenancy.domain.TenantId;
 
 @Component
 public class ScopedValueTenantContext implements TenantContextScope {

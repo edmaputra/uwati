@@ -1,4 +1,4 @@
-package io.github.edmaputra.uwati.core.tenancy.application.port.in;
+package io.github.edmaputra.uwati.domain.tenancy.application.port.in;
 
 public record CreateTenantCommand(String legalName, String displayName) {
 

@@ -1,4 +1,4 @@
-package io.github.edmaputra.uwati.core.domain;
+package io.github.edmaputra.uwati.domain;
 
 /**
  * The bounded domains that make up the Hospital Information System.

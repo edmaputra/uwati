@@ -1,4 +1,4 @@
-package io.github.edmaputra.uwati.core.tenancy.domain;
+package io.github.edmaputra.uwati.domain.tenancy.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;

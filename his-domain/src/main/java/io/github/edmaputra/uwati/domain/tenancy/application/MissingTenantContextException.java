@@ -1,4 +1,4 @@
-package io.github.edmaputra.uwati.core.tenancy.application;
+package io.github.edmaputra.uwati.domain.tenancy.application;
 
 public class MissingTenantContextException extends IllegalStateException {
 

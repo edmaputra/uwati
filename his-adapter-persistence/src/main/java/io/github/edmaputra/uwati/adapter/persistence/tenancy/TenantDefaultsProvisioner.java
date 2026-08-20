@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
-import io.github.edmaputra.uwati.core.tenancy.domain.event.TenantCreated;
+import io.github.edmaputra.uwati.domain.tenancy.domain.event.TenantCreated;
 import lombok.RequiredArgsConstructor;
 
 /**
