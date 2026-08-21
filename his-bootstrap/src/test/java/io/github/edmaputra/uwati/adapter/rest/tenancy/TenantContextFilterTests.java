@@ -8,14 +8,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
-import io.github.edmaputra.uwati.bootstrap.tenancy.ThreadLocalTenantContext;
-import io.github.edmaputra.uwati.core.tenancy.domain.TenantId;
+import io.github.edmaputra.uwati.bootstrap.tenancy.ScopedValueTenantContext;
+import io.github.edmaputra.uwati.domain.tenancy.domain.TenantId;
 
 class TenantContextFilterTests {
 
 	@Test
 	void rejectsApiRequestsWithoutATenantHeader() throws Exception {
-		TenantContextFilter filter = new TenantContextFilter(new ThreadLocalTenantContext());
+		TenantContextFilter filter = new TenantContextFilter(new ScopedValueTenantContext());
 		MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/v1/patients");
 		MockHttpServletResponse response = new MockHttpServletResponse();
 
@@ -29,7 +29,7 @@ class TenantContextFilterTests {
 
 	@Test
 	void makesTheHeaderTenantAvailableOnlyDuringTheApiRequest() throws Exception {
-		ThreadLocalTenantContext context = new ThreadLocalTenantContext();
+		ScopedValueTenantContext context = new ScopedValueTenantContext();
 		TenantContextFilter filter = new TenantContextFilter(context);
 		TenantId tenantId = TenantId.generate();
 		MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/v1/patients");
@@ -42,5 +42,18 @@ class TenantContextFilterTests {
 
 		assertThat(observedTenantId.get()).isEqualTo(tenantId);
 		assertThat(context.currentTenantId()).isEmpty();
+	}
+
+	@Test
+	void skipsTenantHeaderValidationForPlatformTenantManagementEndpoints() throws Exception {
+		TenantContextFilter filter = new TenantContextFilter(new ScopedValueTenantContext());
+		MockHttpServletRequest request = new MockHttpServletRequest("POST", "/api/platform/tenants");
+		MockHttpServletResponse response = new MockHttpServletResponse();
+		AtomicReference<Boolean> chainCalled = new AtomicReference<>(false);
+
+		filter.doFilter(request, response, (ignoredRequest, ignoredResponse) -> chainCalled.set(true));
+
+		assertThat(chainCalled.get()).isTrue();
+		assertThat(response.getStatus()).isEqualTo(200);
 	}
 }

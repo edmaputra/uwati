@@ -18,10 +18,29 @@
 		<java.version>25</java.version>
 	</properties>
 	<modules>
+		<module>his-domain</module>
 		<module>his-core</module>
-		<module>his-adapter-rest</module>
-		<module>his-adapter-persistence</module>
+		<module>his-rest</module>
+		<module>his-persistence</module>
 		<module>his-bootstrap</module>
 	</modules>
+	<build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<configuration>
+						<annotationProcessorPaths>
+							<path>
+								<groupId>org.projectlombok</groupId>
+								<artifactId>lombok</artifactId>
+							</path>
+						</annotationProcessorPaths>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
 
 </project>

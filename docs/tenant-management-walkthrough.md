@@ -85,9 +85,10 @@ The context must also be established for:
 - integration callbacks
 - command-line administration tools
 
-Thread-local context is suitable for the initial synchronous servlet flow only.
-When asynchronous or reactive processing is introduced, propagate the tenant context
-explicitly in the task or message envelope; do not rely on a thread-local value.
+Use Java `ScopedValue` for the initial synchronous servlet flow so the context is
+lexically bounded to the request. When asynchronous or reactive processing is
+introduced, propagate the tenant context explicitly in the task or message envelope;
+do not rely on implicit context propagation.
 
 ### 4. Suspend a tenant
 

@@ -10,4 +10,16 @@
 	</parent>
 	<artifactId>his-core</artifactId>
 	<name>Uwati HIS Core</name>
+	<dependencies>
+		<dependency>
+			<groupId>io.github.edmaputra</groupId>
+			<artifactId>his-domain</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<optional>true</optional>
+		</dependency>
+	</dependencies>
 </project>
