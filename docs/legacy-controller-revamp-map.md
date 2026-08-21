@@ -33,18 +33,15 @@ The following ideas are no longer part of the target direction and should not dr
 
 Minimum target modules:
 
+- `his-domain`
+  - pure business rules, entities, value objects, ports, and domain events
 - `his-core`
-  - business rules
-  - entities
-  - value objects
-  - use cases
-  - ports
-  - tenant-aware domain/application logic
-- `his-adapter-rest`
+  - application use cases and services implementing inbound ports
+- `his-rest`
   - REST controllers
   - request/response DTOs
   - mapping between HTTP and use cases
-- `his-adapter-persistence`
+- `his-persistence`
   - repository implementations
   - persistence entities
   - database access
@@ -346,7 +343,7 @@ This is the reduced view of the old controller set from an HIS perspective.
 ## Recommended migration order
 
 1. Define the target HIS domains and vocabulary in English.
-2. Split the codebase into `his-core`, `his-adapter-rest`, `his-adapter-persistence`, and `his-bootstrap`.
+2. Split the codebase into `his-domain`, `his-core`, `his-rest`, `his-persistence`, and `his-bootstrap`.
 3. Introduce the tenant model early.
 4. Define audit-event and scheduled-work ports early, including tenant-context propagation requirements.
 5. Extract the first core use cases from patient, medical record, medicine, and purchasing flows.

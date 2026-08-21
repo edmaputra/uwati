@@ -18,12 +18,12 @@
 		</dependency>
 		<dependency>
 			<groupId>io.github.edmaputra</groupId>
-			<artifactId>his-adapter-rest</artifactId>
+			<artifactId>his-rest</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>io.github.edmaputra</groupId>
-			<artifactId>his-adapter-persistence</artifactId>
+			<artifactId>his-persistence</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>
@@ -49,6 +49,11 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-webmvc-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-webflux</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>

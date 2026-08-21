@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 
 import io.github.edmaputra.uwati.domain.tenancy.application.port.in.ConfigureTenantSettingsCommand;
 import io.github.edmaputra.uwati.domain.tenancy.application.port.in.ConfigureTenantSettingsCommand.SettingEntry;
@@ -20,10 +19,8 @@ import io.github.edmaputra.uwati.domain.tenancy.application.port.in.ConfigureTen
 import io.github.edmaputra.uwati.domain.tenancy.application.port.in.CreateTenantCommand;
 import io.github.edmaputra.uwati.domain.tenancy.application.port.in.CreateTenantUseCase;
 import io.github.edmaputra.uwati.domain.tenancy.application.port.in.GetTenantSettingsUseCase;
-import io.github.edmaputra.uwati.domain.tenancy.domain.DuplicateTenantDisplayNameException;
 import io.github.edmaputra.uwati.domain.tenancy.domain.Tenant;
 import io.github.edmaputra.uwati.domain.tenancy.domain.TenantId;
-import io.github.edmaputra.uwati.domain.tenancy.domain.TenantNotFoundException;
 import io.github.edmaputra.uwati.domain.tenancy.domain.TenantSetting;
 import lombok.RequiredArgsConstructor;
 
@@ -38,54 +35,33 @@ public class TenantManagementController {
 
 	@PostMapping
 	public ResponseEntity<TenantResponse> createTenant(@RequestBody CreateTenantRequest request) {
-		try {
-			Tenant tenant =
-					createTenantUseCase.execute(new CreateTenantCommand(request.legalName(), request.displayName()));
-			return ResponseEntity.status(HttpStatus.CREATED).body(TenantResponse.from(tenant));
+		if (request == null) {
+			throw new IllegalArgumentException("Request body must not be null.");
 		}
-		catch (DuplicateTenantDisplayNameException exception) {
-			throw new ResponseStatusException(HttpStatus.CONFLICT, exception.getMessage(), exception);
-		}
-		catch (IllegalArgumentException exception) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, exception.getMessage(), exception);
-		}
+		Tenant tenant =
+				createTenantUseCase.execute(new CreateTenantCommand(request.legalName(), request.displayName()));
+		return ResponseEntity.status(HttpStatus.CREATED).body(TenantResponse.from(tenant));
 	}
 
 	@GetMapping("/{tenantId}/settings")
 	public ResponseEntity<List<TenantSettingResponse>> getSettings(@PathVariable String tenantId) {
-		try {
-			List<TenantSetting> settings = getTenantSettingsUseCase.execute(TenantId.from(tenantId));
-			return ResponseEntity.ok(settings.stream().map(TenantSettingResponse::from).toList());
-		}
-		catch (TenantNotFoundException exception) {
-			throw new ResponseStatusException(HttpStatus.NOT_FOUND, exception.getMessage(), exception);
-		}
-		catch (IllegalArgumentException exception) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, exception.getMessage(), exception);
-		}
+		List<TenantSetting> settings = getTenantSettingsUseCase.execute(TenantId.from(tenantId));
+		return ResponseEntity.ok(settings.stream().map(TenantSettingResponse::from).toList());
 	}
 
 	@PutMapping("/{tenantId}/settings")
 	public ResponseEntity<List<TenantSettingResponse>> configureSettings(
 			@PathVariable String tenantId,
 			@RequestBody ConfigureTenantSettingsRequest request) {
-		try {
-			if (request == null || request.settings() == null) {
-				throw new IllegalArgumentException("Settings list must not be null.");
-			}
-			List<SettingEntry> entries = request.settings().stream()
-					.map(s -> new SettingEntry(s.key(), s.value()))
-					.toList();
-			List<TenantSetting> updated = configureTenantSettingsUseCase.execute(
-					new ConfigureTenantSettingsCommand(TenantId.from(tenantId), entries));
-			return ResponseEntity.ok(updated.stream().map(TenantSettingResponse::from).toList());
+		if (request == null || request.settings() == null) {
+			throw new IllegalArgumentException("Settings list must not be null.");
 		}
-		catch (TenantNotFoundException exception) {
-			throw new ResponseStatusException(HttpStatus.NOT_FOUND, exception.getMessage(), exception);
-		}
-		catch (IllegalArgumentException exception) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, exception.getMessage(), exception);
-		}
+		List<SettingEntry> entries = request.settings().stream()
+				.map(s -> new SettingEntry(s.key(), s.value()))
+				.toList();
+		List<TenantSetting> updated = configureTenantSettingsUseCase.execute(
+				new ConfigureTenantSettingsCommand(TenantId.from(tenantId), entries));
+		return ResponseEntity.ok(updated.stream().map(TenantSettingResponse::from).toList());
 	}
 
 	public record CreateTenantRequest(String legalName, String displayName) {

@@ -20,6 +20,7 @@ import io.github.edmaputra.uwati.domain.tenancy.domain.Tenant;
 import io.github.edmaputra.uwati.domain.tenancy.domain.TenantId;
 import io.github.edmaputra.uwati.domain.tenancy.domain.TenantStatus;
 import io.github.edmaputra.uwati.domain.tenancy.domain.event.TenantCreated;
+import io.github.edmaputra.uwati.domain.tenancy.domain.event.TenantSettingsUpdated;
 
 class CreateTenantServiceTests {
 
@@ -48,7 +49,7 @@ class CreateTenantServiceTests {
 	@Test
 	void rejectsEmptyRequiredNames() {
 		CreateTenantService service =
-				new CreateTenantService(new InMemoryTenantRepository(), e -> {});
+				new CreateTenantService(new InMemoryTenantRepository(), new CapturingEventPublisher());
 
 		assertThatIllegalArgumentException().isThrownBy(() -> service.execute(new CreateTenantCommand(" ", "Uwati Health")))
 				.withMessage("Tenant legal name must not be blank.");
@@ -75,7 +76,7 @@ class CreateTenantServiceTests {
 	@Test
 	void rejectsReusingTheDisplayNameForAnotherLegalName() {
 		TenantRepository repository = new InMemoryTenantRepository();
-		CreateTenantService service = new CreateTenantService(repository, e -> {});
+		CreateTenantService service = new CreateTenantService(repository, new CapturingEventPublisher());
 
 		service.execute(new CreateTenantCommand("Uwati Health Services Ltd.", "Uwati Health"));
 
@@ -112,10 +113,16 @@ class CreateTenantServiceTests {
 
 	private static final class CapturingEventPublisher implements TenantEventPublisher {
 		private final List<TenantCreated> events = new ArrayList<>();
+		private final List<TenantSettingsUpdated> settingsEvents = new ArrayList<>();
 
 		@Override
 		public void publish(TenantCreated event) {
 			events.add(event);
+		}
+
+		@Override
+		public void publish(TenantSettingsUpdated event) {
+			settingsEvents.add(event);
 		}
 
 		List<TenantCreated> events() {
