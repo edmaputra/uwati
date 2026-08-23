@@ -3,7 +3,6 @@ package io.github.edmaputra.uwati.adapter.persistence.audit;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import java.time.Instant;
 import java.util.List;
@@ -13,7 +12,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
-import io.github.edmaputra.uwati.domain.audit.AuditContext;
 import io.github.edmaputra.uwati.domain.tenancy.domain.Tenant;
 import io.github.edmaputra.uwati.domain.tenancy.domain.TenantId;
 import io.github.edmaputra.uwati.domain.tenancy.domain.TenantSetting;
@@ -25,21 +23,16 @@ import io.github.edmaputra.uwati.domain.tenancy.domain.event.TenantSettingsUpdat
 class AuditTrailEventListenerTests {
 
 	private AuditEntryJpaRepository auditRepository;
-	private AuditContext auditContext;
 	private AuditTrailEventListener listener;
 
 	@BeforeEach
 	void setUp() {
 		auditRepository = mock(AuditEntryJpaRepository.class);
-		auditContext = mock(AuditContext.class);
-		when(auditContext.requireActor()).thenReturn("operator-01");
-		when(auditContext.requireCorrelationId()).thenReturn("trace-abc-123");
-
-		listener = new AuditTrailEventListener(auditRepository, auditContext);
+		listener = new AuditTrailEventListener(auditRepository);
 	}
 
 	@Test
-	@DisplayName("persists common audit entry on TenantCreated event")
+	@DisplayName("persists audit entry on TenantCreated with actor and correlationId from event")
 	void recordsTenantCreatedAuditEntry() {
 		TenantId tenantId = TenantId.generate();
 		Instant now = Instant.now();
@@ -51,7 +44,7 @@ class AuditTrailEventListenerTests {
 				now,
 				now);
 
-		TenantCreated event = new TenantCreated(tenant, now);
+		TenantCreated event = new TenantCreated(tenant, "operator-01", "trace-abc-123", now);
 		listener.onTenantCreated(event);
 
 		ArgumentCaptor<AuditEntryEntity> captor = ArgumentCaptor.forClass(AuditEntryEntity.class);
@@ -73,7 +66,7 @@ class AuditTrailEventListenerTests {
 	}
 
 	@Test
-	@DisplayName("persists common audit entry on TenantSettingsUpdated event with collection diff")
+	@DisplayName("persists audit entry on TenantSettingsUpdated with actor, correlationId, and collection diff")
 	void recordsTenantSettingsUpdatedAuditEntry() {
 		TenantId tenantId = TenantId.generate();
 		Instant now = Instant.now();
@@ -86,7 +79,8 @@ class AuditTrailEventListenerTests {
 				new TenantSetting(tenantId, "organization.locale", "id-ID", 2),
 				new TenantSetting(tenantId, "inventory.unit", "BOX", 1));
 
-		TenantSettingsUpdated event = new TenantSettingsUpdated(tenantId, previousSettings, updatedSettings, now);
+		TenantSettingsUpdated event = new TenantSettingsUpdated(
+				tenantId, previousSettings, updatedSettings, "operator-01", "trace-abc-123", now);
 		listener.onTenantSettingsUpdated(event);
 
 		ArgumentCaptor<AuditEntryEntity> captor = ArgumentCaptor.forClass(AuditEntryEntity.class);
@@ -105,5 +99,22 @@ class AuditTrailEventListenerTests {
 		assertThat(json).contains("\"added\":[{\"key\":\"inventory.unit\",\"value\":\"BOX\",\"revision\":1}]");
 		assertThat(json).contains("\"removed\":[{\"key\":\"old.feature\",\"value\":\"true\",\"revision\":1}]");
 		assertThat(json).contains("\"changed\":[{\"key\":\"organization.locale\",\"fields\":{\"revision\":{\"old\":1,\"new\":2},\"value\":{\"old\":\"en-US\",\"new\":\"id-ID\"}}}]");
+	}
+
+	@Test
+	@DisplayName("uses 'unknown' as fallback correlationId when event carries null")
+	void fallsBackToUnknownCorrelationId() {
+		TenantId tenantId = TenantId.generate();
+		Instant now = Instant.now();
+		Tenant tenant = new Tenant(tenantId, "Test Clinic Ltd.", "Test Clinic",
+				TenantStatus.ACTIVE, now, now);
+
+		TenantCreated event = new TenantCreated(tenant, "system", null, now);
+		listener.onTenantCreated(event);
+
+		ArgumentCaptor<AuditEntryEntity> captor = ArgumentCaptor.forClass(AuditEntryEntity.class);
+		verify(auditRepository).save(captor.capture());
+
+		assertThat(captor.getValue().getCorrelationId()).isEqualTo("unknown");
 	}
 }

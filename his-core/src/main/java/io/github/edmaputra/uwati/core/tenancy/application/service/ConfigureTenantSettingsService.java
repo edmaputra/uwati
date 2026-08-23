@@ -15,7 +15,6 @@ import io.github.edmaputra.uwati.domain.tenancy.application.port.out.TenantSetti
 import io.github.edmaputra.uwati.domain.tenancy.domain.TenantNotFoundException;
 import io.github.edmaputra.uwati.domain.tenancy.domain.TenantSetting;
 import io.github.edmaputra.uwati.domain.tenancy.domain.TenantSettingValidator;
-import io.github.edmaputra.uwati.domain.tenancy.domain.event.SettingChange;
 import io.github.edmaputra.uwati.domain.tenancy.domain.event.TenantSettingsUpdated;
 import lombok.RequiredArgsConstructor;
 
@@ -39,33 +38,23 @@ public class ConfigureTenantSettingsService implements ConfigureTenantSettingsUs
 			TenantSettingValidator.validate(entry.key(), entry.value());
 		}
 
+		List<TenantSetting> previousSettings = tenantSettingRepository.findAllByTenantId(command.tenantId());
 		List<TenantSetting> settingsToSave = new ArrayList<>();
-		List<SettingChange> changes = new ArrayList<>();
 
 		for (SettingEntry entry : command.settings()) {
 			Optional<TenantSetting> existing =
 					tenantSettingRepository.findByTenantIdAndKey(command.tenantId(), entry.key());
 
-			TenantSetting setting;
-			if (existing.isPresent()) {
-				TenantSetting current = existing.get();
-				setting = current.withIncrementedRevision(entry.value());
-				if (!current.value().equals(entry.value())) {
-					changes.add(SettingChange.changed(
-							entry.key(), current.value(), entry.value(),
-							current.revision(), setting.revision()));
-				}
-			} else {
-				setting = new TenantSetting(command.tenantId(), entry.key(), entry.value(), 1);
-				changes.add(SettingChange.added(entry.key(), entry.value(), 1));
-			}
+			TenantSetting setting = existing
+					.map(current -> current.withIncrementedRevision(entry.value()))
+					.orElseGet(() -> new TenantSetting(command.tenantId(), entry.key(), entry.value(), 1));
 
 			settingsToSave.add(setting);
 		}
 
 		List<TenantSetting> saved = tenantSettingRepository.saveAll(settingsToSave);
 		tenantEventPublisher.publish(
-				TenantSettingsUpdated.of(command.tenantId(), saved, changes,
+				TenantSettingsUpdated.of(command.tenantId(), previousSettings, saved,
 						context.actor(), context.correlationId()));
 		return saved;
 	}

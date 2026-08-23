@@ -10,7 +10,6 @@ import io.github.edmaputra.uwati.core.audit.AuditDiffEngine;
 import io.github.edmaputra.uwati.core.audit.AuditDiffEngine.CollectionDiff;
 import io.github.edmaputra.uwati.core.audit.AuditDiffEngine.FieldDiff;
 import io.github.edmaputra.uwati.core.audit.AuditJsonFormatter;
-import io.github.edmaputra.uwati.domain.audit.AuditContext;
 import io.github.edmaputra.uwati.domain.tenancy.domain.TenantSetting;
 import io.github.edmaputra.uwati.domain.tenancy.domain.event.TenantCreated;
 import io.github.edmaputra.uwati.domain.tenancy.domain.event.TenantSettingsUpdated;
@@ -18,13 +17,13 @@ import lombok.RequiredArgsConstructor;
 
 /**
  * Listens to domain events and persists common, structured audit-trail entries.
+ * Actor and correlation ID are read directly from each event, not from an ambient context.
  */
 @Component
 @RequiredArgsConstructor
 public class AuditTrailEventListener {
 
 	private final AuditEntryJpaRepository auditEntries;
-	private final AuditContext auditContext;
 
 	@TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
 	public void onTenantCreated(TenantCreated event) {
@@ -44,8 +43,8 @@ public class AuditTrailEventListener {
 				"Tenant",
 				tenant.id().value().toString(),
 				"CREATE",
-				auditContext.requireActor(),
-				auditContext.requireCorrelationId(),
+				event.actor(),
+				event.correlationId() != null ? event.correlationId() : "unknown",
 				event.occurredAt(),
 				changesJson));
 	}
@@ -73,8 +72,8 @@ public class AuditTrailEventListener {
 				"TenantSetting",
 				event.tenantId().value().toString(),
 				"UPDATE",
-				auditContext.requireActor(),
-				auditContext.requireCorrelationId(),
+				event.actor(),
+				event.correlationId() != null ? event.correlationId() : "unknown",
 				event.occurredAt(),
 				changesJson));
 	}

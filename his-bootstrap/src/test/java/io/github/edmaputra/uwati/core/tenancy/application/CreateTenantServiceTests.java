@@ -12,6 +12,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 import io.github.edmaputra.uwati.core.tenancy.application.service.CreateTenantService;
+import io.github.edmaputra.uwati.domain.tenancy.application.OperationContext;
 import io.github.edmaputra.uwati.domain.tenancy.application.port.in.CreateTenantCommand;
 import io.github.edmaputra.uwati.domain.tenancy.application.port.out.TenantEventPublisher;
 import io.github.edmaputra.uwati.domain.tenancy.application.port.out.TenantRepository;
@@ -24,13 +25,15 @@ import io.github.edmaputra.uwati.domain.tenancy.domain.event.TenantSettingsUpdat
 
 class CreateTenantServiceTests {
 
+	private static final OperationContext CONTEXT = OperationContext.of("creator-user", "trace-create-001");
+
 	@Test
 	void createsAnActiveTenantWithGeneratedIdentity() {
 		TenantRepository repository = new InMemoryTenantRepository();
 		CapturingEventPublisher publisher = new CapturingEventPublisher();
 		CreateTenantService service = new CreateTenantService(repository, publisher);
 
-		Tenant tenant = service.execute(new CreateTenantCommand("Uwati Health Services Ltd.", "Uwati Health"));
+		Tenant tenant = service.execute(new CreateTenantCommand("Uwati Health Services Ltd.", "Uwati Health"), CONTEXT);
 
 		assertThat(tenant.id()).isNotNull();
 		assertThat(tenant.legalName()).isEqualTo("Uwati Health Services Ltd.");
@@ -43,6 +46,8 @@ class CreateTenantServiceTests {
 		assertThat(publisher.events()).hasSize(1);
 		TenantCreated event = publisher.events().get(0);
 		assertThat(event.tenant()).isEqualTo(tenant);
+		assertThat(event.actor()).isEqualTo("creator-user");
+		assertThat(event.correlationId()).isEqualTo("trace-create-001");
 		assertThat(event.occurredAt()).isNotNull();
 	}
 
@@ -51,10 +56,10 @@ class CreateTenantServiceTests {
 		CreateTenantService service =
 				new CreateTenantService(new InMemoryTenantRepository(), new CapturingEventPublisher());
 
-		assertThatIllegalArgumentException().isThrownBy(() -> service.execute(new CreateTenantCommand(" ", "Uwati Health")))
+		assertThatIllegalArgumentException().isThrownBy(() -> service.execute(new CreateTenantCommand(" ", "Uwati Health"), CONTEXT))
 				.withMessage("Tenant legal name must not be blank.");
 		assertThatIllegalArgumentException()
-				.isThrownBy(() -> service.execute(new CreateTenantCommand("Uwati Health Services Ltd.", "  ")))
+				.isThrownBy(() -> service.execute(new CreateTenantCommand("Uwati Health Services Ltd.", "  "), CONTEXT))
 				.withMessage("Tenant display name must not be blank.");
 	}
 
@@ -64,8 +69,8 @@ class CreateTenantServiceTests {
 		CapturingEventPublisher publisher = new CapturingEventPublisher();
 		CreateTenantService service = new CreateTenantService(repository, publisher);
 
-		Tenant first = service.execute(new CreateTenantCommand("Uwati Health Services Ltd.", "Uwati Health"));
-		Tenant second = service.execute(new CreateTenantCommand("Uwati Health Services Ltd.", "Uwati Health"));
+		Tenant first = service.execute(new CreateTenantCommand("Uwati Health Services Ltd.", "Uwati Health"), CONTEXT);
+		Tenant second = service.execute(new CreateTenantCommand("Uwati Health Services Ltd.", "Uwati Health"), CONTEXT);
 
 		assertThat(second).isEqualTo(first);
 		assertThat(repository.findByDisplayName("Uwati Health")).contains(first);
@@ -78,10 +83,10 @@ class CreateTenantServiceTests {
 		TenantRepository repository = new InMemoryTenantRepository();
 		CreateTenantService service = new CreateTenantService(repository, new CapturingEventPublisher());
 
-		service.execute(new CreateTenantCommand("Uwati Health Services Ltd.", "Uwati Health"));
+		service.execute(new CreateTenantCommand("Uwati Health Services Ltd.", "Uwati Health"), CONTEXT);
 
 		assertThatIllegalArgumentException()
-				.isThrownBy(() -> service.execute(new CreateTenantCommand("Another Legal Entity", "Uwati Health")))
+				.isThrownBy(() -> service.execute(new CreateTenantCommand("Another Legal Entity", "Uwati Health"), CONTEXT))
 				.isInstanceOf(DuplicateTenantDisplayNameException.class)
 				.withMessage("A tenant with the display name 'Uwati Health' already exists.");
 	}

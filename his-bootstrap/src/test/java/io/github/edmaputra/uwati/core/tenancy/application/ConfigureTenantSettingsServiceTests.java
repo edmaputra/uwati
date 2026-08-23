@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 
 import io.github.edmaputra.uwati.core.tenancy.application.service.ConfigureTenantSettingsService;
 import io.github.edmaputra.uwati.core.tenancy.application.service.GetTenantSettingsService;
+import io.github.edmaputra.uwati.domain.tenancy.application.OperationContext;
 import io.github.edmaputra.uwati.domain.tenancy.application.port.in.ConfigureTenantSettingsCommand;
 import io.github.edmaputra.uwati.domain.tenancy.application.port.in.ConfigureTenantSettingsCommand.SettingEntry;
 import io.github.edmaputra.uwati.domain.tenancy.application.port.out.TenantEventPublisher;
@@ -33,6 +34,7 @@ import io.github.edmaputra.uwati.domain.tenancy.domain.event.TenantSettingsUpdat
 class ConfigureTenantSettingsServiceTests {
 
 	private static final TenantId TENANT_ID = TenantId.generate();
+	private static final OperationContext CONTEXT = OperationContext.of("test-operator", "trace-001");
 
 	private InMemoryTenantRepository tenantRepository;
 	private InMemoryTenantSettingRepository settingRepository;
@@ -69,7 +71,7 @@ class ConfigureTenantSettingsServiceTests {
 				TENANT_ID,
 				List.of(
 						new SettingEntry("organization.locale", "id-ID"),
-						new SettingEntry("organization.time-zone", "Asia/Jakarta"))));
+						new SettingEntry("organization.time-zone", "Asia/Jakarta"))), CONTEXT);
 
 		assertThat(results).hasSize(2);
 
@@ -86,6 +88,8 @@ class ConfigureTenantSettingsServiceTests {
 		assertThat(event.tenantId()).isEqualTo(TENANT_ID);
 		assertThat(event.previousSettings()).containsExactly(existingLocale);
 		assertThat(event.updatedSettings()).containsExactlyInAnyOrder(locale, tz);
+		assertThat(event.actor()).isEqualTo("test-operator");
+		assertThat(event.correlationId()).isEqualTo("trace-001");
 	}
 
 	@Test
@@ -96,7 +100,7 @@ class ConfigureTenantSettingsServiceTests {
 		assertThatIllegalArgumentException()
 				.isThrownBy(() -> configureService.execute(new ConfigureTenantSettingsCommand(
 						unknownId,
-						List.of(new SettingEntry("organization.locale", "en-US")))))
+						List.of(new SettingEntry("organization.locale", "en-US"))), CONTEXT))
 				.isInstanceOf(TenantNotFoundException.class);
 
 		assertThatIllegalArgumentException()
@@ -110,13 +114,13 @@ class ConfigureTenantSettingsServiceTests {
 		assertThatIllegalArgumentException()
 				.isThrownBy(() -> configureService.execute(new ConfigureTenantSettingsCommand(
 						TENANT_ID,
-						List.of(new SettingEntry("unsupported.key", "value")))))
+						List.of(new SettingEntry("unsupported.key", "value"))), CONTEXT))
 				.isInstanceOf(InvalidTenantSettingException.class);
 
 		assertThatIllegalArgumentException()
 				.isThrownBy(() -> configureService.execute(new ConfigureTenantSettingsCommand(
 						TENANT_ID,
-						List.of(new SettingEntry("finance.currency", "INVALID_CODE")))))
+						List.of(new SettingEntry("finance.currency", "INVALID_CODE"))), CONTEXT))
 				.isInstanceOf(InvalidTenantSettingException.class);
 	}
 

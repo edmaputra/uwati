@@ -2,6 +2,7 @@ package io.github.edmaputra.uwati.adapter.rest.tenantmanagement;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,7 +11,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -24,6 +24,7 @@ import io.github.edmaputra.uwati.domain.tenancy.application.port.in.GetTenantSet
 import io.github.edmaputra.uwati.domain.tenancy.domain.Tenant;
 import io.github.edmaputra.uwati.domain.tenancy.domain.TenantId;
 import io.github.edmaputra.uwati.domain.tenancy.domain.TenantSetting;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -32,7 +33,10 @@ import lombok.RequiredArgsConstructor;
 public class TenantManagementController {
 
 	public static final String ACTOR_HEADER = "X-Actor";
+	public static final String ACTOR_ID_HEADER = "X-Actor-Id";
+	public static final String USER_ID_HEADER = "X-User-Id";
 	public static final String CORRELATION_ID_HEADER = "X-Correlation-Id";
+	public static final String REQUEST_ID_HEADER = "X-Request-Id";
 
 	private final CreateTenantUseCase createTenantUseCase;
 	private final ConfigureTenantSettingsUseCase configureTenantSettingsUseCase;
@@ -41,15 +45,16 @@ public class TenantManagementController {
 	@PostMapping
 	public ResponseEntity<TenantResponse> createTenant(
 			@RequestBody CreateTenantRequest request,
-			@RequestHeader(value = ACTOR_HEADER, defaultValue = "system") String actor,
-			@RequestHeader(value = CORRELATION_ID_HEADER, required = false) String correlationId) {
+			HttpServletRequest httpRequest) {
 		if (request == null) {
 			throw new IllegalArgumentException("Request body must not be null.");
 		}
-		OperationContext context = OperationContext.of(actor, correlationId);
+		OperationContext context = resolveContext(httpRequest);
 		Tenant tenant =
 				createTenantUseCase.execute(new CreateTenantCommand(request.legalName(), request.displayName()), context);
-		return ResponseEntity.status(HttpStatus.CREATED).body(TenantResponse.from(tenant));
+		return ResponseEntity.status(HttpStatus.CREATED)
+				.header(CORRELATION_ID_HEADER, context.correlationId())
+				.body(TenantResponse.from(tenant));
 	}
 
 	@GetMapping("/{tenantId}/settings")
@@ -62,18 +67,42 @@ public class TenantManagementController {
 	public ResponseEntity<List<TenantSettingResponse>> configureSettings(
 			@PathVariable String tenantId,
 			@RequestBody ConfigureTenantSettingsRequest request,
-			@RequestHeader(value = ACTOR_HEADER, defaultValue = "system") String actor,
-			@RequestHeader(value = CORRELATION_ID_HEADER, required = false) String correlationId) {
+			HttpServletRequest httpRequest) {
 		if (request == null || request.settings() == null) {
 			throw new IllegalArgumentException("Settings list must not be null.");
 		}
-		OperationContext context = OperationContext.of(actor, correlationId);
+		OperationContext context = resolveContext(httpRequest);
 		List<SettingEntry> entries = request.settings().stream()
 				.map(s -> new SettingEntry(s.key(), s.value()))
 				.toList();
 		List<TenantSetting> updated = configureTenantSettingsUseCase.execute(
 				new ConfigureTenantSettingsCommand(TenantId.from(tenantId), entries), context);
-		return ResponseEntity.ok(updated.stream().map(TenantSettingResponse::from).toList());
+		return ResponseEntity.ok()
+				.header(CORRELATION_ID_HEADER, context.correlationId())
+				.body(updated.stream().map(TenantSettingResponse::from).toList());
+	}
+
+	private OperationContext resolveContext(HttpServletRequest request) {
+		String actor = request.getHeader(ACTOR_ID_HEADER);
+		if (actor == null || actor.isBlank()) {
+			actor = request.getHeader(ACTOR_HEADER);
+		}
+		if (actor == null || actor.isBlank()) {
+			actor = request.getHeader(USER_ID_HEADER);
+		}
+		if (actor == null || actor.isBlank()) {
+			actor = "system";
+		}
+
+		String correlationId = request.getHeader(CORRELATION_ID_HEADER);
+		if (correlationId == null || correlationId.isBlank()) {
+			correlationId = request.getHeader(REQUEST_ID_HEADER);
+		}
+		if (correlationId == null || correlationId.isBlank()) {
+			correlationId = UUID.randomUUID().toString();
+		}
+
+		return OperationContext.of(actor.trim(), correlationId.trim());
 	}
 
 	public record CreateTenantRequest(String legalName, String displayName) {
