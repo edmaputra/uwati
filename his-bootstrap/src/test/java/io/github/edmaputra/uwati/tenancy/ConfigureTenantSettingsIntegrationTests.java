@@ -40,7 +40,7 @@ class ConfigureTenantSettingsIntegrationTests {
 	@BeforeEach
 	void setup() {
 		webTestClient = WebTestClient.bindToServer().baseUrl("http://localhost:" + port).build();
-		jdbcTemplate.update("delete from tenant_audit_entries");
+		jdbcTemplate.update("delete from audit_entries");
 		jdbcTemplate.update("delete from tenant_document_sequences");
 		jdbcTemplate.update("delete from tenant_settings");
 		jdbcTemplate.update("delete from tenants");
@@ -76,9 +76,11 @@ class ConfigureTenantSettingsIntegrationTests {
 					"organization.locale",
 					"organization.time-zone");
 
-			// 2. Configure / update settings
+			// 2. Configure / update settings with actor and correlation-id headers
 			byte[] putBytes = webTestClient.put()
 					.uri("/api/platform/tenants/%s/settings".formatted(tenantId))
+					.header("X-Actor-Id", "operator-admin")
+					.header("X-Correlation-Id", "corr-settings-update-999")
 					.contentType(APPLICATION_JSON)
 					.bodyValue("""
 							{
@@ -104,6 +106,7 @@ class ConfigureTenantSettingsIntegrationTests {
 							""")
 					.exchange()
 					.expectStatus().isOk()
+					.expectHeader().valueEquals("X-Correlation-Id", "corr-settings-update-999")
 					.expectHeader().contentTypeCompatibleWith(APPLICATION_JSON)
 					.expectBody()
 					.jsonPath("$.length()").isEqualTo(4)
@@ -145,12 +148,58 @@ class ConfigureTenantSettingsIntegrationTests {
 			assertThat(emailRow.get("setting_value")).isEqualTo("admin@uwati.health");
 			assertThat(emailRow.get("revision")).isEqualTo(1);
 
-			// Verify audit trail entry
-			List<String> auditEvents = jdbcTemplate.queryForList(
-					"select event_type from tenant_audit_entries where tenant_id = ? order by id",
-					String.class,
+			// 4. Verify audit trail entries in database
+			List<Map<String, Object>> auditRows = jdbcTemplate.queryForList(
+					"select tenant_id, entity_name, entity_id, action, actor, correlation_id, changes_json from audit_entries where tenant_id = ? order by id",
 					tenantUuid);
-			assertThat(auditEvents).containsExactly("TENANT_CREATED", "TENANT_SETTINGS_CONFIGURED");
+			assertThat(auditRows).hasSize(2);
+
+			// Audit 1: Tenant Creation
+			Map<String, Object> tenantAudit = auditRows.get(0);
+			assertThat(tenantAudit.get("entity_name")).isEqualTo("Tenant");
+			assertThat(tenantAudit.get("entity_id")).isEqualTo(tenantId);
+			assertThat(tenantAudit.get("action")).isEqualTo("CREATE");
+			String tenantChangesJson = (String) tenantAudit.get("changes_json");
+			assertThat(tenantChangesJson).contains("\"fields\":{");
+			assertThat(tenantChangesJson).contains("\"displayName\":{\"old\":null,\"new\":\"Uwati Health\"}");
+			assertThat(tenantChangesJson).contains("\"legalName\":{\"old\":null,\"new\":\"Uwati Health Services Ltd.\"}");
+			assertThat(tenantChangesJson).contains("\"status\":{\"old\":null,\"new\":\"ACTIVE\"}");
+
+			// Audit 2: Tenant Settings Configuration
+			Map<String, Object> settingsAudit = auditRows.get(1);
+			assertThat(settingsAudit.get("entity_name")).isEqualTo("TenantSetting");
+			assertThat(settingsAudit.get("entity_id")).isEqualTo(tenantId);
+			assertThat(settingsAudit.get("action")).isEqualTo("UPDATE");
+			assertThat(settingsAudit.get("actor")).isEqualTo("operator-admin");
+			assertThat(settingsAudit.get("correlation_id")).isEqualTo("corr-settings-update-999");
+
+			String settingsChangesJson = (String) settingsAudit.get("changes_json");
+
+			// Assert collections diff structure
+			assertThat(settingsChangesJson).contains("\"collections\":{\"settings\":{");
+
+			// Assert Added elements in String JSON
+			assertThat(settingsChangesJson).contains("\"added\":[{\"key\":\"organization.contact-email\",\"value\":\"admin@uwati.health\",\"revision\":1}]");
+
+			// Assert Removed elements in String JSON
+			assertThat(settingsChangesJson).contains("\"removed\":[]");
+
+			// Assert Changed elements in String JSON (with deterministic alphabetical field ordering: revision then value)
+			assertThat(settingsChangesJson).contains("{\"key\":\"organization.locale\",\"fields\":{\"revision\":{\"old\":1,\"new\":2},\"value\":{\"old\":\"en-US\",\"new\":\"id-ID\"}}}");
+			assertThat(settingsChangesJson).contains("{\"key\":\"organization.time-zone\",\"fields\":{\"revision\":{\"old\":1,\"new\":2},\"value\":{\"old\":\"UTC\",\"new\":\"Asia/Jakarta\"}}}");
+			assertThat(settingsChangesJson).contains("{\"key\":\"finance.currency\",\"fields\":{\"revision\":{\"old\":1,\"new\":2},\"value\":{\"old\":\"USD\",\"new\":\"IDR\"}}}");
+
+			// JsonPath assertions on the JSON string
+			List<String> addedKeys = JsonPath.read(settingsChangesJson, "$.collections.settings.added[*].key");
+			assertThat(addedKeys).containsExactly("organization.contact-email");
+
+			List<String> changedKeys = JsonPath.read(settingsChangesJson, "$.collections.settings.changed[*].key");
+			assertThat(changedKeys).containsExactlyInAnyOrder("organization.locale", "organization.time-zone", "finance.currency");
+
+			String localeOldVal = JsonPath.read(settingsChangesJson, "$.collections.settings.changed[?(@.key=='organization.locale')].fields.value.old.get(0)");
+			String localeNewVal = JsonPath.read(settingsChangesJson, "$.collections.settings.changed[?(@.key=='organization.locale')].fields.value.new.get(0)");
+			assertThat(localeOldVal).isEqualTo("en-US");
+			assertThat(localeNewVal).isEqualTo("id-ID");
 		}
 	}
 
@@ -327,6 +376,8 @@ class ConfigureTenantSettingsIntegrationTests {
 	private String createTenant(String legalName, String displayName) {
 		byte[] responseBytes = webTestClient.post()
 				.uri("/api/platform/tenants")
+				.header("X-Actor-Id", "operator-creator")
+				.header("X-Correlation-Id", "corr-create-tenant-001")
 				.contentType(APPLICATION_JSON)
 				.bodyValue("""
 						{

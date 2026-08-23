@@ -59,10 +59,11 @@ class ConfigureTenantSettingsServiceTests {
 	}
 
 	@Test
-	@DisplayName("configures settings, increments revision on existing, and publishes domain event")
+	@DisplayName("configures settings, increments revision on existing, and publishes domain event with previous and updated settings")
 	void configuresAndUpdatesSettings() {
 		// Existing setting at revision 1
-		settingRepository.saveAll(List.of(new TenantSetting(TENANT_ID, "organization.locale", "en-US", 1)));
+		TenantSetting existingLocale = new TenantSetting(TENANT_ID, "organization.locale", "en-US", 1);
+		settingRepository.saveAll(List.of(existingLocale));
 
 		List<TenantSetting> results = configureService.execute(new ConfigureTenantSettingsCommand(
 				TENANT_ID,
@@ -81,7 +82,10 @@ class ConfigureTenantSettingsServiceTests {
 		assertThat(tz.revision()).isEqualTo(1);
 
 		assertThat(eventPublisher.settingsEvents).hasSize(1);
-		assertThat(eventPublisher.settingsEvents.get(0).tenantId()).isEqualTo(TENANT_ID);
+		TenantSettingsUpdated event = eventPublisher.settingsEvents.get(0);
+		assertThat(event.tenantId()).isEqualTo(TENANT_ID);
+		assertThat(event.previousSettings()).containsExactly(existingLocale);
+		assertThat(event.updatedSettings()).containsExactlyInAnyOrder(locale, tz);
 	}
 
 	@Test

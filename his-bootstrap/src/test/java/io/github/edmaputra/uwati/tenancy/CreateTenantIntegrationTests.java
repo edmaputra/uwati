@@ -40,7 +40,7 @@ class CreateTenantIntegrationTests {
 	@BeforeEach
 	void setup() {
 		webTestClient = WebTestClient.bindToServer().baseUrl("http://localhost:" + port).build();
-		jdbcTemplate.update("delete from tenant_audit_entries");
+		jdbcTemplate.update("delete from audit_entries");
 		jdbcTemplate.update("delete from tenant_document_sequences");
 		jdbcTemplate.update("delete from tenant_settings");
 		jdbcTemplate.update("delete from tenants");
@@ -55,6 +55,8 @@ class CreateTenantIntegrationTests {
 		void createsActiveTenantAndProvisionsDefaults() {
 			byte[] responseBytes = webTestClient.post()
 					.uri("/api/platform/tenants")
+					.header("X-Actor-Id", "operator-creator")
+					.header("X-Correlation-Id", "corr-create-tenant-123")
 					.contentType(APPLICATION_JSON)
 					.bodyValue("""
 							{
@@ -64,6 +66,7 @@ class CreateTenantIntegrationTests {
 							""")
 					.exchange()
 					.expectStatus().isCreated()
+					.expectHeader().valueEquals("X-Correlation-Id", "corr-create-tenant-123")
 					.expectHeader().contentTypeCompatibleWith(APPLICATION_JSON)
 					.expectBody()
 					.json("""
@@ -130,11 +133,28 @@ class CreateTenantIntegrationTests {
 					"PURCHASE");
 
 			// Verify audit trail entry recorded
-			List<String> auditEvents = jdbcTemplate.queryForList(
-					"select event_type from tenant_audit_entries where tenant_id = ?",
-					String.class,
+			List<Map<String, Object>> auditEntries = jdbcTemplate.queryForList(
+					"select tenant_id, entity_name, entity_id, action, actor, correlation_id, changes_json from audit_entries where tenant_id = ?",
 					tenantId);
-			assertThat(auditEvents).containsExactly("TENANT_CREATED");
+			assertThat(auditEntries).hasSize(1);
+			Map<String, Object> audit = auditEntries.get(0);
+			assertThat(audit.get("tenant_id")).isEqualTo(tenantId);
+			assertThat(audit.get("entity_name")).isEqualTo("Tenant");
+			assertThat(audit.get("entity_id")).isEqualTo(tenantIdStr);
+			assertThat(audit.get("action")).isEqualTo("CREATE");
+			assertThat(audit.get("actor")).isEqualTo("operator-creator");
+			assertThat(audit.get("correlation_id")).isEqualTo("corr-create-tenant-123");
+
+			String changesJson = (String) audit.get("changes_json");
+			assertThat(changesJson).contains("\"fields\":{");
+			assertThat(changesJson).contains("\"displayName\":{\"old\":null,\"new\":\"Uwati Health\"}");
+			assertThat(changesJson).contains("\"legalName\":{\"old\":null,\"new\":\"Uwati Health Services Ltd.\"}");
+			assertThat(changesJson).contains("\"status\":{\"old\":null,\"new\":\"ACTIVE\"}");
+
+			String displayNameNew = JsonPath.read(changesJson, "$.fields.displayName.new");
+			assertThat(displayNameNew).isEqualTo("Uwati Health");
+			String legalNameNew = JsonPath.read(changesJson, "$.fields.legalName.new");
+			assertThat(legalNameNew).isEqualTo("Uwati Health Services Ltd.");
 		}
 
 		@Test
@@ -147,7 +167,7 @@ class CreateTenantIntegrationTests {
 			assertThat(countRows("tenants")).isEqualTo(1);
 			assertThat(countRows("tenant_settings")).isEqualTo(5);
 			assertThat(countRows("tenant_document_sequences")).isEqualTo(5);
-			assertThat(countRows("tenant_audit_entries")).isEqualTo(1);
+			assertThat(countRows("audit_entries")).isEqualTo(1);
 		}
 	}
 
@@ -215,6 +235,8 @@ class CreateTenantIntegrationTests {
 	private String createTenant(String legalName, String displayName) {
 		byte[] responseBytes = webTestClient.post()
 				.uri("/api/platform/tenants")
+				.header("X-Actor-Id", "operator-creator")
+				.header("X-Correlation-Id", "corr-create-tenant-idempotent")
 				.contentType(APPLICATION_JSON)
 				.bodyValue("""
 						{

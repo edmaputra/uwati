@@ -36,10 +36,13 @@ public class ConfigureTenantSettingsService implements ConfigureTenantSettingsUs
 			TenantSettingValidator.validate(entry.key(), entry.value());
 		}
 
+		List<TenantSetting> previousSettings = new ArrayList<>();
 		List<TenantSetting> settingsToSave = new ArrayList<>();
 		for (SettingEntry entry : command.settings()) {
 			Optional<TenantSetting> existing =
 					tenantSettingRepository.findByTenantIdAndKey(command.tenantId(), entry.key());
+
+			existing.ifPresent(previousSettings::add);
 
 			TenantSetting setting = existing
 					.map(current -> current.withIncrementedRevision(entry.value()))
@@ -49,7 +52,7 @@ public class ConfigureTenantSettingsService implements ConfigureTenantSettingsUs
 		}
 
 		List<TenantSetting> saved = tenantSettingRepository.saveAll(settingsToSave);
-		tenantEventPublisher.publish(TenantSettingsUpdated.of(command.tenantId(), saved));
+		tenantEventPublisher.publish(TenantSettingsUpdated.of(command.tenantId(), previousSettings, saved));
 		return saved;
 	}
 }

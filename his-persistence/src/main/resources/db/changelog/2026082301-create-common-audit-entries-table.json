@@ -1,0 +1,163 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "2026082301-create-common-audit-entries-table",
+        "author": "uwati-team",
+        "changes": [
+          {
+            "createTable": {
+              "tableName": "audit_entries",
+              "columns": [
+                {
+                  "column": {
+                    "name": "id",
+                    "type": "BIGSERIAL",
+                    "constraints": {
+                      "primaryKey": true,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "tenant_id",
+                    "type": "UUID",
+                    "constraints": {
+                      "nullable": true
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "entity_name",
+                    "type": "VARCHAR(64)",
+                    "constraints": {
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "entity_id",
+                    "type": "VARCHAR(255)",
+                    "constraints": {
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "action",
+                    "type": "VARCHAR(64)",
+                    "constraints": {
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "actor",
+                    "type": "VARCHAR(255)",
+                    "constraints": {
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "correlation_id",
+                    "type": "VARCHAR(255)",
+                    "constraints": {
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "occurred_at",
+                    "type": "TIMESTAMP WITH TIME ZONE",
+                    "constraints": {
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "changes_json",
+                    "type": "TEXT",
+                    "constraints": {
+                      "nullable": false
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "createIndex": {
+              "tableName": "audit_entries",
+              "indexName": "idx_audit_entries_entity",
+              "columns": [
+                {
+                  "column": {
+                    "name": "entity_name"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "entity_id"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "createIndex": {
+              "tableName": "audit_entries",
+              "indexName": "idx_audit_entries_tenant_id",
+              "columns": [
+                {
+                  "column": {
+                    "name": "tenant_id"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "createIndex": {
+              "tableName": "audit_entries",
+              "indexName": "idx_audit_entries_correlation_id",
+              "columns": [
+                {
+                  "column": {
+                    "name": "correlation_id"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "createIndex": {
+              "tableName": "audit_entries",
+              "indexName": "idx_audit_entries_occurred_at",
+              "columns": [
+                {
+                  "column": {
+                    "name": "occurred_at"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "dropTable": {
+              "tableName": "tenant_audit_entries"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
