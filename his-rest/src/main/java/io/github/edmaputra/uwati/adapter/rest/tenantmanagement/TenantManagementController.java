@@ -10,9 +10,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.github.edmaputra.uwati.domain.tenancy.application.OperationContext;
 import io.github.edmaputra.uwati.domain.tenancy.application.port.in.ConfigureTenantSettingsCommand;
 import io.github.edmaputra.uwati.domain.tenancy.application.port.in.ConfigureTenantSettingsCommand.SettingEntry;
 import io.github.edmaputra.uwati.domain.tenancy.application.port.in.ConfigureTenantSettingsUseCase;
@@ -29,17 +31,24 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class TenantManagementController {
 
+	public static final String ACTOR_HEADER = "X-Actor";
+	public static final String CORRELATION_ID_HEADER = "X-Correlation-Id";
+
 	private final CreateTenantUseCase createTenantUseCase;
 	private final ConfigureTenantSettingsUseCase configureTenantSettingsUseCase;
 	private final GetTenantSettingsUseCase getTenantSettingsUseCase;
 
 	@PostMapping
-	public ResponseEntity<TenantResponse> createTenant(@RequestBody CreateTenantRequest request) {
+	public ResponseEntity<TenantResponse> createTenant(
+			@RequestBody CreateTenantRequest request,
+			@RequestHeader(value = ACTOR_HEADER, defaultValue = "system") String actor,
+			@RequestHeader(value = CORRELATION_ID_HEADER, required = false) String correlationId) {
 		if (request == null) {
 			throw new IllegalArgumentException("Request body must not be null.");
 		}
+		OperationContext context = OperationContext.of(actor, correlationId);
 		Tenant tenant =
-				createTenantUseCase.execute(new CreateTenantCommand(request.legalName(), request.displayName()));
+				createTenantUseCase.execute(new CreateTenantCommand(request.legalName(), request.displayName()), context);
 		return ResponseEntity.status(HttpStatus.CREATED).body(TenantResponse.from(tenant));
 	}
 
@@ -52,15 +61,18 @@ public class TenantManagementController {
 	@PutMapping("/{tenantId}/settings")
 	public ResponseEntity<List<TenantSettingResponse>> configureSettings(
 			@PathVariable String tenantId,
-			@RequestBody ConfigureTenantSettingsRequest request) {
+			@RequestBody ConfigureTenantSettingsRequest request,
+			@RequestHeader(value = ACTOR_HEADER, defaultValue = "system") String actor,
+			@RequestHeader(value = CORRELATION_ID_HEADER, required = false) String correlationId) {
 		if (request == null || request.settings() == null) {
 			throw new IllegalArgumentException("Settings list must not be null.");
 		}
+		OperationContext context = OperationContext.of(actor, correlationId);
 		List<SettingEntry> entries = request.settings().stream()
 				.map(s -> new SettingEntry(s.key(), s.value()))
 				.toList();
 		List<TenantSetting> updated = configureTenantSettingsUseCase.execute(
-				new ConfigureTenantSettingsCommand(TenantId.from(tenantId), entries));
+				new ConfigureTenantSettingsCommand(TenantId.from(tenantId), entries), context);
 		return ResponseEntity.ok(updated.stream().map(TenantSettingResponse::from).toList());
 	}
 

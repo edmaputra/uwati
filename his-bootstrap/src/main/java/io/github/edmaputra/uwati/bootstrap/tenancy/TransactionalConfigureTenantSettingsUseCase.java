@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import io.github.edmaputra.uwati.core.tenancy.application.service.ConfigureTenantSettingsService;
+import io.github.edmaputra.uwati.domain.tenancy.application.OperationContext;
 import io.github.edmaputra.uwati.domain.tenancy.application.port.in.ConfigureTenantSettingsCommand;
 import io.github.edmaputra.uwati.domain.tenancy.application.port.in.ConfigureTenantSettingsUseCase;
 import io.github.edmaputra.uwati.domain.tenancy.application.port.out.TenantEventPublisher;
@@ -27,7 +28,8 @@ public class TransactionalConfigureTenantSettingsUseCase implements ConfigureTen
 
 	@Override
 	@Transactional
-	public List<TenantSetting> execute(ConfigureTenantSettingsCommand command) {
-		return delegate.execute(command);
+	public List<TenantSetting> execute(ConfigureTenantSettingsCommand command, OperationContext context) {
+		return delegate.execute(command, context);
 	}
 }
+

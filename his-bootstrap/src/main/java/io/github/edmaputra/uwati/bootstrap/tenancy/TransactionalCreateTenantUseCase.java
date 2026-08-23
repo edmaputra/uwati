@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import io.github.edmaputra.uwati.core.tenancy.application.service.CreateTenantService;
+import io.github.edmaputra.uwati.domain.tenancy.application.OperationContext;
 import io.github.edmaputra.uwati.domain.tenancy.application.port.in.CreateTenantCommand;
 import io.github.edmaputra.uwati.domain.tenancy.application.port.in.CreateTenantUseCase;
 import io.github.edmaputra.uwati.domain.tenancy.application.port.out.TenantEventPublisher;
@@ -21,7 +22,8 @@ public class TransactionalCreateTenantUseCase implements CreateTenantUseCase {
 
 	@Override
 	@Transactional
-	public Tenant execute(CreateTenantCommand command) {
-		return delegate.execute(command);
+	public Tenant execute(CreateTenantCommand command, OperationContext context) {
+		return delegate.execute(command, context);
 	}
 }
+
