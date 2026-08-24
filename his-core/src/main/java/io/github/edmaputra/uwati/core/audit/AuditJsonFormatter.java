@@ -10,7 +10,8 @@ import io.github.edmaputra.uwati.core.audit.AuditDiffEngine.ElementDiff;
 import io.github.edmaputra.uwati.core.audit.AuditDiffEngine.FieldDiff;
 
 /**
- * Formats structured audit differences into standard JSON strings.
+ * Formats structured audit differences into clean, standard JSON strings
+ * without redundant wrapper terms like "fields" or "collections".
  */
 public final class AuditJsonFormatter {
 
@@ -42,7 +43,6 @@ public final class AuditJsonFormatter {
 		boolean needsComma = false;
 
 		if (fieldDiffs != null && !fieldDiffs.isEmpty()) {
-			sb.append("\"fields\":{");
 			boolean firstField = true;
 			for (Map.Entry<String, FieldDiff> entry : fieldDiffs.entrySet()) {
 				if (!firstField) {
@@ -54,25 +54,18 @@ public final class AuditJsonFormatter {
 				sb.append("\"new\":").append(toJsonValue(entry.getValue().newValue()));
 				sb.append("}");
 			}
-			sb.append("}");
 			needsComma = true;
 		}
 
 		if (collectionDiffs != null && !collectionDiffs.isEmpty()) {
-			if (needsComma) {
-				sb.append(",");
-			}
-			sb.append("\"collections\":{");
-			boolean firstCol = true;
 			for (Map.Entry<String, SerializedCollectionDiff<?>> entry : collectionDiffs.entrySet()) {
-				if (!firstCol) {
+				if (needsComma) {
 					sb.append(",");
 				}
-				firstCol = false;
+				needsComma = true;
 				sb.append("\"").append(escapeJson(entry.getKey())).append("\":");
 				writeCollectionDiff(sb, entry.getValue());
 			}
-			sb.append("}");
 		}
 
 		sb.append("}");
@@ -120,19 +113,14 @@ public final class AuditJsonFormatter {
 				sb.append(",");
 			}
 			firstChanged = false;
-			sb.append("{\"key\":\"").append(escapeJson(change.key())).append("\",\"fields\":{");
-			boolean firstField = true;
+			sb.append("{\"key\":\"").append(escapeJson(change.key())).append("\"");
 			for (Map.Entry<String, FieldDiff> fEntry : change.fields().entrySet()) {
-				if (!firstField) {
-					sb.append(",");
-				}
-				firstField = false;
-				sb.append("\"").append(escapeJson(fEntry.getKey())).append("\":{");
+				sb.append(",\"").append(escapeJson(fEntry.getKey())).append("\":{");
 				sb.append("\"old\":").append(toJsonValue(fEntry.getValue().oldValue())).append(",");
 				sb.append("\"new\":").append(toJsonValue(fEntry.getValue().newValue()));
 				sb.append("}");
 			}
-			sb.append("}}");
+			sb.append("}");
 		}
 		sb.append("]");
 

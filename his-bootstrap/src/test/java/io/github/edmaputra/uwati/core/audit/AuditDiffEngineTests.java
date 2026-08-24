@@ -49,7 +49,7 @@ class AuditDiffEngineTests {
 	}
 
 	@Test
-	@DisplayName("computes field differences between previous and updated maps")
+	@DisplayName("computes field differences directly at root without 'fields' wrapper")
 	void computesFieldDiffs() {
 		Map<String, Object> oldFields = Map.of(
 				"name", "RS Lama",
@@ -71,14 +71,14 @@ class AuditDiffEngineTests {
 		assertThat(diffs.containsKey("unchanged")).isFalse();
 
 		String json = AuditJsonFormatter.formatDiff(diffs);
-		assertThat(json).contains("\"fields\":{");
+		assertThat(json).doesNotContain("\"fields\":");
 		assertThat(json).contains("\"name\":{\"old\":\"RS Lama\",\"new\":\"RS Baru\"}");
 		assertThat(json).contains("\"newProp\":{\"old\":null,\"new\":\"extra\"}");
 		assertThat(json).contains("\"status\":{\"old\":\"ACTIVE\",\"new\":\"SUSPENDED\"}");
 	}
 
 	@Test
-	@DisplayName("computes keyed collection differences with added, removed, and changed Auditable elements")
+	@DisplayName("computes keyed collection differences retaining collection name without 'collections' or 'fields' wrapper")
 	void computesKeyedCollectionDiffs() {
 		List<Setting> oldSettings = List.of(
 				new Setting("org.locale", "en-US", 1, "meta1"),
@@ -112,10 +112,11 @@ class AuditDiffEngineTests {
 				diff,
 				s -> "{\"key\":\"%s\",\"value\":\"%s\",\"revision\":%d}".formatted(s.key(), s.value(), s.revision()));
 
-		assertThat(json).contains("\"collections\":{\"settings\":{");
+		assertThat(json).doesNotContain("\"collections\":");
+		assertThat(json).contains("\"settings\":{");
 		assertThat(json).contains("\"added\":[{\"key\":\"new.setting\",\"value\":\"val\",\"revision\":1}]");
 		assertThat(json).contains("\"removed\":[{\"key\":\"legacy.key\",\"value\":\"oldVal\",\"revision\":1}]");
-		assertThat(json).contains("\"changed\":[{\"key\":\"org.locale\",\"fields\":{\"revision\":{\"old\":1,\"new\":2},\"value\":{\"old\":\"en-US\",\"new\":\"id-ID\"}}}]");
+		assertThat(json).contains("\"changed\":[{\"key\":\"org.locale\",\"revision\":{\"old\":1,\"new\":2},\"value\":{\"old\":\"en-US\",\"new\":\"id-ID\"}}]");
 	}
 
 	@Test

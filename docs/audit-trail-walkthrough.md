@@ -9,8 +9,8 @@ In a Hospital Information System (HIS), recording *what* activity occurred is in
 1. **Who** performed the change (**Actor identity**).
 2. **Which request/session** initiated the change (**Correlation ID**).
 3. **What exact state differences** occurred (**Structured JSON Diff**):
-   - For entity/field-level changes: Old vs. New values (`{"old": ..., "new": ...}`).
-   - For collections: Detailed breakdown of elements that were **`added`**, **`removed`**, or **`changed`**.
+   - For entity/field-level changes: Old vs. New values (`{"fieldName": {"old": ..., "new": ...}}`).
+   - For collections: Direct collection key (e.g. `"settings"`) with a breakdown of elements that were **`added`**, **`removed`**, or **`changed`**.
 4. **Targeted Monitoring**: Only business-relevant fields are audited, excluding transient or technical fields (e.g. `updatedAt`), defined cleanly via the **`Auditable`** interface.
 5. **When** it occurred (**UTC timestamp**).
 6. **Which tenant** the change belongs to (**Multi-tenant isolation**).
@@ -40,7 +40,7 @@ The audit trail follows clean/hexagonal architecture principles across modules:
 ┌──────────────────────────▼─────────────────────────────┐
 │                      his-core                          │
 │  - AuditDiffEngine: Compares Auditable fields & sets   │
-│  - AuditJsonFormatter: Formats deterministic JSON diff │
+│  - AuditJsonFormatter: Formats clean, flat JSON diff   │
 └──────────────────────────┬─────────────────────────────┘
                            │ Event Listener (BEFORE_COMMIT)
 ┌──────────────────────────▼─────────────────────────────┐
@@ -60,7 +60,7 @@ The audit trail follows clean/hexagonal architecture principles across modules:
 | `his-domain` | `AuditEntry` | Domain representation of an immutable audit record. |
 | `his-domain` | Domain Events | Carry `actor`, `correlationId`, and snapshot/previous/new states. |
 | `his-core` | `AuditDiffEngine` | Compares `Auditable` object states, field maps, and keyed/primitive collections. |
-| `his-core` | `AuditJsonFormatter` | Formats diff results into deterministic JSON with proper escaping. |
+| `his-core` | `AuditJsonFormatter` | Formats diff results into clean JSON without redundant `"fields"` or `"collections"` terms. |
 | `his-persistence` | `AuditEntryEntity` | JPA entity mapping to PostgreSQL `audit_entries` table. |
 | `his-persistence` | `AuditTrailEventListener` | Transactional event listener (`BEFORE_COMMIT`) persisting audit logs. |
 | `his-rest` | `TenantManagementController` | Resolves headers (`X-Actor-Id`, `X-Correlation-Id`, etc.) and injects `OperationContext`. |
@@ -223,23 +223,21 @@ The common audit table is provisioned via Liquibase (`2026082301-create-common-a
 
 ### 1. Entity Creation (`CREATE`)
 
-Recorded when a new `Tenant` is created:
+Recorded when a new `Tenant` is created (fields placed directly at root):
 
 ```json
 {
-  "fields": {
-    "displayName": {
-      "old": null,
-      "new": "RS Permata Medika"
-    },
-    "legalName": {
-      "old": null,
-      "new": "PT Permata Medika Sejahtera"
-    },
-    "status": {
-      "old": null,
-      "new": "ACTIVE"
-    }
+  "displayName": {
+    "old": null,
+    "new": "RS Permata Medika"
+  },
+  "legalName": {
+    "old": null,
+    "new": "PT Permata Medika Sejahtera"
+  },
+  "status": {
+    "old": null,
+    "new": "ACTIVE"
   }
 }
 ```
@@ -257,55 +255,49 @@ correlation_id: "corr-create-tenant-123"
 
 ### 2. Collection Configuration Update (`UPDATE`)
 
-Recorded when `TenantSetting` collection is updated with added, modified, and removed settings:
+Recorded when `TenantSetting` collection is updated with added, modified, and removed settings (under `"settings"`, without `"collections"` or inner `"fields"` wrappers):
 
 ```json
 {
-  "collections": {
-    "settings": {
-      "added": [
-        {
-          "key": "organization.contact-email",
-          "value": "admin@permata.health",
-          "revision": 1
-        }
-      ],
-      "removed": [
-        {
-          "key": "features.legacy-billing",
-          "value": "true",
-          "revision": 1
-        }
-      ],
-      "changed": [
-        {
-          "key": "organization.locale",
-          "fields": {
-            "revision": {
-              "old": 1,
-              "new": 2
-            },
-            "value": {
-              "old": "en-US",
-              "new": "id-ID"
-            }
-          }
+  "settings": {
+    "added": [
+      {
+        "key": "organization.contact-email",
+        "value": "admin@permata.health",
+        "revision": 1
+      }
+    ],
+    "removed": [
+      {
+        "key": "features.legacy-billing",
+        "value": "true",
+        "revision": 1
+      }
+    ],
+    "changed": [
+      {
+        "key": "organization.locale",
+        "revision": {
+          "old": 1,
+          "new": 2
         },
-        {
-          "key": "organization.time-zone",
-          "fields": {
-            "revision": {
-              "old": 1,
-              "new": 2
-            },
-            "value": {
-              "old": "UTC",
-              "new": "Asia/Jakarta"
-            }
-          }
+        "value": {
+          "old": "en-US",
+          "new": "id-ID"
         }
-      ]
-    }
+      },
+      {
+        "key": "organization.time-zone",
+        "revision": {
+          "old": 1,
+          "new": 2
+        },
+        "value": {
+          "old": "UTC",
+          "new": "Asia/Jakarta"
+        }
+      }
+    ]
   }
 }
 ```

@@ -32,7 +32,7 @@ class AuditTrailEventListenerTests {
 	}
 
 	@Test
-	@DisplayName("persists audit entry on TenantCreated with actor and correlationId from event")
+	@DisplayName("persists audit entry on TenantCreated with actor and correlationId from event without 'fields' wrapper")
 	void recordsTenantCreatedAuditEntry() {
 		TenantId tenantId = TenantId.generate();
 		Instant now = Instant.now();
@@ -59,7 +59,7 @@ class AuditTrailEventListenerTests {
 		assertThat(saved.getCorrelationId()).isEqualTo("trace-abc-123");
 		assertThat(saved.getOccurredAt()).isEqualTo(now);
 
-		assertThat(saved.getChangesJson()).contains("\"fields\":{");
+		assertThat(saved.getChangesJson()).doesNotContain("\"fields\":");
 		assertThat(saved.getChangesJson()).contains("\"displayName\":{\"old\":null,\"new\":\"RS Permata\"}");
 		assertThat(saved.getChangesJson()).contains("\"legalName\":{\"old\":null,\"new\":\"RS Permata Medika Ltd.\"}");
 		assertThat(saved.getChangesJson()).contains("\"status\":{\"old\":null,\"new\":\"ACTIVE\"}");
@@ -95,10 +95,11 @@ class AuditTrailEventListenerTests {
 		assertThat(saved.getCorrelationId()).isEqualTo("trace-abc-123");
 
 		String json = saved.getChangesJson();
-		assertThat(json).contains("\"collections\":{\"settings\":{");
+		assertThat(json).doesNotContain("\"collections\":");
+		assertThat(json).contains("\"settings\":{");
 		assertThat(json).contains("\"added\":[{\"key\":\"inventory.unit\",\"value\":\"BOX\",\"revision\":1}]");
 		assertThat(json).contains("\"removed\":[{\"key\":\"old.feature\",\"value\":\"true\",\"revision\":1}]");
-		assertThat(json).contains("\"changed\":[{\"key\":\"organization.locale\",\"fields\":{\"revision\":{\"old\":1,\"new\":2},\"value\":{\"old\":\"en-US\",\"new\":\"id-ID\"}}}]");
+		assertThat(json).contains("\"changed\":[{\"key\":\"organization.locale\",\"revision\":{\"old\":1,\"new\":2},\"value\":{\"old\":\"en-US\",\"new\":\"id-ID\"}}]");
 	}
 
 	@Test

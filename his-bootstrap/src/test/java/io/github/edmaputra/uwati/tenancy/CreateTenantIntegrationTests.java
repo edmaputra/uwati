@@ -146,14 +146,14 @@ class CreateTenantIntegrationTests {
 			assertThat(audit.get("correlation_id")).isEqualTo("corr-create-tenant-123");
 
 			String changesJson = (String) audit.get("changes_json");
-			assertThat(changesJson).contains("\"fields\":{");
+			assertThat(changesJson).doesNotContain("\"fields\":");
 			assertThat(changesJson).contains("\"displayName\":{\"old\":null,\"new\":\"Uwati Health\"}");
 			assertThat(changesJson).contains("\"legalName\":{\"old\":null,\"new\":\"Uwati Health Services Ltd.\"}");
 			assertThat(changesJson).contains("\"status\":{\"old\":null,\"new\":\"ACTIVE\"}");
 
-			String displayNameNew = JsonPath.read(changesJson, "$.fields.displayName.new");
+			String displayNameNew = JsonPath.read(changesJson, "$.displayName.new");
 			assertThat(displayNameNew).isEqualTo("Uwati Health");
-			String legalNameNew = JsonPath.read(changesJson, "$.fields.legalName.new");
+			String legalNameNew = JsonPath.read(changesJson, "$.legalName.new");
 			assertThat(legalNameNew).isEqualTo("Uwati Health Services Ltd.");
 		}
 

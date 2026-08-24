@@ -160,7 +160,7 @@ class ConfigureTenantSettingsIntegrationTests {
 			assertThat(tenantAudit.get("entity_id")).isEqualTo(tenantId);
 			assertThat(tenantAudit.get("action")).isEqualTo("CREATE");
 			String tenantChangesJson = (String) tenantAudit.get("changes_json");
-			assertThat(tenantChangesJson).contains("\"fields\":{");
+			assertThat(tenantChangesJson).doesNotContain("\"fields\":");
 			assertThat(tenantChangesJson).contains("\"displayName\":{\"old\":null,\"new\":\"Uwati Health\"}");
 			assertThat(tenantChangesJson).contains("\"legalName\":{\"old\":null,\"new\":\"Uwati Health Services Ltd.\"}");
 			assertThat(tenantChangesJson).contains("\"status\":{\"old\":null,\"new\":\"ACTIVE\"}");
@@ -175,8 +175,9 @@ class ConfigureTenantSettingsIntegrationTests {
 
 			String settingsChangesJson = (String) settingsAudit.get("changes_json");
 
-			// Assert collections diff structure
-			assertThat(settingsChangesJson).contains("\"collections\":{\"settings\":{");
+			// Assert settings collection diff structure without "collections" wrapper
+			assertThat(settingsChangesJson).doesNotContain("\"collections\":");
+			assertThat(settingsChangesJson).contains("\"settings\":{");
 
 			// Assert Added elements in String JSON
 			assertThat(settingsChangesJson).contains("\"added\":[{\"key\":\"organization.contact-email\",\"value\":\"admin@uwati.health\",\"revision\":1}]");
@@ -184,20 +185,20 @@ class ConfigureTenantSettingsIntegrationTests {
 			// Assert Removed elements in String JSON
 			assertThat(settingsChangesJson).contains("\"removed\":[]");
 
-			// Assert Changed elements in String JSON (with deterministic alphabetical field ordering: revision then value)
-			assertThat(settingsChangesJson).contains("{\"key\":\"organization.locale\",\"fields\":{\"revision\":{\"old\":1,\"new\":2},\"value\":{\"old\":\"en-US\",\"new\":\"id-ID\"}}}");
-			assertThat(settingsChangesJson).contains("{\"key\":\"organization.time-zone\",\"fields\":{\"revision\":{\"old\":1,\"new\":2},\"value\":{\"old\":\"UTC\",\"new\":\"Asia/Jakarta\"}}}");
-			assertThat(settingsChangesJson).contains("{\"key\":\"finance.currency\",\"fields\":{\"revision\":{\"old\":1,\"new\":2},\"value\":{\"old\":\"USD\",\"new\":\"IDR\"}}}");
+			// Assert Changed elements in String JSON (with deterministic alphabetical field ordering: revision then value, without nested "fields")
+			assertThat(settingsChangesJson).contains("{\"key\":\"organization.locale\",\"revision\":{\"old\":1,\"new\":2},\"value\":{\"old\":\"en-US\",\"new\":\"id-ID\"}}");
+			assertThat(settingsChangesJson).contains("{\"key\":\"organization.time-zone\",\"revision\":{\"old\":1,\"new\":2},\"value\":{\"old\":\"UTC\",\"new\":\"Asia/Jakarta\"}}");
+			assertThat(settingsChangesJson).contains("{\"key\":\"finance.currency\",\"revision\":{\"old\":1,\"new\":2},\"value\":{\"old\":\"USD\",\"new\":\"IDR\"}}");
 
 			// JsonPath assertions on the JSON string
-			List<String> addedKeys = JsonPath.read(settingsChangesJson, "$.collections.settings.added[*].key");
+			List<String> addedKeys = JsonPath.read(settingsChangesJson, "$.settings.added[*].key");
 			assertThat(addedKeys).containsExactly("organization.contact-email");
 
-			List<String> changedKeys = JsonPath.read(settingsChangesJson, "$.collections.settings.changed[*].key");
+			List<String> changedKeys = JsonPath.read(settingsChangesJson, "$.settings.changed[*].key");
 			assertThat(changedKeys).containsExactlyInAnyOrder("organization.locale", "organization.time-zone", "finance.currency");
 
-			String localeOldVal = JsonPath.read(settingsChangesJson, "$.collections.settings.changed[?(@.key=='organization.locale')].fields.value.old.get(0)");
-			String localeNewVal = JsonPath.read(settingsChangesJson, "$.collections.settings.changed[?(@.key=='organization.locale')].fields.value.new.get(0)");
+			String localeOldVal = JsonPath.read(settingsChangesJson, "$.settings.changed[?(@.key=='organization.locale')].value.old.get(0)");
+			String localeNewVal = JsonPath.read(settingsChangesJson, "$.settings.changed[?(@.key=='organization.locale')].value.new.get(0)");
 			assertThat(localeOldVal).isEqualTo("en-US");
 			assertThat(localeNewVal).isEqualTo("id-ID");
 		}
