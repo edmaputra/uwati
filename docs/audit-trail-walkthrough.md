@@ -11,8 +11,9 @@ In a Hospital Information System (HIS), recording *what* activity occurred is in
 3. **What exact state differences** occurred (**Structured JSON Diff**):
    - For entity/field-level changes: Old vs. New values (`{"old": ..., "new": ...}`).
    - For collections: Detailed breakdown of elements that were **`added`**, **`removed`**, or **`changed`**.
-4. **When** it occurred (**UTC timestamp**).
-5. **Which tenant** the change belongs to (**Multi-tenant isolation**).
+4. **Targeted Monitoring**: Only business-relevant fields are audited, excluding transient or technical fields (e.g. `updatedAt`), defined cleanly via the **`Auditable`** interface.
+5. **When** it occurred (**UTC timestamp**).
+6. **Which tenant** the change belongs to (**Multi-tenant isolation**).
 
 ---
 
@@ -30,6 +31,7 @@ The audit trail follows clean/hexagonal architecture principles across modules:
                            │ OperationContext (Explicit)
 ┌──────────────────────────▼─────────────────────────────┐
 │                      his-domain                        │
+│  - Auditable: Interface defining monitored fields      │
 │  - Use Cases require explicit OperationContext         │
 │  - Domain Events (TenantCreated, TenantSettingsUpdated)│
 │    carry actor, correlationId, previous/updated state  │
@@ -37,7 +39,7 @@ The audit trail follows clean/hexagonal architecture principles across modules:
                            │ Event Publication
 ┌──────────────────────────▼─────────────────────────────┐
 │                      his-core                          │
-│  - AuditDiffEngine: Compares fields & collections      │
+│  - AuditDiffEngine: Compares Auditable fields & sets   │
 │  - AuditJsonFormatter: Formats deterministic JSON diff │
 └──────────────────────────┬─────────────────────────────┘
                            │ Event Listener (BEFORE_COMMIT)
@@ -53,14 +55,69 @@ The audit trail follows clean/hexagonal architecture principles across modules:
 
 | Module | Component | Responsibility |
 |---|---|---|
+| `his-domain` | `Auditable` | Interface implemented by models to declare which fields are monitored for audit. |
 | `his-domain` | `OperationContext` | Cross-cutting value object carrying `actor` and `correlationId`. |
 | `his-domain` | `AuditEntry` | Domain representation of an immutable audit record. |
 | `his-domain` | Domain Events | Carry `actor`, `correlationId`, and snapshot/previous/new states. |
-| `his-core` | `AuditDiffEngine` | Compares object states, field maps, and keyed/primitive collections. |
+| `his-core` | `AuditDiffEngine` | Compares `Auditable` object states, field maps, and keyed/primitive collections. |
 | `his-core` | `AuditJsonFormatter` | Formats diff results into deterministic JSON with proper escaping. |
 | `his-persistence` | `AuditEntryEntity` | JPA entity mapping to PostgreSQL `audit_entries` table. |
 | `his-persistence` | `AuditTrailEventListener` | Transactional event listener (`BEFORE_COMMIT`) persisting audit logs. |
 | `his-rest` | `TenantManagementController` | Resolves headers (`X-Actor-Id`, `X-Correlation-Id`, etc.) and injects `OperationContext`. |
+
+---
+
+## Selective Field Auditing: The `Auditable` Interface
+
+Rather than blindly auditing every field on an aggregate or reflecting across private fields, domain models implement `Auditable` to define explicitly which fields to monitor:
+
+```java
+package io.github.edmaputra.uwati.domain.audit;
+
+import java.util.Map;
+
+public interface Auditable {
+    Map<String, Object> auditableFields();
+}
+```
+
+### Example: Domain Models implementing `Auditable`
+
+```java
+public record Tenant(
+        TenantId id,
+        String legalName,
+        String displayName,
+        TenantStatus status,
+        Instant createdAt,
+        Instant updatedAt) implements Auditable {
+
+    @Override
+    public Map<String, Object> auditableFields() {
+        // createdAt and updatedAt are excluded from audit diffs
+        return Map.of(
+                "displayName", displayName,
+                "legalName", legalName,
+                "status", status.name());
+    }
+}
+```
+
+```java
+public record TenantSetting(
+        TenantId tenantId,
+        String key,
+        String value,
+        int revision) implements Auditable {
+
+    @Override
+    public Map<String, Object> auditableFields() {
+        return Map.of(
+                "value", value,
+                "revision", revision);
+    }
+}
+```
 
 ---
 
@@ -108,34 +165,26 @@ The REST layer resolves actor and correlation identifiers from incoming HTTP hea
 
 `AuditDiffEngine` in `his-core` provides pure, testable diff calculations without external dependencies.
 
-### 1. Field-Level Diffs (`diffFields`)
+### 1. `Auditable` Model Diffs (`diff(oldEntity, newEntity)`)
 
-Compares two key-value maps with deterministic alphabetical ordering:
+Compares two `Auditable` models directly using their declared `auditableFields()`:
 
 ```java
-Map<String, FieldDiff> diffs = AuditDiffEngine.diffFields(
-    Map.of("status", "ACTIVE", "tier", "STANDARD"),
-    Map.of("status", "SUSPENDED", "tier", "STANDARD")
-);
-// Result diff: {"status": FieldDiff(old="ACTIVE", new="SUSPENDED")}
+Map<String, FieldDiff> diffs = AuditDiffEngine.diff(oldTenant, newTenant);
 ```
 
-### 2. Keyed Collection Diffs (`diffKeyedCollection`)
+### 2. Keyed Collection Diffs with `Auditable` Elements (`diffKeyedCollection`)
 
-Compares collections of identifiable items (e.g., settings, permissions, line items) and classifies each item:
+Compares collections of identifiable `Auditable` items (e.g., settings, line items) and classifies each item:
 - **`added`**: Present in new collection, absent in old.
 - **`removed`**: Present in old collection, absent in new.
-- **`changed`**: Present in both, but specific fields differ.
+- **`changed`**: Present in both, but specific auditable fields differ.
 
 ```java
 CollectionDiff<TenantSetting> diff = AuditDiffEngine.diffKeyedCollection(
     previousSettings,
     updatedSettings,
-    TenantSetting::key,
-    (oldSetting, newSetting) -> AuditDiffEngine.diffFields(
-        Map.of("value", oldSetting.value(), "revision", oldSetting.revision()),
-        Map.of("value", newSetting.value(), "revision", newSetting.revision())
-    )
+    TenantSetting::key
 );
 ```
 
@@ -276,12 +325,26 @@ correlation_id: "req-sett-456"
 
 When introducing a new domain aggregate (e.g. `Patient`, `Encounter`, `Prescription`):
 
-1. **Accept `OperationContext` in the Use Case**:
+1. **Implement `Auditable` on the Domain Model**:
+   ```java
+   public record Patient(PatientId id, String mrn, String fullName, Instant birthDate, Instant updatedAt) implements Auditable {
+       @Override
+       public Map<String, Object> auditableFields() {
+           return Map.of(
+               "mrn", mrn,
+               "fullName", fullName,
+               "birthDate", birthDate.toString()
+           );
+       }
+   }
+   ```
+
+2. **Accept `OperationContext` in the Use Case**:
    ```java
    RegisterPatientResult execute(RegisterPatientCommand command, OperationContext context);
    ```
 
-2. **Include Context & State in Domain Event**:
+3. **Include Context & State in Domain Event**:
    ```java
    public record PatientRegistered(
        Patient patient,
@@ -291,19 +354,12 @@ When introducing a new domain aggregate (e.g. `Patient`, `Encounter`, `Prescript
    ) {}
    ```
 
-3. **Handle Event in `AuditTrailEventListener` (or dedicated domain listener)**:
+4. **Handle Event in `AuditTrailEventListener`**:
    ```java
    @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
    public void onPatientRegistered(PatientRegistered event) {
        var patient = event.patient();
-       Map<String, FieldDiff> fieldDiffs = AuditDiffEngine.diffFields(
-           null,
-           Map.of(
-               "mrn", patient.mrn(),
-               "fullName", patient.fullName(),
-               "status", patient.status().name()
-           )
-       );
+       Map<String, FieldDiff> fieldDiffs = AuditDiffEngine.diff(null, patient);
 
        auditEntries.save(new AuditEntryEntity(
            patient.tenantId().value(),
@@ -318,6 +374,6 @@ When introducing a new domain aggregate (e.g. `Patient`, `Encounter`, `Prescript
    }
    ```
 
-4. **Verify in Integration Tests**:
+5. **Verify in Integration Tests**:
    - Query `audit_entries` table after HTTP request.
    - Assert `actor`, `correlation_id`, `action`, and JSON structure under `changes_json`.

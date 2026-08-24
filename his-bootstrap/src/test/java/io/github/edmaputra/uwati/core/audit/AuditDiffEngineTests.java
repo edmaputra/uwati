@@ -10,11 +10,43 @@ import org.junit.jupiter.api.Test;
 
 import io.github.edmaputra.uwati.core.audit.AuditDiffEngine.CollectionDiff;
 import io.github.edmaputra.uwati.core.audit.AuditDiffEngine.FieldDiff;
+import io.github.edmaputra.uwati.domain.audit.Auditable;
 
 @DisplayName("AuditDiffEngine & AuditJsonFormatter Unit Tests")
 class AuditDiffEngineTests {
 
-	record Setting(String key, String value, int revision) {}
+	record Setting(String key, String value, int revision, String internalMetadata) implements Auditable {
+		@Override
+		public Map<String, Object> auditableFields() {
+			// internalMetadata is deliberately omitted from audit trail
+			return Map.of(
+					"value", value,
+					"revision", revision);
+		}
+	}
+
+	record SimpleEntity(String name, String status, String unmonitoredField) implements Auditable {
+		@Override
+		public Map<String, Object> auditableFields() {
+			return Map.of(
+					"name", name,
+					"status", status);
+		}
+	}
+
+	@Test
+	@DisplayName("computes differences between Auditable models only on declared fields")
+	void computesAuditableModelDiffs() {
+		SimpleEntity oldEntity = new SimpleEntity("Old Name", "ACTIVE", "secret1");
+		SimpleEntity newEntity = new SimpleEntity("New Name", "SUSPENDED", "secret2");
+
+		Map<String, FieldDiff> diffs = AuditDiffEngine.diff(oldEntity, newEntity);
+
+		assertThat(diffs).hasSize(2);
+		assertThat(diffs.get("name")).isEqualTo(new FieldDiff("Old Name", "New Name"));
+		assertThat(diffs.get("status")).isEqualTo(new FieldDiff("ACTIVE", "SUSPENDED"));
+		assertThat(diffs.containsKey("unmonitoredField")).isFalse();
+	}
 
 	@Test
 	@DisplayName("computes field differences between previous and updated maps")
@@ -46,25 +78,22 @@ class AuditDiffEngineTests {
 	}
 
 	@Test
-	@DisplayName("computes keyed collection differences with added, removed, and changed elements")
+	@DisplayName("computes keyed collection differences with added, removed, and changed Auditable elements")
 	void computesKeyedCollectionDiffs() {
 		List<Setting> oldSettings = List.of(
-				new Setting("org.locale", "en-US", 1),
-				new Setting("org.timezone", "UTC", 1),
-				new Setting("legacy.key", "oldVal", 1));
+				new Setting("org.locale", "en-US", 1, "meta1"),
+				new Setting("org.timezone", "UTC", 1, "meta2"),
+				new Setting("legacy.key", "oldVal", 1, "meta3"));
 
 		List<Setting> newSettings = List.of(
-				new Setting("org.locale", "id-ID", 2),
-				new Setting("org.timezone", "UTC", 1), // unchanged
-				new Setting("new.setting", "val", 1)); // added
+				new Setting("org.locale", "id-ID", 2, "meta4"),
+				new Setting("org.timezone", "UTC", 1, "meta2"), // unchanged
+				new Setting("new.setting", "val", 1, "meta5")); // added
 
 		CollectionDiff<Setting> diff = AuditDiffEngine.diffKeyedCollection(
 				oldSettings,
 				newSettings,
-				Setting::key,
-				(oldS, newS) -> AuditDiffEngine.diffFields(
-						Map.of("value", oldS.value(), "revision", oldS.revision()),
-						Map.of("value", newS.value(), "revision", newS.revision())));
+				Setting::key);
 
 		assertThat(diff.hasChanges()).isTrue();
 		assertThat(diff.added()).hasSize(1);

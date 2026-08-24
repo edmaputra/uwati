@@ -12,6 +12,8 @@ import java.util.TreeSet;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+import io.github.edmaputra.uwati.domain.audit.Auditable;
+
 /**
  * Engine for computing state differences between previous and updated objects or collections.
  */
@@ -47,6 +49,15 @@ public final class AuditDiffEngine {
 	}
 
 	/**
+	 * Computes differences between two {@link Auditable} models by comparing their declared auditable fields.
+	 */
+	public static <T extends Auditable> Map<String, FieldDiff> diff(T oldEntity, T newEntity) {
+		Map<String, ?> oldFields = oldEntity != null ? oldEntity.auditableFields() : null;
+		Map<String, ?> newFields = newEntity != null ? newEntity.auditableFields() : null;
+		return diffFields(oldFields, newFields);
+	}
+
+	/**
 	 * Computes differences between two maps of property fields with deterministic alphabetical key ordering.
 	 */
 	public static Map<String, FieldDiff> diffFields(Map<String, ?> oldFields, Map<String, ?> newFields) {
@@ -70,7 +81,17 @@ public final class AuditDiffEngine {
 	}
 
 	/**
-	 * Computes differences for a collection of identifiable (keyed) elements.
+	 * Computes differences for a collection of identifiable {@link Auditable} elements.
+	 */
+	public static <T extends Auditable, K> CollectionDiff<T> diffKeyedCollection(
+			Collection<T> oldElements,
+			Collection<T> newElements,
+			Function<T, K> keyExtractor) {
+		return diffKeyedCollection(oldElements, newElements, keyExtractor, AuditDiffEngine::diff);
+	}
+
+	/**
+	 * Computes differences for a collection of identifiable (keyed) elements with a custom element differ.
 	 */
 	public static <T, K> CollectionDiff<T> diffKeyedCollection(
 			Collection<T> oldElements,

@@ -17,7 +17,7 @@ import lombok.RequiredArgsConstructor;
 
 /**
  * Listens to domain events and persists common, structured audit-trail entries.
- * Actor and correlation ID are read directly from each event, not from an ambient context.
+ * Uses the Auditable interface on domain models to capture only monitored fields.
  */
 @Component
 @RequiredArgsConstructor
@@ -29,13 +29,7 @@ public class AuditTrailEventListener {
 	public void onTenantCreated(TenantCreated event) {
 		var tenant = event.tenant();
 
-		Map<String, FieldDiff> fieldDiffs = AuditDiffEngine.diffFields(
-				null,
-				Map.of(
-						"displayName", tenant.displayName(),
-						"legalName", tenant.legalName(),
-						"status", tenant.status().name()));
-
+		Map<String, FieldDiff> fieldDiffs = AuditDiffEngine.diff(null, tenant);
 		String changesJson = AuditJsonFormatter.formatDiff(fieldDiffs);
 
 		auditEntries.save(new AuditEntryEntity(
@@ -54,10 +48,7 @@ public class AuditTrailEventListener {
 		CollectionDiff<TenantSetting> collectionDiff = AuditDiffEngine.diffKeyedCollection(
 				event.previousSettings(),
 				event.updatedSettings(),
-				TenantSetting::key,
-				(oldSetting, newSetting) -> AuditDiffEngine.diffFields(
-						Map.of("value", oldSetting.value(), "revision", oldSetting.revision()),
-						Map.of("value", newSetting.value(), "revision", newSetting.revision())));
+				TenantSetting::key);
 
 		String changesJson = AuditJsonFormatter.formatCollectionDiff(
 				"settings",
