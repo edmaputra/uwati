@@ -7,6 +7,8 @@ import java.util.Map;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.skyscreamer.jsonassert.JSONAssert;
+import org.skyscreamer.jsonassert.JSONCompareMode;
 
 import io.github.edmaputra.uwati.core.audit.AuditDiffEngine.CollectionDiff;
 import io.github.edmaputra.uwati.core.audit.AuditDiffEngine.FieldDiff;
@@ -50,7 +52,7 @@ class AuditDiffEngineTests {
 
 	@Test
 	@DisplayName("computes field differences directly at root without 'fields' wrapper")
-	void computesFieldDiffs() {
+	void computesFieldDiffs() throws Exception {
 		Map<String, Object> oldFields = Map.of(
 				"name", "RS Lama",
 				"status", "ACTIVE",
@@ -71,15 +73,18 @@ class AuditDiffEngineTests {
 		assertThat(diffs.containsKey("unchanged")).isFalse();
 
 		String json = AuditJsonFormatter.formatDiff(diffs);
-		assertThat(json).doesNotContain("\"fields\":");
-		assertThat(json).contains("\"name\":{\"old\":\"RS Lama\",\"new\":\"RS Baru\"}");
-		assertThat(json).contains("\"newProp\":{\"old\":null,\"new\":\"extra\"}");
-		assertThat(json).contains("\"status\":{\"old\":\"ACTIVE\",\"new\":\"SUSPENDED\"}");
+		JSONAssert.assertEquals("""
+				{
+				  "name": { "old": "RS Lama", "new": "RS Baru" },
+				  "status": { "old": "ACTIVE", "new": "SUSPENDED" },
+				  "newProp": { "old": null, "new": "extra" }
+				}
+				""", json, JSONCompareMode.LENIENT);
 	}
 
 	@Test
 	@DisplayName("computes keyed collection differences retaining collection name without 'collections' or 'fields' wrapper")
-	void computesKeyedCollectionDiffs() {
+	void computesKeyedCollectionDiffs() throws Exception {
 		List<Setting> oldSettings = List.of(
 				new Setting("org.locale", "en-US", 1, "meta1"),
 				new Setting("org.timezone", "UTC", 1, "meta2"),
@@ -110,13 +115,27 @@ class AuditDiffEngineTests {
 		String json = AuditJsonFormatter.formatCollectionDiff(
 				"settings",
 				diff,
-				s -> "{\"key\":\"%s\",\"value\":\"%s\",\"revision\":%d}".formatted(s.key(), s.value(), s.revision()));
+				s -> Map.of("key", s.key(), "value", s.value(), "revision", s.revision()));
 
-		assertThat(json).doesNotContain("\"collections\":");
-		assertThat(json).contains("\"settings\":{");
-		assertThat(json).contains("\"added\":[{\"key\":\"new.setting\",\"value\":\"val\",\"revision\":1}]");
-		assertThat(json).contains("\"removed\":[{\"key\":\"legacy.key\",\"value\":\"oldVal\",\"revision\":1}]");
-		assertThat(json).contains("\"changed\":[{\"key\":\"org.locale\",\"revision\":{\"old\":1,\"new\":2},\"value\":{\"old\":\"en-US\",\"new\":\"id-ID\"}}]");
+		JSONAssert.assertEquals("""
+				{
+				  "settings": {
+				    "added": [
+				      { "key": "new.setting", "value": "val", "revision": 1 }
+				    ],
+				    "removed": [
+				      { "key": "legacy.key", "value": "oldVal", "revision": 1 }
+				    ],
+				    "changed": [
+				      {
+				        "key": "org.locale",
+				        "revision": { "old": 1, "new": 2 },
+				        "value": { "old": "en-US", "new": "id-ID" }
+				      }
+				    ]
+				  }
+				}
+				""", json, JSONCompareMode.LENIENT);
 	}
 
 	@Test

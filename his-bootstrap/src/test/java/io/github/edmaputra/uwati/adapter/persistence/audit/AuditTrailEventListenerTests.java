@@ -11,6 +11,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.skyscreamer.jsonassert.JSONAssert;
+import org.skyscreamer.jsonassert.JSONCompareMode;
 
 import io.github.edmaputra.uwati.domain.tenancy.domain.Tenant;
 import io.github.edmaputra.uwati.domain.tenancy.domain.TenantId;
@@ -33,7 +35,7 @@ class AuditTrailEventListenerTests {
 
 	@Test
 	@DisplayName("persists audit entry on TenantCreated with actor and correlationId from event without 'fields' wrapper")
-	void recordsTenantCreatedAuditEntry() {
+	void recordsTenantCreatedAuditEntry() throws Exception {
 		TenantId tenantId = TenantId.generate();
 		Instant now = Instant.now();
 		Tenant tenant = new Tenant(
@@ -59,15 +61,18 @@ class AuditTrailEventListenerTests {
 		assertThat(saved.getCorrelationId()).isEqualTo("trace-abc-123");
 		assertThat(saved.getOccurredAt()).isEqualTo(now);
 
-		assertThat(saved.getChangesJson()).doesNotContain("\"fields\":");
-		assertThat(saved.getChangesJson()).contains("\"displayName\":{\"old\":null,\"new\":\"RS Permata\"}");
-		assertThat(saved.getChangesJson()).contains("\"legalName\":{\"old\":null,\"new\":\"RS Permata Medika Ltd.\"}");
-		assertThat(saved.getChangesJson()).contains("\"status\":{\"old\":null,\"new\":\"ACTIVE\"}");
+		JSONAssert.assertEquals("""
+				{
+				  "displayName": { "old": null, "new": "RS Permata" },
+				  "legalName": { "old": null, "new": "RS Permata Medika Ltd." },
+				  "status": { "old": null, "new": "ACTIVE" }
+				}
+				""", saved.getChangesJson(), JSONCompareMode.LENIENT);
 	}
 
 	@Test
 	@DisplayName("persists audit entry on TenantSettingsUpdated with actor, correlationId, and collection diff")
-	void recordsTenantSettingsUpdatedAuditEntry() {
+	void recordsTenantSettingsUpdatedAuditEntry() throws Exception {
 		TenantId tenantId = TenantId.generate();
 		Instant now = Instant.now();
 
@@ -94,12 +99,25 @@ class AuditTrailEventListenerTests {
 		assertThat(saved.getActor()).isEqualTo("operator-01");
 		assertThat(saved.getCorrelationId()).isEqualTo("trace-abc-123");
 
-		String json = saved.getChangesJson();
-		assertThat(json).doesNotContain("\"collections\":");
-		assertThat(json).contains("\"settings\":{");
-		assertThat(json).contains("\"added\":[{\"key\":\"inventory.unit\",\"value\":\"BOX\",\"revision\":1}]");
-		assertThat(json).contains("\"removed\":[{\"key\":\"old.feature\",\"value\":\"true\",\"revision\":1}]");
-		assertThat(json).contains("\"changed\":[{\"key\":\"organization.locale\",\"revision\":{\"old\":1,\"new\":2},\"value\":{\"old\":\"en-US\",\"new\":\"id-ID\"}}]");
+		JSONAssert.assertEquals("""
+				{
+				  "settings": {
+				    "added": [
+				      { "key": "inventory.unit", "value": "BOX", "revision": 1 }
+				    ],
+				    "removed": [
+				      { "key": "old.feature", "value": "true", "revision": 1 }
+				    ],
+				    "changed": [
+				      {
+				        "key": "organization.locale",
+				        "revision": { "old": 1, "new": 2 },
+				        "value": { "old": "en-US", "new": "id-ID" }
+				      }
+				    ]
+				  }
+				}
+				""", saved.getChangesJson(), JSONCompareMode.LENIENT);
 	}
 
 	@Test

@@ -53,10 +53,10 @@ public class AuditTrailEventListener {
 		String changesJson = AuditJsonFormatter.formatCollectionDiff(
 				"settings",
 				collectionDiff,
-				setting -> "{\"key\":\"%s\",\"value\":\"%s\",\"revision\":%d}".formatted(
-						AuditJsonFormatter.escapeJson(setting.key()),
-						AuditJsonFormatter.escapeJson(setting.value()),
-						setting.revision()));
+				setting -> Map.of(
+						"key", setting.key(),
+						"value", setting.value(),
+						"revision", setting.revision()));
 
 		auditEntries.save(new AuditEntryEntity(
 				event.tenantId().value(),

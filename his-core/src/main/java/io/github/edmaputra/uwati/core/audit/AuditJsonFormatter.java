@@ -1,181 +1,105 @@
 package io.github.edmaputra.uwati.core.audit;
 
-import java.util.Collection;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.github.edmaputra.uwati.core.audit.AuditDiffEngine.CollectionDiff;
 import io.github.edmaputra.uwati.core.audit.AuditDiffEngine.ElementDiff;
 import io.github.edmaputra.uwati.core.audit.AuditDiffEngine.FieldDiff;
 
 /**
- * Formats structured audit differences into clean, standard JSON strings
- * without redundant wrapper terms like "fields" or "collections".
+ * Formats structured audit differences into clean, standard JSON strings using Jackson ObjectMapper.
  */
 public final class AuditJsonFormatter {
+
+	private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
 	private AuditJsonFormatter() {
 	}
 
 	public static String formatDiff(Map<String, FieldDiff> fieldDiffs) {
-		return formatDiff(fieldDiffs, Map.of());
+		return formatDiff(fieldDiffs, null, null, null);
+	}
+
+	public static <T> String formatCollectionDiff(
+			String collectionName,
+			CollectionDiff<T> collectionDiff) {
+		return formatDiff(Map.of(), collectionName, collectionDiff, null);
 	}
 
 	public static <T> String formatCollectionDiff(
 			String collectionName,
 			CollectionDiff<T> collectionDiff,
-			Function<T, String> elementJsonSerializer) {
-		return formatDiff(Map.of(), Map.of(collectionName, new SerializedCollectionDiff<>(collectionDiff, elementJsonSerializer)));
+			Function<T, ?> elementSerializer) {
+		return formatDiff(Map.of(), collectionName, collectionDiff, elementSerializer);
 	}
 
-	public record SerializedCollectionDiff<T>(
-			CollectionDiff<T> diff,
-			Function<T, String> serializer) {
-	}
-
-	public static String formatDiff(
+	public static <T> String formatDiff(
 			Map<String, FieldDiff> fieldDiffs,
-			Map<String, SerializedCollectionDiff<?>> collectionDiffs) {
+			String collectionName,
+			CollectionDiff<T> collectionDiff,
+			Function<T, ?> elementSerializer) {
 
-		StringBuilder sb = new StringBuilder();
-		sb.append("{");
-		boolean needsComma = false;
+		Map<String, Object> root = new LinkedHashMap<>();
 
+		// 1. Entity field diffs directly at root
 		if (fieldDiffs != null && !fieldDiffs.isEmpty()) {
-			boolean firstField = true;
 			for (Map.Entry<String, FieldDiff> entry : fieldDiffs.entrySet()) {
-				if (!firstField) {
-					sb.append(",");
+				Map<String, Object> valDiff = new LinkedHashMap<>();
+				valDiff.put("old", entry.getValue().oldValue());
+				valDiff.put("new", entry.getValue().newValue());
+				root.put(entry.getKey(), valDiff);
+			}
+		}
+
+		// 2. Collection diff under its collection name
+		if (collectionName != null && collectionDiff != null) {
+			Map<String, Object> colMap = new LinkedHashMap<>();
+
+			Function<T, Object> serializer = elementSerializer != null
+					? item -> (Object) elementSerializer.apply(item)
+					: item -> (Object) item;
+
+			List<Object> added = new ArrayList<>();
+			for (T item : collectionDiff.added()) {
+				added.add(serializer.apply(item));
+			}
+			colMap.put("added", added);
+
+			List<Object> removed = new ArrayList<>();
+			for (T item : collectionDiff.removed()) {
+				removed.add(serializer.apply(item));
+			}
+			colMap.put("removed", removed);
+
+			List<Map<String, Object>> changed = new ArrayList<>();
+			for (ElementDiff change : collectionDiff.changed()) {
+				Map<String, Object> changeMap = new LinkedHashMap<>();
+				changeMap.put("key", change.key());
+				for (Map.Entry<String, FieldDiff> fEntry : change.fields().entrySet()) {
+					Map<String, Object> fValDiff = new LinkedHashMap<>();
+					fValDiff.put("old", fEntry.getValue().oldValue());
+					fValDiff.put("new", fEntry.getValue().newValue());
+					changeMap.put(fEntry.getKey(), fValDiff);
 				}
-				firstField = false;
-				sb.append("\"").append(escapeJson(entry.getKey())).append("\":{");
-				sb.append("\"old\":").append(toJsonValue(entry.getValue().oldValue())).append(",");
-				sb.append("\"new\":").append(toJsonValue(entry.getValue().newValue()));
-				sb.append("}");
+				changed.add(changeMap);
 			}
-			needsComma = true;
+			colMap.put("changed", changed);
+
+			root.put(collectionName, colMap);
 		}
 
-		if (collectionDiffs != null && !collectionDiffs.isEmpty()) {
-			for (Map.Entry<String, SerializedCollectionDiff<?>> entry : collectionDiffs.entrySet()) {
-				if (needsComma) {
-					sb.append(",");
-				}
-				needsComma = true;
-				sb.append("\"").append(escapeJson(entry.getKey())).append("\":");
-				writeCollectionDiff(sb, entry.getValue());
-			}
+		try {
+			return OBJECT_MAPPER.writeValueAsString(root);
 		}
-
-		sb.append("}");
-		return sb.toString();
-	}
-
-	@SuppressWarnings("unchecked")
-	private static <T> void writeCollectionDiff(StringBuilder sb, SerializedCollectionDiff<T> serialized) {
-		CollectionDiff<T> diff = serialized.diff();
-		Function<T, String> serializer = serialized.serializer() != null
-				? serialized.serializer()
-				: item -> toJsonValue(item);
-
-		sb.append("{");
-
-		// "added"
-		sb.append("\"added\":[");
-		boolean firstAdded = true;
-		for (T item : diff.added()) {
-			if (!firstAdded) {
-				sb.append(",");
-			}
-			firstAdded = false;
-			sb.append(serializer.apply(item));
+		catch (Exception e) {
+			throw new IllegalStateException("Failed to serialize audit diff to JSON", e);
 		}
-		sb.append("],");
-
-		// "removed"
-		sb.append("\"removed\":[");
-		boolean firstRemoved = true;
-		for (T item : diff.removed()) {
-			if (!firstRemoved) {
-				sb.append(",");
-			}
-			firstRemoved = false;
-			sb.append(serializer.apply(item));
-		}
-		sb.append("],");
-
-		// "changed"
-		sb.append("\"changed\":[");
-		boolean firstChanged = true;
-		for (ElementDiff change : diff.changed()) {
-			if (!firstChanged) {
-				sb.append(",");
-			}
-			firstChanged = false;
-			sb.append("{\"key\":\"").append(escapeJson(change.key())).append("\"");
-			for (Map.Entry<String, FieldDiff> fEntry : change.fields().entrySet()) {
-				sb.append(",\"").append(escapeJson(fEntry.getKey())).append("\":{");
-				sb.append("\"old\":").append(toJsonValue(fEntry.getValue().oldValue())).append(",");
-				sb.append("\"new\":").append(toJsonValue(fEntry.getValue().newValue()));
-				sb.append("}");
-			}
-			sb.append("}");
-		}
-		sb.append("]");
-
-		sb.append("}");
-	}
-
-	public static String toJsonValue(Object value) {
-		if (value == null) {
-			return "null";
-		}
-		if (value instanceof Number || value instanceof Boolean) {
-			return value.toString();
-		}
-		if (value instanceof CharSequence || value instanceof Enum<?> || value instanceof java.time.temporal.Temporal) {
-			return "\"" + escapeJson(value.toString()) + "\"";
-		}
-		if (value instanceof Collection<?> col) {
-			StringBuilder sb = new StringBuilder("[");
-			boolean first = true;
-			for (Object item : col) {
-				if (!first) sb.append(",");
-				first = false;
-				sb.append(toJsonValue(item));
-			}
-			sb.append("]");
-			return sb.toString();
-		}
-		return "\"" + escapeJson(value.toString()) + "\"";
-	}
-
-	public static String escapeJson(String value) {
-		if (value == null) {
-			return "";
-		}
-		StringBuilder sb = new StringBuilder();
-		for (int i = 0; i < value.length(); i++) {
-			char c = value.charAt(i);
-			switch (c) {
-				case '"' -> sb.append("\\\"");
-				case '\\' -> sb.append("\\\\");
-				case '\b' -> sb.append("\\b");
-				case '\f' -> sb.append("\\f");
-				case '\n' -> sb.append("\\n");
-				case '\r' -> sb.append("\\r");
-				case '\t' -> sb.append("\\t");
-				default -> {
-					if (c < ' ') {
-						sb.append(String.format("\\u%04x", (int) c));
-					}
-					else {
-						sb.append(c);
-					}
-				}
-			}
-		}
-		return sb.toString();
 	}
 }
