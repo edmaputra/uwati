@@ -1,12 +1,15 @@
 package io.github.edmaputra.uwati.domain.tenancy.domain;
 
+import java.util.Map;
 import java.util.Objects;
+
+import io.github.edmaputra.uwati.domain.audit.Auditable;
 
 public record TenantSetting(
 		TenantId tenantId,
 		String key,
 		String value,
-		int revision) {
+		int revision) implements Auditable {
 
 	public TenantSetting {
 		Objects.requireNonNull(tenantId, "Tenant ID must not be null.");
@@ -23,5 +26,12 @@ public record TenantSetting(
 
 	public TenantSetting withIncrementedRevision(String newValue) {
 		return new TenantSetting(tenantId, key, newValue, revision + 1);
+	}
+
+	@Override
+	public Map<String, Object> auditableFields() {
+		return Map.of(
+				"value", value,
+				"revision", revision);
 	}
 }

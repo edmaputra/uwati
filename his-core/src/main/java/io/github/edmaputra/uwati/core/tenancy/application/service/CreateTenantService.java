@@ -3,6 +3,7 @@ package io.github.edmaputra.uwati.core.tenancy.application.service;
 import java.time.Instant;
 import java.util.Objects;
 
+import io.github.edmaputra.uwati.domain.tenancy.application.OperationContext;
 import io.github.edmaputra.uwati.domain.tenancy.application.port.in.CreateTenantCommand;
 import io.github.edmaputra.uwati.domain.tenancy.application.port.in.CreateTenantUseCase;
 import io.github.edmaputra.uwati.domain.tenancy.application.port.out.TenantEventPublisher;
@@ -21,8 +22,9 @@ public class CreateTenantService implements CreateTenantUseCase {
 	private final TenantEventPublisher eventPublisher;
 
 	@Override
-	public Tenant execute(CreateTenantCommand command) {
+	public Tenant execute(CreateTenantCommand command, OperationContext context) {
 		Objects.requireNonNull(command, "Create tenant command must not be null.");
+		Objects.requireNonNull(context, "Operation context must not be null.");
 
 		String legalName = command.legalName().trim();
 		String displayName = command.displayName().trim();
@@ -50,7 +52,8 @@ public class CreateTenantService implements CreateTenantUseCase {
 							now,
 							now);
 					Tenant createdTenant = tenantRepository.save(tenant);
-					eventPublisher.publish(TenantCreated.of(createdTenant));
+					eventPublisher.publish(
+							TenantCreated.of(createdTenant, context.actor(), context.correlationId()));
 					return createdTenant;
 				});
 	}

@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -12,6 +13,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.skyscreamer.jsonassert.JSONAssert;
+import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -19,6 +22,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
 
 import io.github.edmaputra.uwati.TestcontainersConfiguration;
@@ -35,12 +39,15 @@ class ConfigureTenantSettingsIntegrationTests {
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
 
+	@Autowired
+	private ObjectMapper objectMapper;
+
 	private WebTestClient webTestClient;
 
 	@BeforeEach
 	void setup() {
 		webTestClient = WebTestClient.bindToServer().baseUrl("http://localhost:" + port).build();
-		jdbcTemplate.update("delete from tenant_audit_entries");
+		jdbcTemplate.update("delete from audit_entries");
 		jdbcTemplate.update("delete from tenant_document_sequences");
 		jdbcTemplate.update("delete from tenant_settings");
 		jdbcTemplate.update("delete from tenants");
@@ -52,7 +59,7 @@ class ConfigureTenantSettingsIntegrationTests {
 
 		@Test
 		@DisplayName("queries default settings and updates settings with incremented revisions and audit trail")
-		void updatesSettingsAndIncrementsRevision() {
+		void updatesSettingsAndIncrementsRevision() throws Exception {
 			String tenantId = createTenant("Uwati Health Services Ltd.", "Uwati Health");
 
 			// 1. Query initial default settings
@@ -76,9 +83,11 @@ class ConfigureTenantSettingsIntegrationTests {
 					"organization.locale",
 					"organization.time-zone");
 
-			// 2. Configure / update settings
-			byte[] putBytes = webTestClient.put()
+			// 2. Configure / update settings with actor and correlation-id headers
+			webTestClient.put()
 					.uri("/api/platform/tenants/%s/settings".formatted(tenantId))
+					.header("X-Actor-Id", "operator-admin")
+					.header("X-Correlation-Id", "corr-settings-update-999")
 					.contentType(APPLICATION_JSON)
 					.bodyValue("""
 							{
@@ -104,53 +113,148 @@ class ConfigureTenantSettingsIntegrationTests {
 							""")
 					.exchange()
 					.expectStatus().isOk()
+					.expectHeader().valueEquals("X-Correlation-Id", "corr-settings-update-999")
 					.expectHeader().contentTypeCompatibleWith(APPLICATION_JSON)
 					.expectBody()
-					.jsonPath("$.length()").isEqualTo(4)
-					.returnResult()
-					.getResponseBodyContent();
-
-			assertThat(putBytes).isNotNull();
-			String putJson = new String(putBytes, StandardCharsets.UTF_8);
-
-			// Verify updated revisions and values from response JSON
-			List<Map<String, Object>> updatedSettings = JsonPath.read(putJson, "$");
-			Map<String, Object> localeSetting = findSetting(updatedSettings, "organization.locale");
-			assertThat(localeSetting.get("value")).isEqualTo("id-ID");
-			assertThat(localeSetting.get("revision")).isEqualTo(2);
-
-			Map<String, Object> tzSetting = findSetting(updatedSettings, "organization.time-zone");
-			assertThat(tzSetting.get("value")).isEqualTo("Asia/Jakarta");
-			assertThat(tzSetting.get("revision")).isEqualTo(2);
-
-			Map<String, Object> currencySetting = findSetting(updatedSettings, "finance.currency");
-			assertThat(currencySetting.get("value")).isEqualTo("IDR");
-			assertThat(currencySetting.get("revision")).isEqualTo(2);
-
-			Map<String, Object> emailSetting = findSetting(updatedSettings, "organization.contact-email");
-			assertThat(emailSetting.get("value")).isEqualTo("admin@uwati.health");
-			assertThat(emailSetting.get("revision")).isEqualTo(1);
+					.json("""
+							[
+							  {
+							    "key": "organization.locale",
+							    "value": "id-ID",
+							    "revision": 2
+							  },
+							  {
+							    "key": "organization.time-zone",
+							    "value": "Asia/Jakarta",
+							    "revision": 2
+							  },
+							  {
+							    "key": "finance.currency",
+							    "value": "IDR",
+							    "revision": 2
+							  },
+							  {
+							    "key": "organization.contact-email",
+							    "value": "admin@uwati.health",
+							    "revision": 1
+							  }
+							]
+							""");
 
 			// 3. Verify PostgreSQL database state
 			UUID tenantUuid = UUID.fromString(tenantId);
 			Map<String, Object> localeRow = jdbcTemplate.queryForMap(
 					"select setting_value, revision from tenant_settings where tenant_id = ? and setting_key = 'organization.locale'",
 					tenantUuid);
-			assertThat(localeRow.get("setting_value")).isEqualTo("id-ID");
-			assertThat(localeRow.get("revision")).isEqualTo(2);
+			JSONAssert.assertEquals("""
+					{
+					  "setting_value": "id-ID",
+					  "revision": 2
+					}
+					""", objectMapper.writeValueAsString(localeRow), JSONCompareMode.LENIENT);
 
 			Map<String, Object> emailRow = jdbcTemplate.queryForMap(
 					"select setting_value, revision from tenant_settings where tenant_id = ? and setting_key = 'organization.contact-email'",
 					tenantUuid);
-			assertThat(emailRow.get("setting_value")).isEqualTo("admin@uwati.health");
-			assertThat(emailRow.get("revision")).isEqualTo(1);
+			JSONAssert.assertEquals("""
+					{
+					  "setting_value": "admin@uwati.health",
+					  "revision": 1
+					}
+					""", objectMapper.writeValueAsString(emailRow), JSONCompareMode.LENIENT);
 
-			// Verify audit trail entry
-			List<String> auditEvents = jdbcTemplate.queryForList(
-					"select event_type from tenant_audit_entries where tenant_id = ? order by id",
-					String.class,
+			// 4. Verify audit trail entries in database
+			List<Map<String, Object>> auditRows = jdbcTemplate.queryForList(
+					"select tenant_id, entity_name, entity_id, action, actor, correlation_id, changes_json from audit_entries where tenant_id = ? order by id",
 					tenantUuid);
-			assertThat(auditEvents).containsExactly("TENANT_CREATED", "TENANT_SETTINGS_CONFIGURED");
+			assertThat(auditRows).hasSize(2);
+
+			// Audit 1: Tenant Creation
+			Map<String, Object> tenantAudit = auditRows.get(0);
+			JSONAssert.assertEquals("""
+					{
+					  "tenant_id": "%s",
+					  "entity_name": "Tenant",
+					  "entity_id": "%s",
+					  "action": "CREATE",
+					  "actor": "operator-creator",
+					  "correlation_id": "corr-create-tenant-001",
+					  "changes": {
+					    "displayName": {
+					      "old": null,
+					      "new": "Uwati Health"
+					    },
+					    "legalName": {
+					      "old": null,
+					      "new": "Uwati Health Services Ltd."
+					    },
+					    "status": {
+					      "old": null,
+					      "new": "ACTIVE"
+					    }
+					  }
+					}
+					""".formatted(tenantUuid, tenantId), toAuditJson(tenantAudit), JSONCompareMode.LENIENT);
+
+			// Audit 2: Tenant Settings Configuration
+			Map<String, Object> settingsAudit = auditRows.get(1);
+			JSONAssert.assertEquals("""
+					{
+					  "tenant_id": "%s",
+					  "entity_name": "TenantSetting",
+					  "entity_id": "%s",
+					  "action": "UPDATE",
+					  "actor": "operator-admin",
+					  "correlation_id": "corr-settings-update-999",
+					  "changes": {
+					    "settings": {
+					      "added": [
+					        {
+					          "key": "organization.contact-email",
+					          "value": "admin@uwati.health",
+					          "revision": 1
+					        }
+					      ],
+					      "removed": [],
+					      "changed": [
+					        {
+					          "key": "organization.locale",
+					          "revision": {
+					            "old": 1,
+					            "new": 2
+					          },
+					          "value": {
+					            "old": "en-US",
+					            "new": "id-ID"
+					          }
+					        },
+					        {
+					          "key": "organization.time-zone",
+					          "revision": {
+					            "old": 1,
+					            "new": 2
+					          },
+					          "value": {
+					            "old": "UTC",
+					            "new": "Asia/Jakarta"
+					          }
+					        },
+					        {
+					          "key": "finance.currency",
+					          "revision": {
+					            "old": 1,
+					            "new": 2
+					          },
+					          "value": {
+					            "old": "USD",
+					            "new": "IDR"
+					          }
+					        }
+					      ]
+					    }
+					  }
+					}
+					""".formatted(tenantUuid, tenantId), toAuditJson(settingsAudit), JSONCompareMode.LENIENT);
 		}
 	}
 
@@ -170,8 +274,8 @@ class ConfigureTenantSettingsIntegrationTests {
 							{
 							  "settings": [
 							    {
-							      "key": "unsupported.custom-key",
-							      "value": "custom-val"
+							      "key": "unknown.custom-setting",
+							      "value": "some-value"
 							    }
 							  ]
 							}
@@ -181,7 +285,51 @@ class ConfigureTenantSettingsIntegrationTests {
 		}
 
 		@Test
-		@DisplayName("rejects configuration when timezone is invalid")
+		@DisplayName("rejects configuration when currency code is invalid")
+		void rejectsInvalidCurrency() {
+			String tenantId = createTenant("Uwati Health Services Ltd.", "Uwati Health");
+
+			webTestClient.put()
+					.uri("/api/platform/tenants/%s/settings".formatted(tenantId))
+					.contentType(APPLICATION_JSON)
+					.bodyValue("""
+							{
+							  "settings": [
+							    {
+							      "key": "finance.currency",
+							      "value": "INVALID_CURRENCY"
+							    }
+							  ]
+							}
+							""")
+					.exchange()
+					.expectStatus().isBadRequest();
+		}
+
+		@Test
+		@DisplayName("rejects configuration when locale tag is invalid")
+		void rejectsInvalidLocale() {
+			String tenantId = createTenant("Uwati Health Services Ltd.", "Uwati Health");
+
+			webTestClient.put()
+					.uri("/api/platform/tenants/%s/settings".formatted(tenantId))
+					.contentType(APPLICATION_JSON)
+					.bodyValue("""
+							{
+							  "settings": [
+							    {
+							      "key": "organization.locale",
+							      "value": "invalid-locale-tag"
+							    }
+							  ]
+							}
+							""")
+					.exchange()
+					.expectStatus().isBadRequest();
+		}
+
+		@Test
+		@DisplayName("rejects configuration when time zone identifier is invalid")
 		void rejectsInvalidTimeZone() {
 			String tenantId = createTenant("Uwati Health Services Ltd.", "Uwati Health");
 
@@ -194,28 +342,6 @@ class ConfigureTenantSettingsIntegrationTests {
 							    {
 							      "key": "organization.time-zone",
 							      "value": "Invalid/Timezone"
-							    }
-							  ]
-							}
-							""")
-					.exchange()
-					.expectStatus().isBadRequest();
-		}
-
-		@Test
-		@DisplayName("rejects configuration when currency code is invalid")
-		void rejectsInvalidCurrencyCode() {
-			String tenantId = createTenant("Uwati Health Services Ltd.", "Uwati Health");
-
-			webTestClient.put()
-					.uri("/api/platform/tenants/%s/settings".formatted(tenantId))
-					.contentType(APPLICATION_JSON)
-					.bodyValue("""
-							{
-							  "settings": [
-							    {
-							      "key": "finance.currency",
-							      "value": "XYZ_INVALID"
 							    }
 							  ]
 							}
@@ -327,6 +453,8 @@ class ConfigureTenantSettingsIntegrationTests {
 	private String createTenant(String legalName, String displayName) {
 		byte[] responseBytes = webTestClient.post()
 				.uri("/api/platform/tenants")
+				.header("X-Actor-Id", "operator-creator")
+				.header("X-Correlation-Id", "corr-create-tenant-001")
 				.contentType(APPLICATION_JSON)
 				.bodyValue("""
 						{
@@ -344,6 +472,22 @@ class ConfigureTenantSettingsIntegrationTests {
 		assertThat(responseBytes).isNotNull();
 		String jsonString = new String(responseBytes, StandardCharsets.UTF_8);
 		return JsonPath.read(jsonString, "$.id");
+	}
+
+	private String toAuditJson(Map<String, Object> row) {
+		Map<String, Object> map = new LinkedHashMap<>(row);
+		if (map.containsKey("changes_json")) {
+			try {
+				map.put("changes", objectMapper.readTree((String) map.remove("changes_json")));
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+		}
+		try {
+			return objectMapper.writeValueAsString(map);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	private Map<String, Object> findSetting(List<Map<String, Object>> list, String key) {

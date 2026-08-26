@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import io.github.edmaputra.uwati.domain.tenancy.application.OperationContext;
 import io.github.edmaputra.uwati.domain.tenancy.application.port.in.ConfigureTenantSettingsCommand;
 import io.github.edmaputra.uwati.domain.tenancy.application.port.in.ConfigureTenantSettingsCommand.SettingEntry;
 import io.github.edmaputra.uwati.domain.tenancy.application.port.in.ConfigureTenantSettingsUseCase;
@@ -25,8 +26,9 @@ public class ConfigureTenantSettingsService implements ConfigureTenantSettingsUs
 	private final TenantEventPublisher tenantEventPublisher;
 
 	@Override
-	public List<TenantSetting> execute(ConfigureTenantSettingsCommand command) {
+	public List<TenantSetting> execute(ConfigureTenantSettingsCommand command, OperationContext context) {
 		Objects.requireNonNull(command, "Command must not be null.");
+		Objects.requireNonNull(context, "Operation context must not be null.");
 
 		tenantRepository.findById(command.tenantId())
 				.orElseThrow(() -> new TenantNotFoundException(command.tenantId()));
@@ -36,7 +38,9 @@ public class ConfigureTenantSettingsService implements ConfigureTenantSettingsUs
 			TenantSettingValidator.validate(entry.key(), entry.value());
 		}
 
+		List<TenantSetting> previousSettings = tenantSettingRepository.findAllByTenantId(command.tenantId());
 		List<TenantSetting> settingsToSave = new ArrayList<>();
+
 		for (SettingEntry entry : command.settings()) {
 			Optional<TenantSetting> existing =
 					tenantSettingRepository.findByTenantIdAndKey(command.tenantId(), entry.key());
@@ -49,7 +53,9 @@ public class ConfigureTenantSettingsService implements ConfigureTenantSettingsUs
 		}
 
 		List<TenantSetting> saved = tenantSettingRepository.saveAll(settingsToSave);
-		tenantEventPublisher.publish(TenantSettingsUpdated.of(command.tenantId(), saved));
+		tenantEventPublisher.publish(
+				TenantSettingsUpdated.of(command.tenantId(), previousSettings, saved,
+						context.actor(), context.correlationId()));
 		return saved;
 	}
 }

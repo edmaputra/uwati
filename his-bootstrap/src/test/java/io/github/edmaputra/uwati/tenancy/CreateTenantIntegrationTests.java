@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -12,6 +13,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.skyscreamer.jsonassert.JSONAssert;
+import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -19,6 +22,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
 
 import io.github.edmaputra.uwati.TestcontainersConfiguration;
@@ -35,12 +39,15 @@ class CreateTenantIntegrationTests {
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
 
+	@Autowired
+	private ObjectMapper objectMapper;
+
 	private WebTestClient webTestClient;
 
 	@BeforeEach
 	void setup() {
 		webTestClient = WebTestClient.bindToServer().baseUrl("http://localhost:" + port).build();
-		jdbcTemplate.update("delete from tenant_audit_entries");
+		jdbcTemplate.update("delete from audit_entries");
 		jdbcTemplate.update("delete from tenant_document_sequences");
 		jdbcTemplate.update("delete from tenant_settings");
 		jdbcTemplate.update("delete from tenants");
@@ -52,9 +59,11 @@ class CreateTenantIntegrationTests {
 
 		@Test
 		@DisplayName("creates an active tenant, publishes TenantCreated event, and provisions default settings, sequences, and audit log")
-		void createsActiveTenantAndProvisionsDefaults() {
+		void createsActiveTenantAndProvisionsDefaults() throws Exception {
 			byte[] responseBytes = webTestClient.post()
 					.uri("/api/platform/tenants")
+					.header("X-Actor-Id", "operator-creator")
+					.header("X-Correlation-Id", "corr-create-tenant-123")
 					.contentType(APPLICATION_JSON)
 					.bodyValue("""
 							{
@@ -64,6 +73,7 @@ class CreateTenantIntegrationTests {
 							""")
 					.exchange()
 					.expectStatus().isCreated()
+					.expectHeader().valueEquals("X-Correlation-Id", "corr-create-tenant-123")
 					.expectHeader().contentTypeCompatibleWith(APPLICATION_JSON)
 					.expectBody()
 					.json("""
@@ -72,7 +82,7 @@ class CreateTenantIntegrationTests {
 							  "displayName": "Uwati Health",
 							  "status": "ACTIVE"
 							}
-							""", false)
+							""")
 					.jsonPath("$.id").isNotEmpty()
 					.jsonPath("$.createdAt").isNotEmpty()
 					.jsonPath("$.updatedAt").isNotEmpty()
@@ -81,29 +91,20 @@ class CreateTenantIntegrationTests {
 
 			assertThat(responseBytes).isNotNull();
 			String jsonString = new String(responseBytes, StandardCharsets.UTF_8);
-
 			String tenantIdStr = JsonPath.read(jsonString, "$.id");
-			String legalName = JsonPath.read(jsonString, "$.legalName");
-			String displayName = JsonPath.read(jsonString, "$.displayName");
-			String status = JsonPath.read(jsonString, "$.status");
-			String createdAt = JsonPath.read(jsonString, "$.createdAt");
-			String updatedAt = JsonPath.read(jsonString, "$.updatedAt");
-
-			assertThat(legalName).isEqualTo("Uwati Health Services Ltd.");
-			assertThat(displayName).isEqualTo("Uwati Health");
-			assertThat(status).isEqualTo("ACTIVE");
-			assertThat(createdAt).isNotBlank();
-			assertThat(updatedAt).isNotBlank();
-
 			UUID tenantId = UUID.fromString(tenantIdStr);
 
 			// Verify tenant persisted in database
 			assertThat(countRowsWhere("tenants", "id = '" + tenantId + "'")).isEqualTo(1);
 			Map<String, Object> tenantRow = jdbcTemplate.queryForMap(
 					"select legal_name, display_name, status from tenants where id = ?", tenantId);
-			assertThat(tenantRow.get("legal_name")).isEqualTo("Uwati Health Services Ltd.");
-			assertThat(tenantRow.get("display_name")).isEqualTo("Uwati Health");
-			assertThat(tenantRow.get("status")).isEqualTo("ACTIVE");
+			JSONAssert.assertEquals("""
+					{
+					  "legal_name": "Uwati Health Services Ltd.",
+					  "display_name": "Uwati Health",
+					  "status": "ACTIVE"
+					}
+					""", objectMapper.writeValueAsString(tenantRow), JSONCompareMode.LENIENT);
 
 			// Verify default tenant settings provisioned
 			List<String> settingKeys = jdbcTemplate.queryForList(
@@ -129,12 +130,37 @@ class CreateTenantIntegrationTests {
 					"PRESCRIPTION",
 					"PURCHASE");
 
-			// Verify audit trail entry recorded
-			List<String> auditEvents = jdbcTemplate.queryForList(
-					"select event_type from tenant_audit_entries where tenant_id = ?",
-					String.class,
+			// Verify audit trail entry recorded in database
+			List<Map<String, Object>> auditEntries = jdbcTemplate.queryForList(
+					"select tenant_id, entity_name, entity_id, action, actor, correlation_id, changes_json from audit_entries where tenant_id = ?",
 					tenantId);
-			assertThat(auditEvents).containsExactly("TENANT_CREATED");
+			assertThat(auditEntries).hasSize(1);
+			Map<String, Object> audit = auditEntries.get(0);
+
+			JSONAssert.assertEquals("""
+					{
+					  "tenant_id": "%s",
+					  "entity_name": "Tenant",
+					  "entity_id": "%s",
+					  "action": "CREATE",
+					  "actor": "operator-creator",
+					  "correlation_id": "corr-create-tenant-123",
+					  "changes": {
+					    "displayName": {
+					      "old": null,
+					      "new": "Uwati Health"
+					    },
+					    "legalName": {
+					      "old": null,
+					      "new": "Uwati Health Services Ltd."
+					    },
+					    "status": {
+					      "old": null,
+					      "new": "ACTIVE"
+					    }
+					  }
+					}
+					""".formatted(tenantId, tenantIdStr), toAuditJson(audit), JSONCompareMode.LENIENT);
 		}
 
 		@Test
@@ -147,7 +173,7 @@ class CreateTenantIntegrationTests {
 			assertThat(countRows("tenants")).isEqualTo(1);
 			assertThat(countRows("tenant_settings")).isEqualTo(5);
 			assertThat(countRows("tenant_document_sequences")).isEqualTo(5);
-			assertThat(countRows("tenant_audit_entries")).isEqualTo(1);
+			assertThat(countRows("audit_entries")).isEqualTo(1);
 		}
 	}
 
@@ -215,6 +241,8 @@ class CreateTenantIntegrationTests {
 	private String createTenant(String legalName, String displayName) {
 		byte[] responseBytes = webTestClient.post()
 				.uri("/api/platform/tenants")
+				.header("X-Actor-Id", "operator-creator")
+				.header("X-Correlation-Id", "corr-create-tenant-idempotent")
 				.contentType(APPLICATION_JSON)
 				.bodyValue("""
 						{
@@ -232,6 +260,22 @@ class CreateTenantIntegrationTests {
 		assertThat(responseBytes).isNotNull();
 		String jsonString = new String(responseBytes, StandardCharsets.UTF_8);
 		return JsonPath.read(jsonString, "$.id");
+	}
+
+	private String toAuditJson(Map<String, Object> row) {
+		Map<String, Object> map = new LinkedHashMap<>(row);
+		if (map.containsKey("changes_json")) {
+			try {
+				map.put("changes", objectMapper.readTree((String) map.remove("changes_json")));
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+		}
+		try {
+			return objectMapper.writeValueAsString(map);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	private long countRows(String tableName) {

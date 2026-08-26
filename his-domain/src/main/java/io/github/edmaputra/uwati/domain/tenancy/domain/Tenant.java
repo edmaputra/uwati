@@ -1,7 +1,10 @@
 package io.github.edmaputra.uwati.domain.tenancy.domain;
 
 import java.time.Instant;
+import java.util.Map;
 import java.util.Objects;
+
+import io.github.edmaputra.uwati.domain.audit.Auditable;
 
 public record Tenant(
 		TenantId id,
@@ -9,7 +12,7 @@ public record Tenant(
 		String displayName,
 		TenantStatus status,
 		Instant createdAt,
-		Instant updatedAt) {
+		Instant updatedAt) implements Auditable {
 
 	public Tenant {
 		Objects.requireNonNull(id, "Tenant ID must not be null.");
@@ -29,5 +32,13 @@ public record Tenant(
 
 	public boolean isActive() {
 		return status == TenantStatus.ACTIVE;
+	}
+
+	@Override
+	public Map<String, Object> auditableFields() {
+		return Map.of(
+				"displayName", displayName,
+				"legalName", legalName,
+				"status", status.name());
 	}
 }
