@@ -10,4 +10,12 @@
 	</parent>
 	<artifactId>his-domain</artifactId>
 	<name>Uwati HIS Domain</name>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
 </project>

@@ -22,6 +22,7 @@
 		<module>his-core</module>
 		<module>his-rest</module>
 		<module>his-persistence</module>
+		<module>his-iam</module>
 		<module>his-bootstrap</module>
 	</modules>
 	<build>

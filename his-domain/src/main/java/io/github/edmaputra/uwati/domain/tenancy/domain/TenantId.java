@@ -3,6 +3,8 @@ package io.github.edmaputra.uwati.domain.tenancy.domain;
 import java.util.Objects;
 import java.util.UUID;
 
+import io.github.edmaputra.uwati.domain.util.UuidV7;
+
 public record TenantId(UUID value) {
 
 	public TenantId {
@@ -10,7 +12,7 @@ public record TenantId(UUID value) {
 	}
 
 	public static TenantId generate() {
-		return new TenantId(UUID.randomUUID());
+		return new TenantId(UuidV7.generate());
 	}
 
 	public static TenantId from(String value) {
