@@ -421,7 +421,134 @@ public interface CurrentActor {
 
 ---
 
-## 6. Directory & Package Structure
+## 6. Multi-Tier Data Ownership & Core HIS Integration Model
+
+To enable granular data segregation, privacy, and clinical accountability across the entire hospital system, Uwati HIS defines a **3-Tier Data Ownership Model**:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 1. TENANT OWNERSHIP (Hospital Boundary)                                     │
+│    - Contract: TenantOwned (tenant_id)                                      │
+│    - Hard isolation: Tenant A never accesses Tenant B's data under any rule.│
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 2. SCOPE OWNERSHIP (Department / Unit / Clinic Boundary)                    │
+│    - Contract: ScopeOwned (scope_node_id)                                   │
+│    - Contextual Row-Level Security: Restricts records to department subtrees│
+│      (e.g., General Surgery, Cardiology, Central Pharmacy).                 │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 3. USER OWNERSHIP (Individual Creator / Author Boundary)                    │
+│    - Contract: UserOwned (owner_user_id / created_by_user_id)               │
+│    - Author-level protection: Enforces ownership of draft clinical notes,   │
+│      digital signatures, personal task queues, and non-repudiation.         │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 6.1 Domain Contracts in `his-domain`
+
+`his-domain` defines pure, lightweight interfaces that business entities implement without coupling to database or security frameworks:
+
+```java
+package io.github.edmaputra.uwati.domain.security;
+
+import java.util.UUID;
+
+/**
+ * Indicates that an entity belongs to a specific organizational unit (ScopeNode).
+ */
+public interface ScopeOwned {
+    UUID scopeNodeId();
+}
+```
+
+```java
+package io.github.edmaputra.uwati.domain.security;
+
+import java.util.UUID;
+
+/**
+ * Indicates that an entity has an individual creator or single owner.
+ */
+public interface UserOwned {
+    UUID ownerUserId();
+
+    default boolean isOwnedBy(UUID userId) {
+        return ownerUserId() != null && ownerUserId().equals(userId);
+    }
+}
+```
+
+### 6.2 Downstream Entity Implementation Example (in `his-core` / Clinical Modules)
+
+Operational and clinical aggregates combine these interfaces to enforce multi-dimensional data ownership:
+
+```java
+public class ClinicalNote implements TenantOwned, ScopeOwned, UserOwned {
+    private final NoteId id;
+    private final TenantId tenantId;       // Tier 1: Hospital Tenant
+    private final UUID scopeNodeId;        // Tier 2: Cardiology Clinic Node
+    private final UUID createdByUserId;    // Tier 3: Dr. Alice
+    private final PatientId patientId;
+    private String content;
+    private NoteStatus status;             // DRAFT, SIGNED, AMENDED
+
+    @Override public TenantId tenantId() { return this.tenantId; }
+    @Override public UUID scopeNodeId() { return this.scopeNodeId; }
+    @Override public UUID ownerUserId() { return this.createdByUserId; }
+
+    public void updateDraft(String newContent, CurrentActor actor) {
+        // Enforce single-user ownership guard
+        if (!isOwnedBy(actor.userId())) {
+            throw new AccessDeniedException("Only the author can modify a draft clinical note.");
+        }
+        if (this.status != NoteStatus.DRAFT) {
+            throw new IllegalStateException("Signed notes cannot be modified directly; add an amendment.");
+        }
+        this.content = newContent;
+    }
+}
+```
+
+### 6.3 Downstream Database Schema Alignment
+
+Business tables across modules follow this standardized ownership column pattern:
+
+```sql
+CREATE TABLE clinical_note (
+    id UUID PRIMARY KEY,
+    tenant_id UUID NOT NULL REFERENCES tenant(id),              -- Tier 1
+    scope_node_id UUID NOT NULL REFERENCES iam_scope_node(id),  -- Tier 2
+    created_by_user_id UUID NOT NULL REFERENCES iam_user(id),   -- Tier 3
+    patient_id UUID NOT NULL REFERENCES patient(id),
+    content TEXT NOT NULL,
+    status VARCHAR(32) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL
+);
+
+CREATE INDEX idx_clinical_note_tenant_scope ON clinical_note(tenant_id, scope_node_id);
+CREATE INDEX idx_clinical_note_creator ON clinical_note(tenant_id, created_by_user_id);
+```
+
+### 6.4 The Complete 4-Dimensional Authorization Decision Matrix
+
+When a business use case in `his-core` executes an operation, the authorization policy evaluates across four distinct dimensions:
+
+| Dimension | Evaluation Mechanism | Question Answered |
+| :--- | :--- | :--- |
+| **1. Tenant Boundary** | `TenantContext.requireTenantId()` | Is the request operating within the caller's active hospital tenant? |
+| **2. Coarse Permission** | `CurrentActor.hasPermission(code)` | Does the user/group hold the functional permission (e.g. `CLINICAL_WRITE`)? |
+| **3. Scope Boundary** | `CurrentActor.canAccessScope(nodeId)` | Is the user authorized for this specific department or clinic subtree? |
+| **4. User Ownership** | `entity.isOwnedBy(actor.userId())` | Is the user the specific author/owner (e.g. draft notes, personal queue)? |
+
+---
+
+## 7. Directory & Package Structure
 
 The `his-iam` module is organized internally using clean/hexagonal conventions:
 
@@ -478,14 +605,14 @@ his-iam/
 
 ---
 
-## 7. REST API Endpoints Specification & Entity Management
+## 8. REST API Endpoints Specification & Entity Management
 
-### 7.1 Authentication Endpoints (`/api/v1/auth`)
+### 8.1 Authentication Endpoints (`/api/v1/auth`)
 - `POST /api/v1/auth/login`: Authenticate with credentials (email/password or SSO token) and obtain access & refresh tokens.
 - `POST /api/v1/auth/refresh`: Exchange refresh token for a new access token.
 - `GET /api/v1/auth/me`: Retrieve currently authenticated user profile, roles, permissions, group memberships, and accessible scopes.
 
-### 7.2 Scope Tree Management Endpoints (`/api/v1/iam/scopes`)
+### 8.2 Scope Tree Management Endpoints (`/api/v1/iam/scopes`)
 - `GET /api/v1/iam/scopes`: Fetch full hierarchical scope tree or flat list for the active tenant.
 - `POST /api/v1/iam/scopes`: Create a new scope node (`code`, `name`, optional `parentId`). Automatically calculates materialized `path`.
 - `GET /api/v1/iam/scopes/{id}`: Retrieve scope node details along with direct child nodes.
@@ -494,7 +621,7 @@ his-iam/
 - `DELETE /api/v1/iam/scopes/{id}`: Delete a node.
   - *Safeguard*: Rejects deletion with `409 Conflict` if the node has child nodes or active user/group role assignments.
 
-### 7.3 Role & Permission Endpoints (`/api/v1/iam/roles`)
+### 8.3 Role & Permission Endpoints (`/api/v1/iam/roles`)
 - `GET /api/v1/iam/roles`: List available roles (supports `?type=ALL|SYSTEM|CUSTOM`).
 - `POST /api/v1/iam/roles`: Create a custom tenant role with a specified permission set.
 - `GET /api/v1/iam/roles/{id}`: Retrieve role details and assigned permission codes.
@@ -504,7 +631,7 @@ his-iam/
   - *Safeguard*: Rejects deletion if the role is a system role or is currently assigned to any active user or group.
 - `GET /api/v1/iam/permissions`: List all registered system permissions grouped by domain category (e.g., `PATIENT`, `CLINICAL`, `BILLING`, `IAM`).
 
-### 7.4 User Lifecycle & Direct Assignment Endpoints (`/api/v1/iam/users`)
+### 8.4 User Lifecycle & Direct Assignment Endpoints (`/api/v1/iam/users`)
 - `GET /api/v1/iam/users`: Paginated search and filtering of users:
   - Query parameters: `?page=0&size=20&search=keyword&status=ACTIVE|SUSPENDED|DEACTIVATED&roleId=...&groupId=...&scopeNodeId=...`
 - `POST /api/v1/iam/users`: Register/provision a new user with initial profile and optional role/group assignments.
@@ -524,7 +651,7 @@ his-iam/
 - `POST /api/v1/iam/users/{userId}/assignments`: Assign a role at a target scope node (`roleId`, optional `scopeNodeId`, `inheritChildren`).
 - `DELETE /api/v1/iam/users/{userId}/assignments/{assignmentId}`: Revoke a direct role assignment.
 
-### 7.5 User Group & Team Management Endpoints (`/api/v1/iam/groups`)
+### 8.5 User Group & Team Management Endpoints (`/api/v1/iam/groups`)
 - `GET /api/v1/iam/groups`: Paginated list of groups in active tenant (`?page=0&size=20&search=...`).
 - `POST /api/v1/iam/groups`: Create a new group (specifying `code`, `name`, `description`, optional `externalIdpGroupName`).
 - `GET /api/v1/iam/groups/{groupId}`: Get group details with summary statistics.
@@ -539,9 +666,9 @@ his-iam/
 
 ---
 
-## 8. Business Rules, Safeguards & Domain Events
+## 9. Business Rules, Safeguards & Domain Events
 
-### 8.1 User Lifecycle State Machine
+### 9.1 User Lifecycle State Machine
 ```
 [Provisioned / JIT] ──► ACTIVE ◄────► SUSPENDED
                            │
@@ -552,11 +679,11 @@ his-iam/
 - **SUSPENDED**: Temporarily locked (e.g. pending investigation or contract pause). Authentication rejected with `403 Account Suspended`.
 - **DEACTIVATED**: Offboarded user. Credentials and refresh tokens permanently revoked. Historical records and audit trail preserved.
 
-### 8.2 Scope Hierarchy Integrity & Path Cascading
+### 9.2 Scope Hierarchy Integrity & Path Cascading
 - When a node with path `/T-100/A/B/` is moved under parent `C` (`/T-100/C/`), its new path becomes `/T-100/C/B/`.
 - The `ScopeHierarchyService` executes a batch prefix update on all descendant nodes (`UPDATE iam_scope_node SET path = replace(path, '/T-100/A/B/', '/T-100/C/B/') WHERE path LIKE '/T-100/A/B/%'`).
 
-### 8.3 Domain Events & Audit Integration
+### 9.3 Domain Events & Audit Integration
 All mutating IAM operations publish Spring application events to decouple side-effects (e.g. cache invalidation, notification, security telemetry) and implement the `Auditable` contract:
 - **User Events**: `UserCreatedEvent`, `UserUpdatedEvent`, `UserStatusChangedEvent`, `UserPasswordResetEvent`, `UserDeactivatedEvent`.
 - **Role Events**: `RoleCreatedEvent`, `RoleUpdatedEvent`, `RoleDeletedEvent`.
@@ -565,14 +692,15 @@ All mutating IAM operations publish Spring application events to decouple side-e
 
 ---
 
-## 9. Implementation Roadmap
+## 10. Implementation Roadmap
 
 ### Phase 1: Module Scaffolding & Data Model
 1. Create `his-iam` Maven module and register in parent `pom.xml`.
 2. Write Liquibase migration `db/changelog/iam/2026082601-create-iam-tables.json` with user, identity, group, user_group_membership, role, permission, scope node, and assignment tables.
 3. Configure Liquibase modular changelog discovery.
-4. Implement pure domain models: `User`, `UserIdentity`, `Group`, `UserGroupMembership`, `Role`, `Permission`, `ScopeNode`, `UserRoleAssignment`, `GroupRoleAssignment`.
-5. Implement domain events and `Auditable` mappings.
+4. Implement pure domain models and ownership contracts in `his-domain`: `ScopeOwned`, `UserOwned`, `CurrentActor`.
+5. Implement pure domain models in `his-iam`: `User`, `UserIdentity`, `Group`, `UserGroupMembership`, `Role`, `Permission`, `ScopeNode`, `UserRoleAssignment`, `GroupRoleAssignment`.
+6. Implement domain events and `Auditable` mappings.
 
 ### Phase 2: Hierarchical Scope Tree & Subtree Resolver
 1. Implement `ScopeNode` path generation and re-parenting cascade algorithms.
