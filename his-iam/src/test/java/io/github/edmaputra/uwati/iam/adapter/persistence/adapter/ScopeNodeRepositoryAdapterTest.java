@@ -11,8 +11,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import io.github.edmaputra.uwati.domain.tenancy.domain.TenantId;
-import io.github.edmaputra.uwati.iam.adapter.persistence.entity.ScopeNodeJpaEntity;
-import io.github.edmaputra.uwati.iam.adapter.persistence.repository.SpringDataScopeNodeRepository;
+import io.github.edmaputra.uwati.iam.adapter.persistence.entity.ScopeNodeEntity;
+import io.github.edmaputra.uwati.iam.adapter.persistence.repository.ScopeNodeJpaRepository;
 import io.github.edmaputra.uwati.iam.domain.model.ScopeNode;
 import io.github.edmaputra.uwati.iam.domain.model.ScopeNodeId;
 
@@ -23,12 +23,12 @@ import static org.mockito.Mockito.when;
 
 class ScopeNodeRepositoryAdapterTest {
 
-	private SpringDataScopeNodeRepository repository;
+	private ScopeNodeJpaRepository repository;
 	private ScopeNodeRepositoryAdapter adapter;
 
 	@BeforeEach
 	void setUp() {
-		repository = Mockito.mock(SpringDataScopeNodeRepository.class);
+		repository = Mockito.mock(ScopeNodeJpaRepository.class);
 		adapter = new ScopeNodeRepositoryAdapter(repository);
 	}
 
@@ -38,7 +38,7 @@ class ScopeNodeRepositoryAdapterTest {
 		TenantId tenantId = TenantId.generate();
 		ScopeNode node = ScopeNode.createRoot(tenantId, "MAIN", "Main Facility");
 
-		when(repository.save(any(ScopeNodeJpaEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+		when(repository.save(any(ScopeNodeEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
 		ScopeNode saved = adapter.save(node);
 
@@ -46,7 +46,7 @@ class ScopeNodeRepositoryAdapterTest {
 		assertThat(saved.getTenantId()).isEqualTo(tenantId);
 		assertThat(saved.getCode()).isEqualTo("MAIN");
 		assertThat(saved.getPath()).isEqualTo(node.getPath());
-		verify(repository).save(any(ScopeNodeJpaEntity.class));
+		verify(repository).save(any(ScopeNodeEntity.class));
 	}
 
 	@Test
@@ -54,7 +54,7 @@ class ScopeNodeRepositoryAdapterTest {
 	void shouldFindByIdAndTenantCode() {
 		UUID id = UUID.randomUUID();
 		UUID tenantId = UUID.randomUUID();
-		ScopeNodeJpaEntity entity = new ScopeNodeJpaEntity(
+		ScopeNodeEntity entity = new ScopeNodeEntity(
 				id,
 				tenantId,
 				null,
@@ -81,7 +81,7 @@ class ScopeNodeRepositoryAdapterTest {
 	void shouldFindDescendantsByPathPrefix() {
 		String prefix = "/tenant-1/root-1/";
 		UUID tenantId = UUID.randomUUID();
-		ScopeNodeJpaEntity child = new ScopeNodeJpaEntity(
+		ScopeNodeEntity child = new ScopeNodeEntity(
 				UUID.randomUUID(),
 				tenantId,
 				UUID.randomUUID(),

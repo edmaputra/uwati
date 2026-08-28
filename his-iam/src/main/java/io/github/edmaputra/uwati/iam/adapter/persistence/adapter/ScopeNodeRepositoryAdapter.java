@@ -6,28 +6,29 @@ import java.util.Objects;
 import java.util.Optional;
 
 import io.github.edmaputra.uwati.domain.tenancy.domain.TenantId;
-import io.github.edmaputra.uwati.iam.adapter.persistence.entity.ScopeNodeJpaEntity;
-import io.github.edmaputra.uwati.iam.adapter.persistence.repository.SpringDataScopeNodeRepository;
+import io.github.edmaputra.uwati.iam.adapter.persistence.entity.ScopeNodeEntity;
+import io.github.edmaputra.uwati.iam.adapter.persistence.repository.ScopeNodeJpaRepository;
 import io.github.edmaputra.uwati.iam.domain.model.ScopeNode;
 import io.github.edmaputra.uwati.iam.domain.model.ScopeNodeId;
 import io.github.edmaputra.uwati.iam.domain.repository.ScopeNodeRepository;
 
 /**
- * Persistence adapter mapping between ScopeNode domain entity and ScopeNodeJpaEntity.
+ * Persistence adapter mapping between ScopeNode domain entity and
+ * ScopeNodeJpaEntity.
  */
 public class ScopeNodeRepositoryAdapter implements ScopeNodeRepository {
 
-	private final SpringDataScopeNodeRepository repository;
+	private final ScopeNodeJpaRepository repository;
 
-	public ScopeNodeRepositoryAdapter(SpringDataScopeNodeRepository repository) {
+	public ScopeNodeRepositoryAdapter(ScopeNodeJpaRepository repository) {
 		this.repository = Objects.requireNonNull(repository, "SpringDataScopeNodeRepository must not be null.");
 	}
 
 	@Override
 	public ScopeNode save(ScopeNode node) {
 		Objects.requireNonNull(node, "ScopeNode must not be null.");
-		ScopeNodeJpaEntity entity = toEntity(node);
-		ScopeNodeJpaEntity saved = repository.save(entity);
+		ScopeNodeEntity entity = toEntity(node);
+		ScopeNodeEntity saved = repository.save(entity);
 		return toDomain(saved);
 	}
 
@@ -94,8 +95,8 @@ public class ScopeNodeRepositoryAdapter implements ScopeNodeRepository {
 		repository.deleteById(id.value());
 	}
 
-	private ScopeNodeJpaEntity toEntity(ScopeNode domain) {
-		return new ScopeNodeJpaEntity(
+	private ScopeNodeEntity toEntity(ScopeNode domain) {
+		return new ScopeNodeEntity(
 				domain.getId().value(),
 				domain.getTenantId().value(),
 				domain.getParentId() != null ? domain.getParentId().value() : null,
@@ -106,7 +107,7 @@ public class ScopeNodeRepositoryAdapter implements ScopeNodeRepository {
 				domain.getUpdatedAt());
 	}
 
-	private ScopeNode toDomain(ScopeNodeJpaEntity entity) {
+	private ScopeNode toDomain(ScopeNodeEntity entity) {
 		return new ScopeNode(
 				ScopeNodeId.of(entity.getId()),
 				TenantId.from(entity.getTenantId().toString()),

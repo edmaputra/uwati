@@ -16,7 +16,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class ScopeNodeJpaEntity {
+public class ScopeNodeEntity {
 
 	@Id
 	@Column(name = "id", nullable = false)
@@ -43,7 +43,7 @@ public class ScopeNodeJpaEntity {
 	@Column(name = "updated_at", nullable = false)
 	private Instant updatedAt;
 
-	public ScopeNodeJpaEntity(
+	public ScopeNodeEntity(
 			UUID id,
 			UUID tenantId,
 			UUID parentId,

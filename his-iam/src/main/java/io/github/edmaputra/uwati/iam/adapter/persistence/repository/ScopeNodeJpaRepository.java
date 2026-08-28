@@ -10,17 +10,17 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import io.github.edmaputra.uwati.iam.adapter.persistence.entity.ScopeNodeJpaEntity;
+import io.github.edmaputra.uwati.iam.adapter.persistence.entity.ScopeNodeEntity;
 
-public interface SpringDataScopeNodeRepository extends JpaRepository<ScopeNodeJpaEntity, UUID> {
+public interface ScopeNodeJpaRepository extends JpaRepository<ScopeNodeEntity, UUID> {
 
-	List<ScopeNodeJpaEntity> findAllByTenantId(UUID tenantId);
+	List<ScopeNodeEntity> findAllByTenantId(UUID tenantId);
 
-	Optional<ScopeNodeJpaEntity> findByTenantIdAndCode(UUID tenantId, String code);
+	Optional<ScopeNodeEntity> findByTenantIdAndCode(UUID tenantId, String code);
 
-	List<ScopeNodeJpaEntity> findByParentId(UUID parentId);
+	List<ScopeNodeEntity> findByParentId(UUID parentId);
 
-	List<ScopeNodeJpaEntity> findByPathStartingWith(String pathPrefix);
+	List<ScopeNodeEntity> findByPathStartingWith(String pathPrefix);
 
 	boolean existsByParentId(UUID parentId);
 

@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 import io.github.edmaputra.uwati.iam.adapter.persistence.adapter.ScopeNodeRepositoryAdapter;
-import io.github.edmaputra.uwati.iam.adapter.persistence.repository.SpringDataScopeNodeRepository;
+import io.github.edmaputra.uwati.iam.adapter.persistence.repository.ScopeNodeJpaRepository;
 import io.github.edmaputra.uwati.iam.application.port.in.ManageScopeUseCase;
 import io.github.edmaputra.uwati.iam.application.service.ScopeHierarchyService;
 import io.github.edmaputra.uwati.iam.application.service.ScopeSubtreeResolver;
@@ -19,7 +19,7 @@ import io.github.edmaputra.uwati.iam.domain.repository.ScopeNodeRepository;
 public class IamScopeAutoConfiguration {
 
 	@Bean
-	public ScopeNodeRepository scopeNodeRepository(SpringDataScopeNodeRepository repository) {
+	public ScopeNodeRepository scopeNodeRepository(ScopeNodeJpaRepository repository) {
 		return new ScopeNodeRepositoryAdapter(repository);
 	}
 
