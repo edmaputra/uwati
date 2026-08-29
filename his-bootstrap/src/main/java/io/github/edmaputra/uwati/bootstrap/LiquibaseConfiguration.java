@@ -23,7 +23,7 @@ public class LiquibaseConfiguration {
 	static class LiquibaseEntityManagerDependencyConfiguration extends EntityManagerFactoryDependsOnPostProcessor {
 
 		LiquibaseEntityManagerDependencyConfiguration() {
-			super("liquibase");
+			super(SpringLiquibase.class);
 		}
 	}
 }

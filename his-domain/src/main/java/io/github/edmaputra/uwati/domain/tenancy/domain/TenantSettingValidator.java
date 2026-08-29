@@ -49,8 +49,13 @@ public final class TenantSettingValidator {
 	}
 
 	private static void validateLocale(String key, String value) {
-		Locale locale = Locale.forLanguageTag(value);
-		if (locale.getLanguage().isBlank()) {
+		try {
+			Locale locale = new Locale.Builder().setLanguageTag(value).build();
+			if (locale.getLanguage().isBlank() || !Set.of(Locale.getISOLanguages()).contains(locale.getLanguage())) {
+				throw new InvalidTenantSettingException("Invalid locale '%s' for setting '%s'.".formatted(value, key));
+			}
+		}
+		catch (Exception exception) {
 			throw new InvalidTenantSettingException("Invalid locale '%s' for setting '%s'.".formatted(value, key));
 		}
 	}

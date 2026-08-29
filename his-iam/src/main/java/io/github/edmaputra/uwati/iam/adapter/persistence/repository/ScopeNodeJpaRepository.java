@@ -27,7 +27,7 @@ public interface ScopeNodeJpaRepository extends JpaRepository<ScopeNodeEntity, U
 	boolean existsByTenantIdAndCode(UUID tenantId, String code);
 
 	@Modifying
-	@Query("UPDATE ScopeNodeJpaEntity s SET s.path = CONCAT(:newPrefix, SUBSTRING(s.path, LENGTH(:oldPrefix) + 1)), s.updatedAt = :now WHERE s.path LIKE CONCAT(:oldPrefix, '%')")
+	@Query("UPDATE ScopeNodeEntity s SET s.path = CONCAT(:newPrefix, SUBSTRING(s.path, LENGTH(:oldPrefix) + 1)), s.updatedAt = :now WHERE s.path LIKE CONCAT(:oldPrefix, '%')")
 	int updatePathPrefix(
 			@Param("oldPrefix") String oldPrefix,
 			@Param("newPrefix") String newPrefix,

@@ -38,12 +38,6 @@ import io.github.edmaputra.uwati.domain.tenancy.application.TenantContext;
 public class CacheAutoConfiguration implements CachingConfigurer {
 
 	@Bean
-	@ConditionalOnMissingBean
-	public RedisCacheProperties redisCacheProperties() {
-		return new RedisCacheProperties();
-	}
-
-	@Bean
 	@ConditionalOnMissingBean(name = "tenantAwareKeyGenerator")
 	public KeyGenerator tenantAwareKeyGenerator(Optional<TenantContext> tenantContext) {
 		return new TenantAwareCacheKeyGenerator(tenantContext);

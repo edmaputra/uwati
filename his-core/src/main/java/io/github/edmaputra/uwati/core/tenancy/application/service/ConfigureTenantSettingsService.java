@@ -38,12 +38,14 @@ public class ConfigureTenantSettingsService implements ConfigureTenantSettingsUs
 			TenantSettingValidator.validate(entry.key(), entry.value());
 		}
 
-		List<TenantSetting> previousSettings = tenantSettingRepository.findAllByTenantId(command.tenantId());
+		List<TenantSetting> previousSettings = new ArrayList<>();
 		List<TenantSetting> settingsToSave = new ArrayList<>();
 
 		for (SettingEntry entry : command.settings()) {
 			Optional<TenantSetting> existing =
 					tenantSettingRepository.findByTenantIdAndKey(command.tenantId(), entry.key());
+
+			existing.ifPresent(previousSettings::add);
 
 			TenantSetting setting = existing
 					.map(current -> current.withIncrementedRevision(entry.value()))
