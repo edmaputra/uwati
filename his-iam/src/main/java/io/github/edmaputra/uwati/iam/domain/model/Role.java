@@ -2,7 +2,6 @@ package io.github.edmaputra.uwati.iam.domain.model;
 
 import java.time.Instant;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;

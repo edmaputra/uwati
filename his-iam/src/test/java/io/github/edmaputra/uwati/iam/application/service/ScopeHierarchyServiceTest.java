@@ -20,7 +20,6 @@ import io.github.edmaputra.uwati.iam.application.port.in.UpdateScopeNodeCommand;
 import io.github.edmaputra.uwati.iam.domain.event.IamEvent;
 import io.github.edmaputra.uwati.iam.domain.event.IamEventTypes;
 import io.github.edmaputra.uwati.iam.domain.model.ScopeNode;
-import io.github.edmaputra.uwati.iam.domain.model.ScopeNodeId;
 import io.github.edmaputra.uwati.iam.domain.repository.ScopeNodeRepository;
 
 import static org.assertj.core.api.Assertions.assertThat;

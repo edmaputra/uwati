@@ -1,6 +1,5 @@
 package io.github.edmaputra.uwati.cache.serialization;
 
-import java.util.List;
 import java.util.UUID;
 
 import org.junit.jupiter.api.DisplayName;
