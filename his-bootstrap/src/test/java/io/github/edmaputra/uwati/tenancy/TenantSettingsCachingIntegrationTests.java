@@ -30,9 +30,11 @@ import io.github.edmaputra.uwati.domain.tenancy.application.port.in.GetTenantSet
 import io.github.edmaputra.uwati.domain.tenancy.domain.Tenant;
 import io.github.edmaputra.uwati.domain.tenancy.domain.TenantId;
 import io.github.edmaputra.uwati.domain.tenancy.domain.TenantSetting;
+import io.github.edmaputra.uwati.test.RequiresDocker;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@RequiresDocker
 @Import(TestcontainersConfiguration.class)
 @SpringBootTest(classes = UwatiApplication.class)
 @DisplayName("Integration: Multi-Tenant Redis Caching & Distributed Locks")
