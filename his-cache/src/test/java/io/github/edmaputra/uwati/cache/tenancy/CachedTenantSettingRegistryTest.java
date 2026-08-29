@@ -49,7 +49,7 @@ class CachedTenantSettingRegistryTest {
 		);
 
 		Cache.ValueWrapper wrapper = mock(Cache.ValueWrapper.class);
-		when(wrapper.get()).thenReturn(cachedSettings);
+		when(wrapper.get()).thenReturn(new CachedTenantSettingRegistry.CachedTenantSettings(cachedSettings));
 		when(cache.get(cacheKey)).thenReturn(wrapper);
 
 		List<TenantSetting> result = cachedRegistry.findAllByTenantId(tenantId);
@@ -74,7 +74,7 @@ class CachedTenantSettingRegistryTest {
 
 		assertThat(result).isEqualTo(dbSettings);
 		verify(delegate).findAllByTenantId(tenantId);
-		verify(cache).put(cacheKey, dbSettings);
+		verify(cache).put(cacheKey, new CachedTenantSettingRegistry.CachedTenantSettings(dbSettings));
 	}
 
 	@Test

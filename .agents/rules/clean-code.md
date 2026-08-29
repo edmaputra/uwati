@@ -167,3 +167,35 @@ public void validateSettings(TenantSetting setting) {
 - **Sub-Second Unit Tests**: `his-domain` and `his-core` tests must be pure unit tests without starting Spring Boot (`@SpringBootTest`). Use mock repositories or in-memory fakes.
 - **Integration & Slices**: Keep full Spring Boot integration tests (`@SpringBootTest`, Testcontainers) in `his-bootstrap/src/test` and slice tests in adapter modules.
 - **Arrange-Act-Assert**: Write clean, expressive tests with clear expectations.
+
+---
+
+## 8. JSON Serialization Standards (Jackson 3.x / `tools.jackson.*`)
+
+- **Jackson 3 Namespace Requirement**: Always use `tools.jackson.*` package imports for JSON serialization and parsing in all modern modules (`his-*`). Never use `com.fasterxml.jackson.*` (Jackson 2.x).
+- **Maven Coordinates**: Depend on `tools.jackson.core:jackson-databind`. Do not include obsolete Jackson 2 datatype modules (such as `jackson-datatype-jsr310`), as modern Java features (`java.time.*`, `Optional`, and `record`s) are supported natively.
+- **Builder Construction & Immutability**:
+  - `ObjectMapper` instances are immutable. Instantiate standalone mappers using `JsonMapper.builder()`:
+  ```java
+  // ✅ GOOD: Jackson 3 builder pattern
+  import tools.jackson.databind.ObjectMapper;
+  import tools.jackson.databind.json.JsonMapper;
+
+  private static final ObjectMapper OBJECT_MAPPER = JsonMapper.builder().build();
+
+  // ❌ BAD: Jackson 2 mutable constructor
+  import com.fasterxml.jackson.databind.ObjectMapper;
+  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+  ```
+- **Spring Data Redis Serialization**:
+  - Use `GenericJacksonJsonRedisSerializer` (note: not `GenericJackson2JsonRedisSerializer`) with fluent builder:
+  ```java
+  // ✅ GOOD: Jackson 3 GenericJacksonJsonRedisSerializer
+  import org.springframework.data.redis.serializer.GenericJacksonJsonRedisSerializer;
+
+  return GenericJacksonJsonRedisSerializer.builder()
+          .enableDefaultTyping(typeValidator)
+          .enableSpringCacheNullValueSupport()
+          .build();
+  ```
+

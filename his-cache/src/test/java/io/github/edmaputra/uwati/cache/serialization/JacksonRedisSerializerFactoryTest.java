@@ -29,14 +29,14 @@ class JacksonRedisSerializerFactoryTest {
 	}
 
 	@Test
-	@DisplayName("Should serialize and deserialize List of TenantSettings correctly")
-	void shouldSerializeAndDeserializeList() {
+	@DisplayName("Should serialize and deserialize Array of TenantSettings correctly")
+	void shouldSerializeAndDeserializeArray() {
 		RedisSerializer<Object> serializer = JacksonRedisSerializerFactory.createJsonRedisSerializer();
 		TenantId tenantId = new TenantId(UUID.randomUUID());
-		List<TenantSetting> original = List.of(
+		TenantSetting[] original = new TenantSetting[] {
 				new TenantSetting(tenantId, "KEY1", "VAL1", 1),
 				new TenantSetting(tenantId, "KEY2", "VAL2", 2)
-		);
+		};
 
 		byte[] raw = serializer.serialize(original);
 		assertThat(raw).isNotEmpty();

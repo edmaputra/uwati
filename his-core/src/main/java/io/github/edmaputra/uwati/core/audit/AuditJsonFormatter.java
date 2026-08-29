@@ -7,7 +7,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 import io.github.edmaputra.uwati.core.audit.AuditDiffEngine.CollectionDiff;
 import io.github.edmaputra.uwati.core.audit.AuditDiffEngine.ElementDiff;
@@ -18,7 +19,7 @@ import io.github.edmaputra.uwati.core.audit.AuditDiffEngine.FieldDiff;
  */
 public final class AuditJsonFormatter {
 
-	private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+	private static final ObjectMapper OBJECT_MAPPER = JsonMapper.builder().build();
 
 	private AuditJsonFormatter() {
 	}

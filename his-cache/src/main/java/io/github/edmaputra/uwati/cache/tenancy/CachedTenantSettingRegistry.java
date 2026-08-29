@@ -34,6 +34,12 @@ public class CachedTenantSettingRegistry implements TenantSettingRepository {
 		this.cacheManager = Objects.requireNonNull(cacheManager, "Cache manager must not be null.");
 	}
 
+	public record CachedTenantSettings(List<TenantSetting> settings) {
+		public CachedTenantSettings {
+			settings = settings != null ? List.copyOf(settings) : List.of();
+		}
+	}
+
 	@Override
 	@SuppressWarnings("unchecked")
 	public List<TenantSetting> findAllByTenantId(TenantId tenantId) {
@@ -44,9 +50,16 @@ public class CachedTenantSettingRegistry implements TenantSettingRepository {
 		if (cache != null) {
 			try {
 				Cache.ValueWrapper wrapper = cache.get(cacheKey);
-				if (wrapper != null && wrapper.get() instanceof List<?> list) {
-					log.debug("Cache hit for tenant settings: {}", cacheKey);
-					return (List<TenantSetting>) list;
+				if (wrapper != null) {
+					Object value = wrapper.get();
+					if (value instanceof CachedTenantSettings cached) {
+						log.debug("Cache hit for tenant settings: {}", cacheKey);
+						return cached.settings();
+					}
+					if (value instanceof List<?> list) {
+						log.debug("Cache hit for tenant settings (list): {}", cacheKey);
+						return (List<TenantSetting>) list;
+					}
 				}
 			}
 			catch (Exception e) {
@@ -59,7 +72,7 @@ public class CachedTenantSettingRegistry implements TenantSettingRepository {
 
 		if (cache != null) {
 			try {
-				cache.put(cacheKey, settings);
+				cache.put(cacheKey, new CachedTenantSettings(settings));
 			}
 			catch (Exception e) {
 				log.warn("Cache put error for key '{}': {}", cacheKey, e.getMessage());
