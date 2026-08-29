@@ -10,7 +10,11 @@ import org.springframework.transaction.annotation.Transactional;
 import io.github.edmaputra.uwati.domain.tenancy.application.OperationContext;
 import io.github.edmaputra.uwati.domain.tenancy.domain.TenantId;
 import io.github.edmaputra.uwati.iam.application.model.ScopeTreeNode;
+import io.github.edmaputra.uwati.iam.application.port.in.CreateScopeNodeCommand;
+import io.github.edmaputra.uwati.iam.application.port.in.DeleteScopeNodeCommand;
 import io.github.edmaputra.uwati.iam.application.port.in.ManageScopeUseCase;
+import io.github.edmaputra.uwati.iam.application.port.in.MoveScopeNodeCommand;
+import io.github.edmaputra.uwati.iam.application.port.in.UpdateScopeNodeCommand;
 import io.github.edmaputra.uwati.iam.domain.event.IamEvent;
 import io.github.edmaputra.uwati.iam.domain.event.IamEventTypes;
 import io.github.edmaputra.uwati.iam.domain.exception.ScopeNodeNotFoundException;
@@ -35,60 +39,48 @@ public class ScopeHierarchyService implements ManageScopeUseCase {
 
 	@Override
 	@Transactional
-	public ScopeNode createRoot(TenantId tenantId, String code, String name, OperationContext context) {
-		Objects.requireNonNull(tenantId, "TenantId must not be null.");
-		validateCodeUniqueness(tenantId, code);
+	public ScopeNode createScopeNode(CreateScopeNodeCommand command, OperationContext context) {
+		Objects.requireNonNull(command, "Command must not be null.");
+		validateCodeUniqueness(command.tenantId(), command.code());
 
-		ScopeNode root = ScopeNode.createRoot(tenantId, code, name);
-		ScopeNode saved = scopeNodeRepository.save(root);
-
-		publishEvent(IamEventTypes.SCOPE_NODE_CREATED, tenantId, saved.getId(), saved, context);
-		return saved;
-	}
-
-	@Override
-	@Transactional
-	public ScopeNode createChild(TenantId tenantId, ScopeNodeId parentId, String code, String name, OperationContext context) {
-		Objects.requireNonNull(tenantId, "TenantId must not be null.");
-		Objects.requireNonNull(parentId, "ParentId must not be null.");
-		validateCodeUniqueness(tenantId, code);
-
-		ScopeNode parent = getById(tenantId, parentId);
-		ScopeNode child = ScopeNode.createChild(tenantId, parent, code, name);
-		ScopeNode saved = scopeNodeRepository.save(child);
-
-		publishEvent(IamEventTypes.SCOPE_NODE_CREATED, tenantId, saved.getId(), saved, context);
-		return saved;
-	}
-
-	@Override
-	@Transactional
-	public ScopeNode updateMetadata(TenantId tenantId, ScopeNodeId id, String code, String name, OperationContext context) {
-		ScopeNode node = getById(tenantId, id);
-
-		if (!node.getCode().equalsIgnoreCase(code)) {
-			validateCodeUniqueness(tenantId, code);
+		ScopeNode node;
+		if (command.isRoot()) {
+			node = ScopeNode.createRoot(command.tenantId(), command.code(), command.name());
+		}
+		else {
+			ScopeNode parent = getById(command.tenantId(), command.parentId());
+			node = ScopeNode.createChild(command.tenantId(), parent, command.code(), command.name());
 		}
 
-		node.updateMetadata(code, name);
+		ScopeNode saved = scopeNodeRepository.save(node);
+		publishEvent(IamEventTypes.SCOPE_NODE_CREATED, command.tenantId(), saved.getId(), saved, context);
+		return saved;
+	}
+
+	@Override
+	@Transactional
+	public ScopeNode updateMetadata(UpdateScopeNodeCommand command, OperationContext context) {
+		Objects.requireNonNull(command, "Command must not be null.");
+		ScopeNode node = getById(command.tenantId(), command.id());
+
+		if (!node.getCode().equalsIgnoreCase(command.code())) {
+			validateCodeUniqueness(command.tenantId(), command.code());
+		}
+
+		node.updateMetadata(command.code(), command.name());
 		ScopeNode updated = scopeNodeRepository.save(node);
 
-		publishEvent(IamEventTypes.SCOPE_NODE_UPDATED, tenantId, updated.getId(), updated, context);
+		publishEvent(IamEventTypes.SCOPE_NODE_UPDATED, command.tenantId(), updated.getId(), updated, context);
 		return updated;
 	}
 
 	@Override
 	@Transactional
-	public ScopeNode moveNode(TenantId tenantId, ScopeNodeId id, ScopeNodeId newParentId, OperationContext context) {
-		Objects.requireNonNull(id, "Target ScopeNodeId must not be null.");
-		Objects.requireNonNull(newParentId, "New parent ScopeNodeId must not be null.");
+	public ScopeNode moveNode(MoveScopeNodeCommand command, OperationContext context) {
+		Objects.requireNonNull(command, "Command must not be null.");
 
-		if (id.equals(newParentId)) {
-			throw new IllegalArgumentException("Cannot move scope node to itself.");
-		}
-
-		ScopeNode target = getById(tenantId, id);
-		ScopeNode newParent = getById(tenantId, newParentId);
+		ScopeNode target = getById(command.tenantId(), command.id());
+		ScopeNode newParent = getById(command.tenantId(), command.newParentId());
 
 		// Cycle detection: Cannot move a node under one of its own descendants
 		if (newParent.getPath().startsWith(target.getPath())) {
@@ -107,9 +99,9 @@ public class ScopeHierarchyService implements ManageScopeUseCase {
 
 		publishEvent(
 				IamEventTypes.SCOPE_NODE_MOVED,
-				tenantId,
+				command.tenantId(),
 				saved.getId(),
-				Map.of("oldPath", oldPath, "newPath", newPath, "newParentId", newParentId.value().toString()),
+				Map.of("oldPath", oldPath, "newPath", newPath, "newParentId", command.newParentId().value().toString()),
 				context);
 
 		return saved;
@@ -117,15 +109,16 @@ public class ScopeHierarchyService implements ManageScopeUseCase {
 
 	@Override
 	@Transactional
-	public void deleteNode(TenantId tenantId, ScopeNodeId id, OperationContext context) {
-		ScopeNode node = getById(tenantId, id);
+	public void deleteNode(DeleteScopeNodeCommand command, OperationContext context) {
+		Objects.requireNonNull(command, "Command must not be null.");
+		ScopeNode node = getById(command.tenantId(), command.id());
 
-		if (scopeNodeRepository.existsByParentId(id)) {
+		if (scopeNodeRepository.existsByParentId(command.id())) {
 			throw new IllegalStateException("Cannot delete scope node '" + node.getCode() + "' because it has child nodes.");
 		}
 
-		scopeNodeRepository.delete(id);
-		publishEvent(IamEventTypes.SCOPE_NODE_DELETED, tenantId, id, null, context);
+		scopeNodeRepository.delete(command.id());
+		publishEvent(IamEventTypes.SCOPE_NODE_DELETED, command.tenantId(), command.id(), null, context);
 	}
 
 	@Override

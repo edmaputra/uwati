@@ -213,9 +213,10 @@ IAM migrations are isolated in `his-iam/src/main/resources/db/changelog/iam/`:
 
 ## 8. Development Log & Changelog
 
-- **2026-08-28**:
+- **2026-08-28 / 2026-08-29**:
   - Scaffolded `his-iam` module and multi-tenant domain models.
   - Added 3-Tier Data Ownership contracts (`ScopeOwned`, `UserOwned`) to `his-domain`.
   - Implemented Hierarchical Scope Tree, materialized path generator, re-parenting cascade, and `ScopeSubtreeResolver`.
-  - Added comprehensive unit tests covering tree construction, re-parenting, cycle prevention, and subtree resolution.
+  - Refactored `ManageScopeUseCase` and `ScopeHierarchyService` to use strongly-typed command DTO records (`CreateScopeNodeCommand`, `UpdateScopeNodeCommand`, `MoveScopeNodeCommand`, `DeleteScopeNodeCommand`) with self-encapsulated validation.
+  - Added comprehensive unit tests covering tree construction, re-parenting, cycle prevention, subtree resolution, and command validation.
   - Authored initial `docs/iam-walkthrough.md`.

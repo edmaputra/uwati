@@ -13,15 +13,13 @@ import io.github.edmaputra.uwati.iam.domain.model.ScopeNodeId;
  */
 public interface ManageScopeUseCase {
 
-	ScopeNode createRoot(TenantId tenantId, String code, String name, OperationContext context);
+	ScopeNode createScopeNode(CreateScopeNodeCommand command, OperationContext context);
 
-	ScopeNode createChild(TenantId tenantId, ScopeNodeId parentId, String code, String name, OperationContext context);
+	ScopeNode updateMetadata(UpdateScopeNodeCommand command, OperationContext context);
 
-	ScopeNode updateMetadata(TenantId tenantId, ScopeNodeId id, String code, String name, OperationContext context);
+	ScopeNode moveNode(MoveScopeNodeCommand command, OperationContext context);
 
-	ScopeNode moveNode(TenantId tenantId, ScopeNodeId id, ScopeNodeId newParentId, OperationContext context);
-
-	void deleteNode(TenantId tenantId, ScopeNodeId id, OperationContext context);
+	void deleteNode(DeleteScopeNodeCommand command, OperationContext context);
 
 	List<ScopeTreeNode> getScopeTree(TenantId tenantId);
 

@@ -13,6 +13,10 @@ import org.springframework.context.ApplicationEventPublisher;
 import io.github.edmaputra.uwati.domain.tenancy.application.OperationContext;
 import io.github.edmaputra.uwati.domain.tenancy.domain.TenantId;
 import io.github.edmaputra.uwati.iam.application.model.ScopeTreeNode;
+import io.github.edmaputra.uwati.iam.application.port.in.CreateScopeNodeCommand;
+import io.github.edmaputra.uwati.iam.application.port.in.DeleteScopeNodeCommand;
+import io.github.edmaputra.uwati.iam.application.port.in.MoveScopeNodeCommand;
+import io.github.edmaputra.uwati.iam.application.port.in.UpdateScopeNodeCommand;
 import io.github.edmaputra.uwati.iam.domain.event.IamEvent;
 import io.github.edmaputra.uwati.iam.domain.event.IamEventTypes;
 import io.github.edmaputra.uwati.iam.domain.model.ScopeNode;
@@ -49,7 +53,7 @@ class ScopeHierarchyServiceTest {
 		when(scopeNodeRepository.existsByTenantIdAndCode(tenantId, "MAIN")).thenReturn(false);
 		when(scopeNodeRepository.save(any(ScopeNode.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-		ScopeNode root = service.createRoot(tenantId, "MAIN", "Main Facility", context);
+		ScopeNode root = service.createScopeNode(CreateScopeNodeCommand.root(tenantId, "MAIN", "Main Facility"), context);
 
 		assertThat(root).isNotNull();
 		assertThat(root.getCode()).isEqualTo("MAIN");
@@ -67,7 +71,7 @@ class ScopeHierarchyServiceTest {
 	void shouldRejectDuplicateCode() {
 		when(scopeNodeRepository.existsByTenantIdAndCode(tenantId, "MAIN")).thenReturn(true);
 
-		assertThatThrownBy(() -> service.createRoot(tenantId, "MAIN", "Main Facility", context))
+		assertThatThrownBy(() -> service.createScopeNode(CreateScopeNodeCommand.root(tenantId, "MAIN", "Main Facility"), context))
 				.isInstanceOf(IllegalArgumentException.class)
 				.hasMessageContaining("already exists");
 
@@ -83,7 +87,9 @@ class ScopeHierarchyServiceTest {
 		when(scopeNodeRepository.existsByTenantIdAndCode(tenantId, "SURGERY")).thenReturn(false);
 		when(scopeNodeRepository.save(any(ScopeNode.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-		ScopeNode child = service.createChild(tenantId, root.getId(), "SURGERY", "Surgery Dept", context);
+		ScopeNode child = service.createScopeNode(
+				CreateScopeNodeCommand.child(tenantId, root.getId(), "SURGERY", "Surgery Dept"),
+				context);
 
 		assertThat(child.getParentId()).isEqualTo(root.getId());
 		assertThat(child.getPath()).startsWith(root.getPath());
@@ -103,7 +109,7 @@ class ScopeHierarchyServiceTest {
 		when(scopeNodeRepository.findById(root2.getId())).thenReturn(Optional.of(root2));
 		when(scopeNodeRepository.save(any(ScopeNode.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-		ScopeNode moved = service.moveNode(tenantId, dept.getId(), root2.getId(), context);
+		ScopeNode moved = service.moveNode(new MoveScopeNodeCommand(tenantId, dept.getId(), root2.getId()), context);
 
 		assertThat(moved.getParentId()).isEqualTo(root2.getId());
 		String expectedNewPath = root2.getPath() + dept.getId().value() + "/";
@@ -127,11 +133,28 @@ class ScopeHierarchyServiceTest {
 		when(scopeNodeRepository.findById(dept.getId())).thenReturn(Optional.of(dept));
 
 		// Attempting to move div under dept (its own child)
-		assertThatThrownBy(() -> service.moveNode(tenantId, div.getId(), dept.getId(), context))
+		assertThatThrownBy(() -> service.moveNode(new MoveScopeNodeCommand(tenantId, div.getId(), dept.getId()), context))
 				.isInstanceOf(IllegalArgumentException.class)
 				.hasMessageContaining("cycle detected");
 
 		verify(scopeNodeRepository, never()).updatePathPrefix(any(), any());
+	}
+
+	@Test
+	@DisplayName("Should update scope node metadata")
+	void shouldUpdateMetadata() {
+		ScopeNode root = ScopeNode.createRoot(tenantId, "MAIN", "Main Facility");
+
+		when(scopeNodeRepository.findById(root.getId())).thenReturn(Optional.of(root));
+		when(scopeNodeRepository.save(any(ScopeNode.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+		ScopeNode updated = service.updateMetadata(
+				new UpdateScopeNodeCommand(tenantId, root.getId(), "MAIN_UPDATED", "Main Facility Updated"),
+				context);
+
+		assertThat(updated.getCode()).isEqualTo("MAIN_UPDATED");
+		assertThat(updated.getName()).isEqualTo("Main Facility Updated");
+		verify(eventPublisher).publishEvent(any(IamEvent.class));
 	}
 
 	@Test
@@ -142,7 +165,7 @@ class ScopeHierarchyServiceTest {
 		when(scopeNodeRepository.findById(root.getId())).thenReturn(Optional.of(root));
 		when(scopeNodeRepository.existsByParentId(root.getId())).thenReturn(true);
 
-		assertThatThrownBy(() -> service.deleteNode(tenantId, root.getId(), context))
+		assertThatThrownBy(() -> service.deleteNode(new DeleteScopeNodeCommand(tenantId, root.getId()), context))
 				.isInstanceOf(IllegalStateException.class)
 				.hasMessageContaining("has child nodes");
 
