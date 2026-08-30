@@ -6,6 +6,9 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+/**
+ * Domain validator ensuring tenant configuration settings conform to format, ISO standards, and supported keys.
+ */
 public final class TenantSettingValidator {
 
 	private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");
@@ -25,6 +28,13 @@ public final class TenantSettingValidator {
 	private TenantSettingValidator() {
 	}
 
+	/**
+	 * Validates a tenant setting key-value pair against domain format rules.
+	 *
+	 * @param key the setting key
+	 * @param value the setting value
+	 * @throws InvalidTenantSettingException if the key is unsupported or value format is invalid
+	 */
 	public static void validate(String key, String value) {
 		if (key == null || key.isBlank()) {
 			throw new InvalidTenantSettingException("Setting key must not be blank.");
@@ -49,8 +59,13 @@ public final class TenantSettingValidator {
 	}
 
 	private static void validateLocale(String key, String value) {
-		Locale locale = Locale.forLanguageTag(value);
-		if (locale.getLanguage().isBlank()) {
+		try {
+			Locale locale = new Locale.Builder().setLanguageTag(value).build();
+			if (locale.getLanguage().isBlank() || !Set.of(Locale.getISOLanguages()).contains(locale.getLanguage())) {
+				throw new InvalidTenantSettingException("Invalid locale '%s' for setting '%s'.".formatted(value, key));
+			}
+		}
+		catch (Exception exception) {
 			throw new InvalidTenantSettingException("Invalid locale '%s' for setting '%s'.".formatted(value, key));
 		}
 	}

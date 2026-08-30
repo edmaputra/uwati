@@ -18,6 +18,12 @@ import io.github.edmaputra.uwati.domain.tenancy.domain.TenantSettingValidator;
 import io.github.edmaputra.uwati.domain.tenancy.domain.event.TenantSettingsUpdated;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Application service implementing {@link ConfigureTenantSettingsUseCase}.
+ * <p>
+ * Validates setting values against domain rules, tracks previous values for audit diff calculation,
+ * increments revisions, persists changes, and publishes {@link TenantSettingsUpdated} domain events.
+ */
 @RequiredArgsConstructor
 public class ConfigureTenantSettingsService implements ConfigureTenantSettingsUseCase {
 
@@ -38,12 +44,14 @@ public class ConfigureTenantSettingsService implements ConfigureTenantSettingsUs
 			TenantSettingValidator.validate(entry.key(), entry.value());
 		}
 
-		List<TenantSetting> previousSettings = tenantSettingRepository.findAllByTenantId(command.tenantId());
+		List<TenantSetting> previousSettings = new ArrayList<>();
 		List<TenantSetting> settingsToSave = new ArrayList<>();
 
 		for (SettingEntry entry : command.settings()) {
 			Optional<TenantSetting> existing =
 					tenantSettingRepository.findByTenantIdAndKey(command.tenantId(), entry.key());
+
+			existing.ifPresent(previousSettings::add);
 
 			TenantSetting setting = existing
 					.map(current -> current.withIncrementedRevision(entry.value()))

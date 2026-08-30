@@ -20,7 +20,6 @@ import io.github.edmaputra.uwati.iam.application.port.in.UpdateScopeNodeCommand;
 import io.github.edmaputra.uwati.iam.domain.event.IamEvent;
 import io.github.edmaputra.uwati.iam.domain.event.IamEventTypes;
 import io.github.edmaputra.uwati.iam.domain.model.ScopeNode;
-import io.github.edmaputra.uwati.iam.domain.model.ScopeNodeId;
 import io.github.edmaputra.uwati.iam.domain.repository.ScopeNodeRepository;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -31,6 +30,9 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+/**
+ * Unit tests verifying scope hierarchy management operations (create, move, update, delete).
+ */
 class ScopeHierarchyServiceTest {
 
 	private ScopeNodeRepository scopeNodeRepository;

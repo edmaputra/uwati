@@ -8,9 +8,23 @@ import org.springframework.boot.jpa.autoconfigure.EntityManagerFactoryDependsOnP
 
 import liquibase.integration.spring.SpringLiquibase;
 
+/**
+ * Configuration for the core / master Liquibase database migrations.
+ * <p>
+ * Manages the execution of the base database changelog ({@code db.changelog-master.json})
+ * which provisions fundamental schemas, tenancy structures, audit tables, and shared database objects.
+ * Also configures JPA {@link jakarta.persistence.EntityManagerFactory} to depend on all
+ * {@link SpringLiquibase} instances before initializing Hibernate.
+ */
 @Configuration
 public class LiquibaseConfiguration {
 
+	/**
+	 * Configures the master {@link SpringLiquibase} migration runner.
+	 *
+	 * @param dataSource the shared application datasource
+	 * @return configured master SpringLiquibase bean
+	 */
 	@Bean
 	SpringLiquibase liquibase(DataSource dataSource) {
 		SpringLiquibase liquibase = new SpringLiquibase();
@@ -19,11 +33,15 @@ public class LiquibaseConfiguration {
 		return liquibase;
 	}
 
+	/**
+	 * Ensures JPA {@link jakarta.persistence.EntityManagerFactory} initialization waits for all
+	 * {@link SpringLiquibase} beans across all application modules to finish schema execution.
+	 */
 	@Configuration
 	static class LiquibaseEntityManagerDependencyConfiguration extends EntityManagerFactoryDependsOnPostProcessor {
 
 		LiquibaseEntityManagerDependencyConfiguration() {
-			super("liquibase");
+			super(SpringLiquibase.class);
 		}
 	}
 }

@@ -22,12 +22,18 @@ import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
 
 import io.github.edmaputra.uwati.TestcontainersConfiguration;
 import io.github.edmaputra.uwati.bootstrap.UwatiApplication;
+import io.github.edmaputra.uwati.test.RequiresDocker;
 
+/**
+ * Integration tests for tenant settings configuration and retrieval REST APIs,
+ * validating validation rules, audit difference generation, and optimistic concurrency.
+ */
+@RequiresDocker
 @Import(TestcontainersConfiguration.class)
 @SpringBootTest(classes = UwatiApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @DisplayName("Use Case: Configure Tenant Settings API")
