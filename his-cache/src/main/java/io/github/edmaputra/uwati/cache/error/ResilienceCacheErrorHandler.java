@@ -5,6 +5,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.cache.Cache;
 import org.springframework.cache.interceptor.CacheErrorHandler;
 
+/**
+ * Resilient {@link CacheErrorHandler} that handles Redis/Valkey outages gracefully.
+ * <p>
+ * Rather than rethrowing exceptions and breaking user-facing HTTP requests, this handler logs
+ * warnings and allows the application to fall through to primary database queries.
+ */
 public class ResilienceCacheErrorHandler implements CacheErrorHandler {
 
 	private static final Logger log = LoggerFactory.getLogger(ResilienceCacheErrorHandler.class);

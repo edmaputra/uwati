@@ -5,6 +5,12 @@ import org.junit.jupiter.api.extension.ExecutionCondition;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.testcontainers.DockerClientFactory;
 
+/**
+ * JUnit 5 {@link ExecutionCondition} that checks if a Docker/container runtime is reachable.
+ * <p>
+ * If Docker is unavailable, tests annotated with {@link RequiresDocker} are gracefully skipped
+ * rather than failing the build.
+ */
 public class DockerAvailableCondition implements ExecutionCondition {
 
 	private static final ConditionEvaluationResult ENABLED =

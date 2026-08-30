@@ -34,6 +34,10 @@ import io.github.edmaputra.uwati.test.RequiresDocker;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+/**
+ * Integration tests verifying multi-tenant Valkey caching, tenant key isolation,
+ * domain event-driven cache eviction, and distributed lock acquisition against Testcontainers.
+ */
 @RequiresDocker
 @Import(TestcontainersConfiguration.class)
 @SpringBootTest(classes = UwatiApplication.class)

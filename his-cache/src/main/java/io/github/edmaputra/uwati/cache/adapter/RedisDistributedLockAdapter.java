@@ -16,6 +16,16 @@ import org.springframework.stereotype.Component;
 
 import io.github.edmaputra.uwati.cache.port.DistributedLockPort;
 
+/**
+ * Adapter implementing {@link DistributedLockPort} using atomic Redis commands and Lua scripting.
+ * <p>
+ * Implements safe distributed locking semantics:
+ * <ul>
+ *   <li><b>Atomic Acquisition:</b> Uses {@code SETNX} with an automatic expiration lease to avoid deadlocks.</li>
+ *   <li><b>Safe Release:</b> Uses an atomic Lua script to ensure a client only releases a lock if it still holds
+ *       the matching ownership token (value), preventing accidental release of locks renewed by other threads.</li>
+ * </ul>
+ */
 @Component
 public class RedisDistributedLockAdapter implements DistributedLockPort {
 
@@ -31,8 +41,13 @@ public class RedisDistributedLockAdapter implements DistributedLockPort {
 	private final StringRedisTemplate redisTemplate;
 	private final RedisScript<Long> unlockScript;
 
+	/**
+	 * Constructs the distributed lock adapter with the specified Redis template.
+	 *
+	 * @param redisTemplate the StringRedisTemplate for lock state
+	 */
 	public RedisDistributedLockAdapter(StringRedisTemplate redisTemplate) {
-		this.redisTemplate = redisTemplate;
+		this.redisTemplate = Objects.requireNonNull(redisTemplate, "RedisTemplate must not be null.");
 		this.unlockScript = new DefaultRedisScript<>(UNLOCK_LUA_SCRIPT, Long.class);
 	}
 

@@ -29,6 +29,10 @@ import io.github.edmaputra.uwati.TestcontainersConfiguration;
 import io.github.edmaputra.uwati.bootstrap.UwatiApplication;
 import io.github.edmaputra.uwati.test.RequiresDocker;
 
+/**
+ * Integration tests for tenant creation REST API endpoints, verifying database transactions,
+ * audit entry creation, default settings provisioning, and JSON response payloads.
+ */
 @RequiresDocker
 @Import(TestcontainersConfiguration.class)
 @SpringBootTest(classes = UwatiApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)

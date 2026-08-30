@@ -17,16 +17,32 @@ import io.github.edmaputra.uwati.domain.tenancy.application.port.out.TenantSetti
 import io.github.edmaputra.uwati.domain.tenancy.domain.TenantId;
 import io.github.edmaputra.uwati.domain.tenancy.domain.TenantSetting;
 
+/**
+ * Decorator implementing {@link TenantSettingRepository} with transparent Redis caching.
+ * <p>
+ * This hexagonal decorator wraps the primary JPA repository implementation ({@code JpaTenantSettingRegistry}),
+ * preserving relational persistence purity while delivering sub-millisecond cached reads and deterministic cache eviction.
+ */
 @Primary
 @Component
 public class CachedTenantSettingRegistry implements TenantSettingRepository {
 
 	private static final Logger log = LoggerFactory.getLogger(CachedTenantSettingRegistry.class);
+
+	/**
+	 * Name of the Redis cache for tenant settings.
+	 */
 	public static final String CACHE_NAME = "tenant_settings";
 
 	private final TenantSettingRepository delegate;
 	private final CacheManager cacheManager;
 
+	/**
+	 * Constructs the cached tenant setting registry decorator.
+	 *
+	 * @param delegate the underlying relational database repository
+	 * @param cacheManager the Spring cache manager
+	 */
 	public CachedTenantSettingRegistry(
 			@Qualifier("jpaTenantSettingRegistry") TenantSettingRepository delegate,
 			CacheManager cacheManager) {
@@ -34,6 +50,11 @@ public class CachedTenantSettingRegistry implements TenantSettingRepository {
 		this.cacheManager = Objects.requireNonNull(cacheManager, "Cache manager must not be null.");
 	}
 
+	/**
+	 * Immutable wrapper record for caching collections of {@link TenantSetting} with full polymorphic type metadata.
+	 *
+	 * @param settings the unmodifiable list of tenant settings
+	 */
 	public record CachedTenantSettings(List<TenantSetting> settings) {
 		public CachedTenantSettings {
 			settings = settings != null ? List.copyOf(settings) : List.of();
@@ -137,6 +158,11 @@ public class CachedTenantSettingRegistry implements TenantSettingRepository {
 		return saved;
 	}
 
+	/**
+	 * Explicitly evicts all cached settings for the given tenant ID.
+	 *
+	 * @param tenantId the tenant ID whose cache entries should be evicted
+	 */
 	public void evictTenantSettings(TenantId tenantId) {
 		Objects.requireNonNull(tenantId, "Tenant ID must not be null.");
 		Cache cache = getCache();

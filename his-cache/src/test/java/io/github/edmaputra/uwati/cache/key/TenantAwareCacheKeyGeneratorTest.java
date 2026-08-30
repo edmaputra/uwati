@@ -14,6 +14,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+/**
+ * Unit tests verifying tenant key generation and namespace partitioning rules.
+ */
 class TenantAwareCacheKeyGeneratorTest {
 
 	@Test

@@ -18,6 +18,12 @@ import io.github.edmaputra.uwati.domain.tenancy.domain.TenantSettingValidator;
 import io.github.edmaputra.uwati.domain.tenancy.domain.event.TenantSettingsUpdated;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Application service implementing {@link ConfigureTenantSettingsUseCase}.
+ * <p>
+ * Validates setting values against domain rules, tracks previous values for audit diff calculation,
+ * increments revisions, persists changes, and publishes {@link TenantSettingsUpdated} domain events.
+ */
 @RequiredArgsConstructor
 public class ConfigureTenantSettingsService implements ConfigureTenantSettingsUseCase {
 

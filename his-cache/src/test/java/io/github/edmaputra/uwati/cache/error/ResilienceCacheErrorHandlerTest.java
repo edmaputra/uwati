@@ -8,6 +8,9 @@ import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+/**
+ * Unit tests verifying that ResilienceCacheErrorHandler suppresses cache runtime exceptions.
+ */
 class ResilienceCacheErrorHandlerTest {
 
 	private final ResilienceCacheErrorHandler errorHandler = new ResilienceCacheErrorHandler();

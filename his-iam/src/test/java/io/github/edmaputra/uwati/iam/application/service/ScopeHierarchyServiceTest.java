@@ -30,6 +30,9 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+/**
+ * Unit tests verifying scope hierarchy management operations (create, move, update, delete).
+ */
 class ScopeHierarchyServiceTest {
 
 	private ScopeNodeRepository scopeNodeRepository;

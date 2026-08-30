@@ -22,6 +22,9 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+/**
+ * Unit tests verifying CachedTenantSettingRegistry decorator caching, miss delegation, and eviction.
+ */
 class CachedTenantSettingRegistryTest {
 
 	private TenantSettingRepository delegate;

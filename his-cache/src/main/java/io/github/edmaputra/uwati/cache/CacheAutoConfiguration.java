@@ -30,6 +30,18 @@ import io.github.edmaputra.uwati.cache.port.DistributedLockPort;
 import io.github.edmaputra.uwati.cache.serialization.JacksonRedisSerializerFactory;
 import io.github.edmaputra.uwati.domain.tenancy.application.TenantContext;
 
+/**
+ * Spring Boot Auto-Configuration for distributed Redis/Valkey caching and concurrency control.
+ * <p>
+ * This configuration automatically provisions:
+ * <ul>
+ *   <li>{@link TenantAwareCacheKeyGenerator} for tenant-isolated cache key namespacing.</li>
+ *   <li>{@link ResilienceCacheErrorHandler} for non-blocking cache error fallback.</li>
+ *   <li>{@link RedisCacheManager} pre-configured with Jackson 3 serialization and per-cache TTLs.</li>
+ *   <li>{@link RedisTemplate} for direct Redis key-value interactions.</li>
+ *   <li>{@link DistributedLockPort} backed by {@link RedisDistributedLockAdapter} for atomic locking.</li>
+ * </ul>
+ */
 @AutoConfiguration
 @EnableCaching
 @ConditionalOnClass(RedisConnectionFactory.class)
@@ -37,23 +49,48 @@ import io.github.edmaputra.uwati.domain.tenancy.application.TenantContext;
 @EnableConfigurationProperties(RedisCacheProperties.class)
 public class CacheAutoConfiguration implements CachingConfigurer {
 
+	/**
+	 * Creates a tenant-aware {@link KeyGenerator} that prefixes cache keys with the active tenant ID.
+	 *
+	 * @param tenantContext optional tenant context accessor
+	 * @return tenant-aware KeyGenerator
+	 */
 	@Bean
 	@ConditionalOnMissingBean(name = "tenantAwareKeyGenerator")
 	public KeyGenerator tenantAwareKeyGenerator(Optional<TenantContext> tenantContext) {
 		return new TenantAwareCacheKeyGenerator(tenantContext);
 	}
 
+	/**
+	 * Creates a resilient {@link CacheErrorHandler} that logs warnings and falls back to primary storage
+	 * rather than failing application requests when cache operations error.
+	 *
+	 * @return resilient CacheErrorHandler
+	 */
 	@Bean
 	@ConditionalOnMissingBean
 	public CacheErrorHandler cacheErrorHandler() {
 		return new ResilienceCacheErrorHandler();
 	}
 
+	/**
+	 * Configures the default Spring Cache error handler for declarative caching annotations.
+	 *
+	 * @return the resilient CacheErrorHandler
+	 */
 	@Override
 	public CacheErrorHandler errorHandler() {
 		return cacheErrorHandler();
 	}
 
+	/**
+	 * Creates the primary {@link RedisCacheManager} configured with Jackson 3 JSON serialization,
+	 * default TTL, and custom per-cache expiration times.
+	 *
+	 * @param connectionFactory the Redis connection factory
+	 * @param properties custom cache configuration properties
+	 * @return fully configured RedisCacheManager
+	 */
 	@Bean
 	@ConditionalOnMissingBean
 	public RedisCacheManager redisCacheManager(
@@ -86,6 +123,12 @@ public class CacheAutoConfiguration implements CachingConfigurer {
 				.build();
 	}
 
+	/**
+	 * Creates a {@link RedisTemplate} for general-purpose Redis operations using Jackson 3 JSON value serialization.
+	 *
+	 * @param connectionFactory the Redis connection factory
+	 * @return configured RedisTemplate
+	 */
 	@Bean
 	@ConditionalOnMissingBean
 	public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
@@ -99,6 +142,12 @@ public class CacheAutoConfiguration implements CachingConfigurer {
 		return template;
 	}
 
+	/**
+	 * Creates the {@link DistributedLockPort} bean backed by Redis atomic commands.
+	 *
+	 * @param stringRedisTemplate the StringRedisTemplate for lock state
+	 * @return DistributedLockPort implementation
+	 */
 	@Bean
 	@ConditionalOnMissingBean
 	public DistributedLockPort distributedLockPort(StringRedisTemplate stringRedisTemplate) {

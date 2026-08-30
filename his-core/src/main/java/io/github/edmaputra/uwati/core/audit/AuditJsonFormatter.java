@@ -23,16 +23,39 @@ public final class AuditJsonFormatter {
 	private AuditJsonFormatter() {
 	}
 
+	/**
+	 * Formats a map of entity field differences into a JSON string.
+	 *
+	 * @param fieldDiffs map of field names to their old/new differences
+	 * @return formatted JSON string representation
+	 */
 	public static String formatDiff(Map<String, FieldDiff> fieldDiffs) {
 		return formatDiff(fieldDiffs, null, null, null);
 	}
 
+	/**
+	 * Formats collection differences under a specific collection property name.
+	 *
+	 * @param <T> collection element type
+	 * @param collectionName name of the collection field
+	 * @param collectionDiff structured collection differences
+	 * @return formatted JSON string representation
+	 */
 	public static <T> String formatCollectionDiff(
 			String collectionName,
 			CollectionDiff<T> collectionDiff) {
 		return formatDiff(Map.of(), collectionName, collectionDiff, null);
 	}
 
+	/**
+	 * Formats collection differences using a custom element serializer function.
+	 *
+	 * @param <T> collection element type
+	 * @param collectionName name of the collection field
+	 * @param collectionDiff structured collection differences
+	 * @param elementSerializer custom serializer function for elements
+	 * @return formatted JSON string representation
+	 */
 	public static <T> String formatCollectionDiff(
 			String collectionName,
 			CollectionDiff<T> collectionDiff,
@@ -40,6 +63,16 @@ public final class AuditJsonFormatter {
 		return formatDiff(Map.of(), collectionName, collectionDiff, elementSerializer);
 	}
 
+	/**
+	 * Formats combined entity field differences and collection differences into a single JSON object.
+	 *
+	 * @param <T> collection element type
+	 * @param fieldDiffs root entity field differences
+	 * @param collectionName name of the collection property (nullable)
+	 * @param collectionDiff collection differences (nullable)
+	 * @param elementSerializer custom element serializer (nullable)
+	 * @return formatted JSON string representation
+	 */
 	public static <T> String formatDiff(
 			Map<String, FieldDiff> fieldDiffs,
 			String collectionName,

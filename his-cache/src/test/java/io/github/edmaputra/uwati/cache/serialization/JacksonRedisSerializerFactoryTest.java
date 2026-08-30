@@ -11,6 +11,9 @@ import io.github.edmaputra.uwati.domain.tenancy.domain.TenantSetting;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+/**
+ * Unit tests verifying Jackson 3 Redis serialization and deserialization of domain records and arrays.
+ */
 class JacksonRedisSerializerFactoryTest {
 
 	@Test

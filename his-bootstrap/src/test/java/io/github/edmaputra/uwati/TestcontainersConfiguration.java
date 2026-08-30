@@ -7,6 +7,10 @@ import org.springframework.context.annotation.Bean;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 
+/**
+ * Spring Boot test configuration defining reusable Testcontainers singleton instances
+ * for PostgreSQL 17 and Valkey 9.1.1.
+ */
 @TestConfiguration(proxyBeanMethods = false)
 public class TestcontainersConfiguration {
 
@@ -18,16 +22,25 @@ public class TestcontainersConfiguration {
 	private static final GenericContainer<?> REDIS = new GenericContainer<>("valkey/valkey:9.1.1-alpine3.24")
 			.withExposedPorts(6379);
 
+	/**
+	 * Shared PostgreSQL Testcontainer managed via Spring Boot {@link ServiceConnection}.
+	 *
+	 * @return PostgreSQL testcontainer singleton
+	 */
 	@Bean
 	@ServiceConnection
 	public PostgreSQLContainer<?> postgresContainer() {
 		return POSTGRES;
 	}
 
+	/**
+	 * Shared Valkey Testcontainer managed via Spring Boot {@link ServiceConnection}.
+	 *
+	 * @return Valkey testcontainer singleton
+	 */
 	@Bean
 	@ServiceConnection(name = "redis")
 	public GenericContainer<?> redisContainer() {
 		return REDIS;
 	}
-
 }

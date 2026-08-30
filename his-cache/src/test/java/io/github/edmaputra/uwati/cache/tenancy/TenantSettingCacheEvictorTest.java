@@ -14,6 +14,9 @@ import io.github.edmaputra.uwati.domain.tenancy.domain.event.TenantSettingsUpdat
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
+/**
+ * Unit tests verifying that TenantSettingCacheEvictor evicts cached entries upon receiving TenantSettingsUpdated events.
+ */
 class TenantSettingCacheEvictorTest {
 
 	@Test
