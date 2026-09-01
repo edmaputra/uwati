@@ -1,0 +1,195 @@
+package io.github.edmaputra.uwati.iam;
+
+import java.util.List;
+
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.persistence.autoconfigure.EntityScan;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+
+import io.github.edmaputra.uwati.domain.security.CurrentActorProvider;
+import io.github.edmaputra.uwati.domain.tenancy.application.TenantContextScope;
+import io.github.edmaputra.uwati.iam.adapter.persistence.adapter.GroupRepositoryAdapter;
+import io.github.edmaputra.uwati.iam.adapter.persistence.adapter.GroupRoleAssignmentRepositoryAdapter;
+import io.github.edmaputra.uwati.iam.adapter.persistence.adapter.RoleRepositoryAdapter;
+import io.github.edmaputra.uwati.iam.adapter.persistence.adapter.UserGroupMembershipRepositoryAdapter;
+import io.github.edmaputra.uwati.iam.adapter.persistence.adapter.UserIdentityRepositoryAdapter;
+import io.github.edmaputra.uwati.iam.adapter.persistence.adapter.UserRepositoryAdapter;
+import io.github.edmaputra.uwati.iam.adapter.persistence.adapter.UserRoleAssignmentRepositoryAdapter;
+import io.github.edmaputra.uwati.iam.adapter.persistence.repository.SpringDataGroupRepository;
+import io.github.edmaputra.uwati.iam.adapter.persistence.repository.SpringDataGroupRoleAssignmentRepository;
+import io.github.edmaputra.uwati.iam.adapter.persistence.repository.SpringDataRoleRepository;
+import io.github.edmaputra.uwati.iam.adapter.persistence.repository.SpringDataUserGroupMembershipRepository;
+import io.github.edmaputra.uwati.iam.adapter.persistence.repository.SpringDataUserIdentityRepository;
+import io.github.edmaputra.uwati.iam.adapter.persistence.repository.SpringDataUserRepository;
+import io.github.edmaputra.uwati.iam.adapter.persistence.repository.SpringDataUserRoleAssignmentRepository;
+import io.github.edmaputra.uwati.iam.adapter.rest.AuthController;
+import io.github.edmaputra.uwati.iam.adapter.rest.IamExceptionHandler;
+import io.github.edmaputra.uwati.iam.adapter.security.BCryptPasswordEncoderAdapter;
+import io.github.edmaputra.uwati.iam.adapter.security.SecurityContextAccessor;
+import io.github.edmaputra.uwati.iam.adapter.security.jwt.JwtAuthenticationFilter;
+import io.github.edmaputra.uwati.iam.adapter.security.jwt.JwtProperties;
+import io.github.edmaputra.uwati.iam.adapter.security.jwt.JwtTokenProvider;
+import io.github.edmaputra.uwati.iam.adapter.security.provider.LocalPasswordAuthProvider;
+import io.github.edmaputra.uwati.iam.adapter.security.provider.OidcAuthProvider;
+import io.github.edmaputra.uwati.iam.application.port.in.AuthenticateUserUseCase;
+import io.github.edmaputra.uwati.iam.application.port.out.AuthenticationProvider;
+import io.github.edmaputra.uwati.iam.application.port.out.AuthenticationProviderRouter;
+import io.github.edmaputra.uwati.iam.application.port.out.PasswordEncoderPort;
+import io.github.edmaputra.uwati.iam.application.service.AuthenticationService;
+import io.github.edmaputra.uwati.iam.application.service.EffectiveAccessResolver;
+import io.github.edmaputra.uwati.iam.application.service.FederatedIdentityService;
+import io.github.edmaputra.uwati.iam.application.service.ScopeSubtreeResolver;
+import io.github.edmaputra.uwati.iam.domain.repository.GroupRepository;
+import io.github.edmaputra.uwati.iam.domain.repository.GroupRoleAssignmentRepository;
+import io.github.edmaputra.uwati.iam.domain.repository.RoleRepository;
+import io.github.edmaputra.uwati.iam.domain.repository.ScopeNodeRepository;
+import io.github.edmaputra.uwati.iam.domain.repository.UserGroupMembershipRepository;
+import io.github.edmaputra.uwati.iam.domain.repository.UserIdentityRepository;
+import io.github.edmaputra.uwati.iam.domain.repository.UserRepository;
+import io.github.edmaputra.uwati.iam.domain.repository.UserRoleAssignmentRepository;
+
+/**
+ * Spring Boot auto-configuration for IAM security, authentication SPI providers,
+ * JWT token engine, persistence adapters, and security context bridges.
+ */
+@AutoConfiguration
+@EnableConfigurationProperties(JwtProperties.class)
+@EntityScan(basePackages = "io.github.edmaputra.uwati.iam.adapter.persistence.entity")
+@EnableJpaRepositories(basePackages = "io.github.edmaputra.uwati.iam.adapter.persistence.repository")
+@Import({AuthController.class, IamExceptionHandler.class})
+public class IamSecurityAutoConfiguration {
+
+	@Bean
+	@ConditionalOnMissingBean
+	public UserRepository userRepository(SpringDataUserRepository repository) {
+		return new UserRepositoryAdapter(repository);
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	public RoleRepository roleRepository(SpringDataRoleRepository repository) {
+		return new RoleRepositoryAdapter(repository);
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	public GroupRepository groupRepository(SpringDataGroupRepository repository) {
+		return new GroupRepositoryAdapter(repository);
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	public UserGroupMembershipRepository userGroupMembershipRepository(SpringDataUserGroupMembershipRepository repository) {
+		return new UserGroupMembershipRepositoryAdapter(repository);
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	public UserRoleAssignmentRepository userRoleAssignmentRepository(SpringDataUserRoleAssignmentRepository repository) {
+		return new UserRoleAssignmentRepositoryAdapter(repository);
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	public GroupRoleAssignmentRepository groupRoleAssignmentRepository(SpringDataGroupRoleAssignmentRepository repository) {
+		return new GroupRoleAssignmentRepositoryAdapter(repository);
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	public UserIdentityRepository userIdentityRepository(SpringDataUserIdentityRepository repository) {
+		return new UserIdentityRepositoryAdapter(repository);
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	public FederatedIdentityService federatedIdentityService(
+			UserRepository userRepository,
+			UserIdentityRepository userIdentityRepository,
+			GroupRepository groupRepository,
+			UserGroupMembershipRepository userGroupMembershipRepository) {
+		return new FederatedIdentityService(userRepository, userIdentityRepository, groupRepository, userGroupMembershipRepository);
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	public PasswordEncoderPort passwordEncoderPort() {
+		return new BCryptPasswordEncoderAdapter();
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	public LocalPasswordAuthProvider localPasswordAuthProvider(
+			UserRepository userRepository,
+			PasswordEncoderPort passwordEncoder) {
+		return new LocalPasswordAuthProvider(userRepository, passwordEncoder);
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	public OidcAuthProvider oidcAuthProvider(FederatedIdentityService federatedIdentityService) {
+		return new OidcAuthProvider(federatedIdentityService);
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	public AuthenticationProviderRouter authenticationProviderRouter(List<AuthenticationProvider> providers) {
+		return new AuthenticationProviderRouter(providers);
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	public EffectiveAccessResolver effectiveAccessResolver(
+			UserGroupMembershipRepository userGroupMembershipRepository,
+			GroupRepository groupRepository,
+			UserRoleAssignmentRepository userRoleAssignmentRepository,
+			GroupRoleAssignmentRepository groupRoleAssignmentRepository,
+			RoleRepository roleRepository,
+			ScopeNodeRepository scopeNodeRepository,
+			ScopeSubtreeResolver scopeSubtreeResolver) {
+		return new EffectiveAccessResolver(
+				userGroupMembershipRepository,
+				groupRepository,
+				userRoleAssignmentRepository,
+				groupRoleAssignmentRepository,
+				roleRepository,
+				scopeNodeRepository,
+				scopeSubtreeResolver);
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	public JwtTokenProvider jwtTokenProvider(JwtProperties properties) {
+		return new JwtTokenProvider(properties);
+	}
+
+	@Bean
+	@ConditionalOnMissingBean(CurrentActorProvider.class)
+	public SecurityContextAccessor securityContextAccessor() {
+		return new SecurityContextAccessor();
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	public AuthenticateUserUseCase authenticateUserUseCase(
+			AuthenticationProviderRouter authRouter,
+			UserRepository userRepository,
+			EffectiveAccessResolver effectiveAccessResolver,
+			JwtTokenProvider jwtTokenProvider) {
+		return new AuthenticationService(authRouter, userRepository, effectiveAccessResolver, jwtTokenProvider);
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	public JwtAuthenticationFilter jwtAuthenticationFilter(
+			JwtTokenProvider jwtTokenProvider,
+			SecurityContextAccessor securityContextAccessor,
+			ObjectProvider<TenantContextScope> tenantContextProvider) {
+		return new JwtAuthenticationFilter(jwtTokenProvider, securityContextAccessor, tenantContextProvider);
+	}
+}

@@ -2,13 +2,26 @@ package io.github.edmaputra.uwati.iam.domain.exception;
 
 import io.github.edmaputra.uwati.iam.domain.model.ScopeNodeId;
 
+/**
+ * Thrown when a scope node cannot be found in the tenant hierarchy.
+ */
 public class ScopeNodeNotFoundException extends RuntimeException {
 
-	public ScopeNodeNotFoundException(ScopeNodeId scopeNodeId) {
-		super("ScopeNode not found with id: " + scopeNodeId);
+	/**
+	 * Constructs the exception with a scope node ID.
+	 *
+	 * @param id the missing scope node ID
+	 */
+	public ScopeNodeNotFoundException(ScopeNodeId id) {
+		super("Scope node not found with id: " + id);
 	}
 
-	public ScopeNodeNotFoundException(String code) {
-		super("ScopeNode not found with code: " + code);
+	/**
+	 * Constructs the exception with a scope path.
+	 *
+	 * @param path the missing scope path
+	 */
+	public ScopeNodeNotFoundException(String path) {
+		super("Scope node not found with path: " + path);
 	}
 }

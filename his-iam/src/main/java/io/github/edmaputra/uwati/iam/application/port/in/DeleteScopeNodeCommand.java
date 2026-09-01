@@ -5,6 +5,12 @@ import java.util.Objects;
 import io.github.edmaputra.uwati.domain.tenancy.domain.TenantId;
 import io.github.edmaputra.uwati.iam.domain.model.ScopeNodeId;
 
+/**
+ * Command for deleting a leaf scope node from a tenant hierarchy.
+ *
+ * @param tenantId the tenant ID
+ * @param id       the scope node ID to delete
+ */
 public record DeleteScopeNodeCommand(
 		TenantId tenantId,
 		ScopeNodeId id) {

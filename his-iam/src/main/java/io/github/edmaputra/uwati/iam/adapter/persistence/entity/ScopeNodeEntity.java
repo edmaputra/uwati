@@ -7,15 +7,20 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+/**
+ * JPA entity representing a scope hierarchy node in the {@code iam_scope_node} table.
+ */
 @Entity
 @Table(name = "iam_scope_node")
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
 public class ScopeNodeEntity {
 
 	@Id
@@ -28,13 +33,13 @@ public class ScopeNodeEntity {
 	@Column(name = "parent_id")
 	private UUID parentId;
 
-	@Column(name = "code", length = 64, nullable = false)
+	@Column(name = "code", nullable = false, length = 64)
 	private String code;
 
-	@Column(name = "name", length = 255, nullable = false)
+	@Column(name = "name", nullable = false, length = 255)
 	private String name;
 
-	@Column(name = "path", length = 512, nullable = false)
+	@Column(name = "path", nullable = false, length = 512)
 	private String path;
 
 	@Column(name = "created_at", nullable = false)
@@ -42,23 +47,4 @@ public class ScopeNodeEntity {
 
 	@Column(name = "updated_at", nullable = false)
 	private Instant updatedAt;
-
-	public ScopeNodeEntity(
-			UUID id,
-			UUID tenantId,
-			UUID parentId,
-			String code,
-			String name,
-			String path,
-			Instant createdAt,
-			Instant updatedAt) {
-		this.id = id;
-		this.tenantId = tenantId;
-		this.parentId = parentId;
-		this.code = code;
-		this.name = name;
-		this.path = path;
-		this.createdAt = createdAt;
-		this.updatedAt = updatedAt;
-	}
 }

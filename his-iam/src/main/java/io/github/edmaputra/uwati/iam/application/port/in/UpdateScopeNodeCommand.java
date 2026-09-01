@@ -5,6 +5,14 @@ import java.util.Objects;
 import io.github.edmaputra.uwati.domain.tenancy.domain.TenantId;
 import io.github.edmaputra.uwati.iam.domain.model.ScopeNodeId;
 
+/**
+ * Command for updating the metadata of an existing scope node.
+ *
+ * @param tenantId the tenant ID
+ * @param id       the scope node ID
+ * @param code     the updated code
+ * @param name     the updated name
+ */
 public record UpdateScopeNodeCommand(
 		TenantId tenantId,
 		ScopeNodeId id,
@@ -14,8 +22,10 @@ public record UpdateScopeNodeCommand(
 	public UpdateScopeNodeCommand {
 		Objects.requireNonNull(tenantId, "TenantId must not be null.");
 		Objects.requireNonNull(id, "ScopeNodeId must not be null.");
-		Objects.requireNonNull(code, "Scope node code must not be null.");
-		Objects.requireNonNull(name, "Scope node name must not be null.");
+		Objects.requireNonNull(code, "Code must not be null.");
+		Objects.requireNonNull(name, "Name must not be null.");
+		code = code.trim().toUpperCase();
+		name = name.trim();
 		if (code.isBlank()) {
 			throw new IllegalArgumentException("Scope node code must not be blank.");
 		}

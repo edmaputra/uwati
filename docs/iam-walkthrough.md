@@ -61,8 +61,8 @@ The `his-iam` module is a self-contained, vertical plugin that delivers:
 |---|---|:---:|
 | **Phase 1: Foundation & Data Model** | Maven scaffolding, Liquibase migrations (`2026082601-create-iam-tables.json`), domain entities (`User`, `Role`, `Group`, `ScopeNode`, `UserRoleAssignment`, `GroupRoleAssignment`), ownership contracts in `his-domain` (`ScopeOwned`, `UserOwned`, `CurrentActor`). | ✅ **Completed** |
 | **Phase 2: Scope Hierarchy & Subtree Engine** | `ScopeNode` path generation, re-parenting cascade, `ScopeHierarchyService`, `ScopeSubtreeResolver`, JPA entity & repositories, and subtree inheritance unit tests. | ✅ **Completed** |
-| **Phase 3: Pluggable Auth & JWT Security** | `AuthenticationProvider` SPI, `LocalPasswordAuthProvider` (BCrypt), JWT token provider & claims builder, `JwtAuthenticationFilter`, `SecurityContext` bridge, `/api/v1/auth/*` endpoints. | 🔄 *Next* |
-| **Phase 4: Scoped RBAC, Groups & REST CRUD** | Use cases & REST controllers for Users, Roles, Permissions, Groups, Scope Tree, and assignments with lifecycle safeguards. | ⏳ *Planned* |
+| **Phase 3: Pluggable Auth & JWT Security** | `AuthenticationProvider` SPI, `LocalPasswordAuthProvider` (BCrypt), `EffectiveAccessResolver`, JWT token provider & claims builder, `JwtAuthenticationFilter`, `SecurityContextAccessor` bridge, `/api/v1/auth/*` endpoints (`/login`, `/refresh`, `/me`). | ✅ **Completed** |
+| **Phase 4: Scoped RBAC, Groups & REST CRUD** | Use cases & REST controllers for Users, Roles, Permissions, Groups, Scope Tree, and assignments with lifecycle safeguards. | 🔄 *Next* |
 | **Phase 5: Verification & Integration Tests** | Full Testcontainers integration tests, tenant context propagation, group inheritance, and bootstrap auto-configuration tests. | ⏳ *Planned* |
 
 ---
@@ -162,7 +162,9 @@ Tenant: City Health System (ID: T-100)
 
 ---
 
-## 6. Pluggable Authentication Architecture (Preview for Phase 3)
+## 6. Pluggable Authentication & Security Architecture
+
+### 6.1 Authentication Flow & Provider SPI
 
 ```mermaid
 flowchart TD
@@ -173,27 +175,67 @@ flowchart TD
         ApiKey["API Key (Lab Devices)"]
     end
 
-    subgraph SPI["his-iam Provider SPI"]
-        Router["AuthenticationProvider Router"]
-        Identity["Federated Identity Linker"]
-        ScopeEngine["Scope Subtree Resolver"]
-        JwtIssuer["Unified JWT Token Issuer"]
+    subgraph SPI["his-iam Provider SPI & Engine"]
+        Router["AuthenticationProviderRouter"]
+        LocalProvider["LocalPasswordAuthProvider (BCrypt)"]
+        Resolver["EffectiveAccessResolver"]
+        ScopeEngine["ScopeSubtreeResolver"]
+        JwtIssuer["JwtTokenProvider"]
     end
 
-    subgraph HIS_Core["HIS Services"]
-        Actor["CurrentActor & TenantContext"]
+    subgraph Runtime["Request Execution & Context"]
+        Filter["JwtAuthenticationFilter"]
+        ActorBridge["SecurityContextAccessor (ScopedValue)"]
+        TenantBridge["ScopedValueTenantContext"]
+        CurrentActor["CurrentActor Provider"]
     end
 
     Direct --> Router
-    OIDC --> Router
-    SAML --> Router
-    ApiKey --> Router
+    OIDC -.-> Router
+    SAML -.-> Router
+    ApiKey -.-> Router
 
-    Router --> Identity
-    Identity --> ScopeEngine
+    Router --> LocalProvider
+    LocalProvider --> Resolver
+    Resolver --> ScopeEngine
     ScopeEngine --> JwtIssuer
-    JwtIssuer --> Actor
+
+    JwtIssuer --> Filter
+    Filter --> ActorBridge
+    Filter --> TenantBridge
+    ActorBridge --> CurrentActor
 ```
+
+### 6.2 Provider SPI & Security Components
+
+- **`AuthenticationProvider`**: Core SPI contract supporting extensible authentication mechanisms (`PASSWORD`, `OIDC_TOKEN`, `SAML_ASSERTION`, `API_KEY`).
+- **`AuthenticationProviderRouter`**: Dynamically routes incoming credentials to the appropriate registered provider.
+- **`LocalPasswordAuthProvider`**: Implements local database credential verification with BCrypt hashing and account lifecycle status checks (`ACTIVE`, `SUSPENDED`, `DEACTIVATED`).
+- **`OidcAuthProvider`**: Validates federated OIDC ID token credentials and integrates with `FederatedIdentityService`.
+- **`ApiKeyAuthProvider`**: Validates machine-to-machine API keys for lab devices and background worker processes via `ApiKeyValidatorPort`.
+- **`FederatedIdentityService`**: Handles identity linking to `iam_user_identity` and Just-In-Time (JIT) user provisioning, synchronizing external IdP group claims with tenant `iam_group` mappings (`external_idp_group_name`).
+- **`EffectiveAccessResolver`**: Resolves composite permissions, roles, and accessible scope nodes by aggregating direct user role assignments and group-inherited role assignments with subtree inheritance.
+- **`JwtTokenProvider`**: Issues HMAC-SHA256 access and refresh tokens. Embeds rich contextual claims:
+  - `sub`: User ID
+  - `email`: User email
+  - `tenantId`: Tenant UUID (null for platform superadmin)
+  - `isSuperAdmin`: Platform superadmin flag
+  - `isTenantWide`: Tenant-wide access flag
+  - `groups`: List of assigned group codes
+  - `roles`: List of effective role codes
+  - `permissions`: Flattened distinct permission strings
+  - `scopeNodeIds`: Accessible scope node UUIDs
+  - `scopePaths`: Accessible materialized path prefixes
+- **`SecurityContextAccessor`**: Modern Java 25 `ScopedValue`-based accessor implementing `CurrentActorProvider`. Guarantees clean thread-boundary isolation and automatic scope cleanup.
+- **`JwtAuthenticationFilter`**: Spring `OncePerRequestFilter` that extracts `Authorization: Bearer <token>`, establishes the `CurrentActor` scope, and synchronizes the multi-tenant scope via `TenantContextScope`.
+
+### 6.3 Authentication REST Endpoints
+
+| Method | Endpoint | Request Body | Description |
+|---|---|---|---|
+| `POST` | `/api/v1/auth/login` | `LoginRequest(email, password, tenantId?)` | Authenticates credentials and returns JWT access + refresh tokens. |
+| `POST` | `/api/v1/auth/refresh` | `RefreshTokenRequest(refreshToken)` | Validates refresh token and issues fresh access token. |
+| `GET` | `/api/v1/auth/me` | *None (Requires Bearer token)* | Returns profile, assigned roles, permissions, and accessible scope hierarchy for current actor. |
 
 ---
 
@@ -213,10 +255,16 @@ IAM migrations are isolated in `his-iam/src/main/resources/db/changelog/iam/`:
 
 ## 8. Development Log & Changelog
 
-- **2026-08-28 / 2026-08-29**:
+- **2026-08-28 / 2026-08-30**:
   - Scaffolded `his-iam` module and multi-tenant domain models.
   - Added 3-Tier Data Ownership contracts (`ScopeOwned`, `UserOwned`) to `his-domain`.
   - Implemented Hierarchical Scope Tree, materialized path generator, re-parenting cascade, and `ScopeSubtreeResolver`.
   - Refactored `ManageScopeUseCase` and `ScopeHierarchyService` to use strongly-typed command DTO records (`CreateScopeNodeCommand`, `UpdateScopeNodeCommand`, `MoveScopeNodeCommand`, `DeleteScopeNodeCommand`) with self-encapsulated validation.
-  - Added comprehensive unit tests covering tree construction, re-parenting, cycle prevention, subtree resolution, and command validation.
-  - Authored initial `docs/iam-walkthrough.md`.
+  - Implemented Pluggable Authentication Provider SPI (`AuthenticationProvider`, `AuthenticationProviderRouter`, `LocalPasswordAuthProvider` with BCrypt `PasswordEncoderPort`, `OidcAuthProvider`, `ApiKeyAuthProvider`).
+  - Implemented `FederatedIdentityService` and `UserIdentityRepository` for Just-In-Time (JIT) provisioning and external IdP group mapping.
+  - Implemented JPA persistence entities, Spring Data repositories, and adapters for `User`, `UserIdentity`, `Role`, `Group`, `UserGroupMembership`, `UserRoleAssignment`, and `GroupRoleAssignment`.
+  - Implemented `EffectiveAccessResolver` resolving composite roles, permissions, and hierarchical scopes from direct and group assignments.
+  - Implemented `JwtTokenProvider` issuing signed access and refresh tokens with custom claims, and `SecurityContextAccessor` / `JwtAuthenticationFilter` providing the `CurrentActor` bridge using Java 25 `ScopedValue`.
+  - Implemented `AuthenticateUserUseCase`, `AuthenticationService`, and `/api/v1/auth/*` REST endpoints (`/login`, `/refresh`, `/me`) with `IamExceptionHandler`.
+  - Added 89 unit & slice tests covering the entire IAM security subsystem with 100% pass rate.
+  - Authored comprehensive `docs/iam-walkthrough.md`.

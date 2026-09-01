@@ -8,6 +8,10 @@ import io.github.edmaputra.uwati.domain.tenancy.domain.TenantId;
 import io.github.edmaputra.uwati.domain.tenancy.domain.TenantOwned;
 import lombok.Getter;
 
+/**
+ * Pure domain entity representing a hierarchical organizational unit or facility scope node.
+ * Uses materialized paths (e.g. {@code /<tenantId>/<rootId>/<childId>/}) for high-performance subtree inheritance.
+ */
 @Getter
 public class ScopeNode implements TenantOwned {
 
@@ -20,6 +24,18 @@ public class ScopeNode implements TenantOwned {
 	private final Instant createdAt;
 	private Instant updatedAt;
 
+	/**
+	 * Canonical constructor for reconstructing scope nodes from persistence.
+	 *
+	 * @param id        the unique scope node ID
+	 * @param tenantId  the owning tenant ID
+	 * @param parentId  the parent scope node ID (null for root nodes)
+	 * @param code      the uppercase unique code within parent
+	 * @param name      the human-readable node name
+	 * @param path      the materialized hierarchy path
+	 * @param createdAt creation timestamp
+	 * @param updatedAt last updated timestamp
+	 */
 	public ScopeNode(
 			ScopeNodeId id,
 			TenantId tenantId,
@@ -39,6 +55,14 @@ public class ScopeNode implements TenantOwned {
 		this.updatedAt = Objects.requireNonNull(updatedAt, "UpdatedAt must not be null.");
 	}
 
+	/**
+	 * Factory method creating a root scope node for a tenant.
+	 *
+	 * @param tenantId the tenant ID
+	 * @param code     the scope node code
+	 * @param name     the scope node name
+	 * @return new root {@link ScopeNode}
+	 */
 	public static ScopeNode createRoot(
 			TenantId tenantId,
 			String code,
@@ -57,6 +81,15 @@ public class ScopeNode implements TenantOwned {
 				now);
 	}
 
+	/**
+	 * Factory method creating a child scope node under an existing parent.
+	 *
+	 * @param tenantId the tenant ID
+	 * @param parent   the parent scope node
+	 * @param code     the child scope node code
+	 * @param name     the child scope node name
+	 * @return new child {@link ScopeNode}
+	 */
 	public static ScopeNode createChild(
 			TenantId tenantId,
 			ScopeNode parent,
@@ -82,22 +115,44 @@ public class ScopeNode implements TenantOwned {
 		return this.tenantId;
 	}
 
+	/**
+	 * Updates the node's code and name.
+	 *
+	 * @param code the updated code
+	 * @param name the updated name
+	 */
 	public void updateMetadata(String code, String name) {
 		this.code = validateCode(code);
 		this.name = validateName(name);
 		this.updatedAt = Instant.now();
 	}
 
+	/**
+	 * Re-parents this node and updates its materialized path.
+	 *
+	 * @param newParentId the new parent scope node ID (or null for root)
+	 * @param newPath     the new computed materialized path
+	 */
 	public void moveTo(ScopeNodeId newParentId, String newPath) {
 		this.parentId = newParentId;
 		this.path = validatePath(newPath);
 		this.updatedAt = Instant.now();
 	}
 
+	/**
+	 * Returns the optional parent node ID.
+	 *
+	 * @return optional {@link ScopeNodeId}
+	 */
 	public Optional<ScopeNodeId> optionalParentId() {
 		return Optional.ofNullable(parentId);
 	}
 
+	/**
+	 * Returns true if this is a top-level root scope node.
+	 *
+	 * @return true if root
+	 */
 	public boolean isRoot() {
 		return this.parentId == null;
 	}

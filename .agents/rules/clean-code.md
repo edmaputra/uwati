@@ -195,7 +195,36 @@ public void validateSettings(TenantSetting setting) {
 
   return GenericJacksonJsonRedisSerializer.builder()
           .enableDefaultTyping(typeValidator)
-          .enableSpringCacheNullValueSupport()
-          .build();
-  ```
+
+---
+
+## 9. Comprehensive Javadoc Documentation Standards
+
+- **Mandatory Class, Interface, Record, and Enum Javadoc**:
+  - Every Java class, interface, `record`, and `enum` MUST have a descriptive Javadoc block summarizing its purpose, domain context, and architectural role (Inbound Port, Outbound Port, Domain Entity, Adapter, etc.).
+- **Public & Protected Methods Documentation**:
+  - All public and protected methods across interfaces, ports, and domain services must be documented with clear descriptions, `@param` for inputs, `@return` for results, and `@throws` for expected domain/runtime exceptions.
+- **Record & Domain Invariants**:
+  - Document domain invariant constraints, validation rules, and structural behaviors (e.g. subtree inheritance, token expiry).
+- **Concise & Meaningful**:
+  - Avoid empty or tautological comments (e.g. `/** Gets the name. */`). Provide real context on intent, behavior, and lifecycle.
+
+```java
+// ✅ GOOD: Meaningful class and method Javadoc
+/**
+ * Inbound port for managing user authentication lifecycle and token issuance.
+ * Coordinates credential verification across registered {@link AuthenticationProvider}s.
+ */
+public interface AuthenticateUserUseCase {
+
+    /**
+     * Authenticates user credentials and issues signed access and refresh tokens.
+     *
+     * @param command the login command containing credentials and target tenant
+     * @return the token response containing JWT access/refresh tokens and user profile
+     * @throws AuthenticationException if credentials are invalid or the account is locked
+     */
+    TokenResponse login(LoginCommand command);
+}
+```
 
