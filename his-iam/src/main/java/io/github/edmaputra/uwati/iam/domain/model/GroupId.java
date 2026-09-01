@@ -5,22 +5,25 @@ import java.util.UUID;
 
 import io.github.edmaputra.uwati.domain.util.UuidV7;
 
+/**
+ * Strongly-typed value object representing a unique Group identifier (UUIDv7).
+ *
+ * @param value the underlying UUID value
+ *
+ * @author edmaputra
+ */
 public record GroupId(UUID value) {
 
 	public GroupId {
 		Objects.requireNonNull(value, "Group ID must not be null.");
 	}
 
+	/**
+	 * Generates a new time-ordered UUIDv7 Group identifier.
+	 *
+	 * @return new {@link GroupId}
+	 */
 	public static GroupId generate() {
 		return new GroupId(UuidV7.generate());
-	}
-
-	public static GroupId of(UUID value) {
-		return new GroupId(value);
-	}
-
-	@Override
-	public String toString() {
-		return value.toString();
 	}
 }

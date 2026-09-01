@@ -3,13 +3,16 @@ package io.github.edmaputra.uwati.domain.security;
 import java.util.UUID;
 
 /**
- * Indicates that an entity has an individual creator or single owner.
+ * Marks a domain entity or aggregate as owned by a specific individual user (e.g. private draft, doctor's personal notes).
+ *
+ * @author edmaputra
  */
 public interface UserOwned {
 
-	UUID ownerUserId();
-
-	default boolean isOwnedBy(UUID userId) {
-		return ownerUserId() != null && ownerUserId().equals(userId);
-	}
+	/**
+	 * Returns the UUID of the owning user.
+	 *
+	 * @return user UUID
+	 */
+	UUID userId();
 }

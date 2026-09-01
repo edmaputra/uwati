@@ -5,6 +5,8 @@ import java.util.Map;
 /**
  * Interface implemented by domain models and aggregates to declare which
  * specific fields should be monitored and recorded in the audit trail.
+ *
+ * @author edmaputra
  */
 public interface Auditable {
 

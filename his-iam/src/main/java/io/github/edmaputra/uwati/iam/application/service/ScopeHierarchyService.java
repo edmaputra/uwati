@@ -23,13 +23,22 @@ import io.github.edmaputra.uwati.iam.domain.model.ScopeNodeId;
 import io.github.edmaputra.uwati.iam.domain.repository.ScopeNodeRepository;
 
 /**
- * Core application service managing the hierarchical scope tree and lifecycle.
+ * Application service implementing {@link ManageScopeUseCase}.
+ * Manages scope tree hierarchy, path generation, cycle detection, re-parenting cascades, and audit events.
+ *
+ * @author edmaputra
  */
 public class ScopeHierarchyService implements ManageScopeUseCase {
 
 	private final ScopeNodeRepository scopeNodeRepository;
 	private final ApplicationEventPublisher eventPublisher;
 
+	/**
+	 * Constructs the scope hierarchy service.
+	 *
+	 * @param scopeNodeRepository the scope node repository
+	 * @param eventPublisher      the application event publisher
+	 */
 	public ScopeHierarchyService(
 			ScopeNodeRepository scopeNodeRepository,
 			ApplicationEventPublisher eventPublisher) {

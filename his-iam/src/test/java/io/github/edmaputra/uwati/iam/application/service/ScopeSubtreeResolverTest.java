@@ -62,6 +62,7 @@ class ScopeSubtreeResolverTest {
 		ScopeNode pediatricsDiv = ScopeNode.createChild(tenantId, root, "PEDIATRICS", "Pediatrics Division");
 
 		when(scopeNodeRepository.findById(surgeryDiv.getId())).thenReturn(Optional.of(surgeryDiv));
+		when(scopeNodeRepository.findDescendantsByPathPrefix(surgeryDiv.getPath())).thenReturn(List.of(genSurgery));
 		when(scopeNodeRepository.findById(genSurgery.getId())).thenReturn(Optional.of(genSurgery));
 		when(scopeNodeRepository.findById(pediatricsDiv.getId())).thenReturn(Optional.of(pediatricsDiv));
 

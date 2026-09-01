@@ -13,15 +13,21 @@ import io.github.edmaputra.uwati.iam.domain.model.ScopeNodeId;
 import io.github.edmaputra.uwati.iam.domain.repository.ScopeNodeRepository;
 
 /**
- * Persistence adapter mapping between ScopeNode domain entity and
- * ScopeNodeJpaEntity.
+ * Persistence adapter implementing {@link ScopeNodeRepository} backed by Spring Data JPA.
+ *
+ * @author edmaputra
  */
 public class ScopeNodeRepositoryAdapter implements ScopeNodeRepository {
 
 	private final ScopeNodeJpaRepository repository;
 
+	/**
+	 * Constructs the adapter with the underlying Spring Data repository.
+	 *
+	 * @param repository the Spring Data repository
+	 */
 	public ScopeNodeRepositoryAdapter(ScopeNodeJpaRepository repository) {
-		this.repository = Objects.requireNonNull(repository, "SpringDataScopeNodeRepository must not be null.");
+		this.repository = Objects.requireNonNull(repository, "ScopeNodeJpaRepository must not be null.");
 	}
 
 	@Override
@@ -55,7 +61,7 @@ public class ScopeNodeRepositoryAdapter implements ScopeNodeRepository {
 
 	@Override
 	public List<ScopeNode> findByParentId(ScopeNodeId parentId) {
-		Objects.requireNonNull(parentId, "ParentId must not be null.");
+		Objects.requireNonNull(parentId, "ScopeNodeId must not be null.");
 		return repository.findByParentId(parentId.value()).stream()
 				.map(this::toDomain)
 				.toList();
@@ -78,7 +84,7 @@ public class ScopeNodeRepositoryAdapter implements ScopeNodeRepository {
 
 	@Override
 	public boolean existsByParentId(ScopeNodeId parentId) {
-		Objects.requireNonNull(parentId, "ParentId must not be null.");
+		Objects.requireNonNull(parentId, "ScopeNodeId must not be null.");
 		return repository.existsByParentId(parentId.value());
 	}
 
@@ -86,7 +92,7 @@ public class ScopeNodeRepositoryAdapter implements ScopeNodeRepository {
 	public boolean existsByTenantIdAndCode(TenantId tenantId, String code) {
 		Objects.requireNonNull(tenantId, "TenantId must not be null.");
 		Objects.requireNonNull(code, "Code must not be null.");
-		return repository.existsByTenantIdAndCode(tenantId.value(), code.trim().toUpperCase());
+		return repository.existsByTenantIdAndCode(tenantId.value(), code.trim());
 	}
 
 	@Override
@@ -95,27 +101,27 @@ public class ScopeNodeRepositoryAdapter implements ScopeNodeRepository {
 		repository.deleteById(id.value());
 	}
 
-	private ScopeNodeEntity toEntity(ScopeNode domain) {
-		return new ScopeNodeEntity(
-				domain.getId().value(),
-				domain.getTenantId().value(),
-				domain.getParentId() != null ? domain.getParentId().value() : null,
-				domain.getCode(),
-				domain.getName(),
-				domain.getPath(),
-				domain.getCreatedAt(),
-				domain.getUpdatedAt());
-	}
-
 	private ScopeNode toDomain(ScopeNodeEntity entity) {
 		return new ScopeNode(
-				ScopeNodeId.of(entity.getId()),
-				TenantId.from(entity.getTenantId().toString()),
-				entity.getParentId() != null ? ScopeNodeId.of(entity.getParentId()) : null,
+				new ScopeNodeId(entity.getId()),
+				new TenantId(entity.getTenantId()),
+				entity.getParentId() == null ? null : new ScopeNodeId(entity.getParentId()),
 				entity.getCode(),
 				entity.getName(),
 				entity.getPath(),
 				entity.getCreatedAt(),
 				entity.getUpdatedAt());
+	}
+
+	private ScopeNodeEntity toEntity(ScopeNode node) {
+		return new ScopeNodeEntity(
+				node.getId().value(),
+				node.getTenantId().value(),
+				node.optionalParentId().map(ScopeNodeId::value).orElse(null),
+				node.getCode(),
+				node.getName(),
+				node.getPath(),
+				node.getCreatedAt(),
+				node.getUpdatedAt());
 	}
 }

@@ -30,6 +30,8 @@ import org.springframework.context.annotation.Configuration;
  *       Hibernate's {@link jakarta.persistence.EntityManagerFactory} is not initialized until the IAM
  *       migrations have completed.</li>
  * </ul>
+ *
+ * @author edmaputra
  */
 @AutoConfiguration
 @ConditionalOnClass(SpringLiquibase.class)

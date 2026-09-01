@@ -8,6 +8,12 @@ import io.github.edmaputra.uwati.domain.tenancy.domain.TenantId;
 import io.github.edmaputra.uwati.domain.tenancy.domain.TenantOwned;
 import lombok.Getter;
 
+/**
+ * Pure domain entity representing a user group or team within a tenant.
+ * Supports mapping external IdP group claims for automated federation assignments.
+ *
+ * @author edmaputra
+ */
 @Getter
 public class Group implements TenantOwned {
 
@@ -20,6 +26,18 @@ public class Group implements TenantOwned {
 	private final Instant createdAt;
 	private Instant updatedAt;
 
+	/**
+	 * Canonical constructor for reconstructing existing group domain models.
+	 *
+	 * @param id                   the unique group ID
+	 * @param tenantId             the owning tenant ID
+	 * @param code                 the uppercase group code
+	 * @param name                 the human-readable group name
+	 * @param description          optional description
+	 * @param externalIdpGroupName optional external IdP group claim name
+	 * @param createdAt            creation timestamp
+	 * @param updatedAt            last updated timestamp
+	 */
 	public Group(
 			GroupId id,
 			TenantId tenantId,
@@ -39,6 +57,16 @@ public class Group implements TenantOwned {
 		this.updatedAt = Objects.requireNonNull(updatedAt, "UpdatedAt must not be null.");
 	}
 
+	/**
+	 * Factory method creating a new tenant group.
+	 *
+	 * @param tenantId             the owning tenant ID
+	 * @param code                 the group code
+	 * @param name                 the group name
+	 * @param description          optional description
+	 * @param externalIdpGroupName optional external IdP group mapping name
+	 * @return new {@link Group}
+	 */
 	public static Group create(
 			TenantId tenantId,
 			String code,
@@ -62,6 +90,13 @@ public class Group implements TenantOwned {
 		return this.tenantId;
 	}
 
+	/**
+	 * Updates the group metadata.
+	 *
+	 * @param name                 the updated group name
+	 * @param description          the updated description
+	 * @param externalIdpGroupName the updated external IdP group claim name
+	 */
 	public void updateDetails(String name, String description, String externalIdpGroupName) {
 		this.name = validateName(name);
 		this.description = description;
@@ -69,10 +104,20 @@ public class Group implements TenantOwned {
 		this.updatedAt = Instant.now();
 	}
 
+	/**
+	 * Returns the optional group description.
+	 *
+	 * @return optional description string
+	 */
 	public Optional<String> optionalDescription() {
 		return Optional.ofNullable(description);
 	}
 
+	/**
+	 * Returns the optional external IdP group claim mapping name.
+	 *
+	 * @return optional external group name string
+	 */
 	public Optional<String> optionalExternalIdpGroupName() {
 		return Optional.ofNullable(externalIdpGroupName);
 	}

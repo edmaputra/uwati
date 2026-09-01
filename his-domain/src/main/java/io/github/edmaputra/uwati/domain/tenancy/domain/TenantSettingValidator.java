@@ -8,6 +8,8 @@ import java.util.regex.Pattern;
 
 /**
  * Domain validator ensuring tenant configuration settings conform to format, ISO standards, and supported keys.
+ *
+ * @author edmaputra
  */
 public final class TenantSettingValidator {
 

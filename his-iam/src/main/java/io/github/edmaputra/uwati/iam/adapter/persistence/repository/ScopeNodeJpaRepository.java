@@ -14,6 +14,8 @@ import io.github.edmaputra.uwati.iam.adapter.persistence.entity.ScopeNodeEntity;
 
 /**
  * Spring Data JPA repository for IAM scope hierarchy nodes ({@link ScopeNodeEntity}).
+ *
+ * @author edmaputra
  */
 public interface ScopeNodeJpaRepository extends JpaRepository<ScopeNodeEntity, UUID> {
 
@@ -35,12 +37,37 @@ public interface ScopeNodeJpaRepository extends JpaRepository<ScopeNodeEntity, U
 	Optional<ScopeNodeEntity> findByTenantIdAndCode(UUID tenantId, String code);
 
 	/**
+	 * Finds a scope node by tenant ID and materialized path.
+	 *
+	 * @param tenantId the tenant ID
+	 * @param path     the materialized path
+	 * @return optional containing the matching entity, or empty
+	 */
+	Optional<ScopeNodeEntity> findByTenantIdAndPath(UUID tenantId, String path);
+
+	/**
+	 * Finds all root scope nodes for a tenant (parentId is null).
+	 *
+	 * @param tenantId the tenant ID
+	 * @return list of root scope node entities
+	 */
+	List<ScopeNodeEntity> findAllByTenantIdAndParentIdIsNull(UUID tenantId);
+
+	/**
 	 * Finds all direct child nodes of a parent scope node.
 	 *
 	 * @param parentId the parent scope node ID
 	 * @return list of direct children
 	 */
 	List<ScopeNodeEntity> findByParentId(UUID parentId);
+
+	/**
+	 * Finds all direct child nodes of a parent scope node.
+	 *
+	 * @param parentId the parent scope node ID
+	 * @return list of direct children
+	 */
+	List<ScopeNodeEntity> findAllByParentId(UUID parentId);
 
 	/**
 	 * Finds all descendant scope nodes whose materialized path starts with the given prefix.
@@ -66,6 +93,25 @@ public interface ScopeNodeJpaRepository extends JpaRepository<ScopeNodeEntity, U
 	 * @return {@code true} if code exists, {@code false} otherwise
 	 */
 	boolean existsByTenantIdAndCode(UUID tenantId, String code);
+
+	/**
+	 * Checks if a root scope node exists with the given code.
+	 *
+	 * @param tenantId the tenant ID
+	 * @param code     the scope node code
+	 * @return true if exists
+	 */
+	boolean existsByTenantIdAndCodeAndParentIdIsNull(UUID tenantId, String code);
+
+	/**
+	 * Checks if a child scope node exists under a parent with the given code.
+	 *
+	 * @param tenantId the tenant ID
+	 * @param code     the scope node code
+	 * @param parentId the parent ID
+	 * @return true if exists
+	 */
+	boolean existsByTenantIdAndCodeAndParentId(UUID tenantId, String code, UUID parentId);
 
 	/**
 	 * Batch updates the materialized path prefix of all descendant scope nodes when a subtree is moved.
