@@ -43,7 +43,7 @@ The `his-iam` module is a self-contained, vertical plugin that delivers:
 └──────────────┬──────────────┘ └──────────────┬──────────────┘
                │                               │
                └───────────────┬───────────────┘
-                               ▼
+                                ▼
                ┌───────────────────────────────┐
                │          his-domain           │
                │  - TenantContext              │
@@ -61,7 +61,7 @@ The `his-iam` module is a self-contained, vertical plugin that delivers:
 |---|---|:---:|
 | **Phase 1: Foundation & Data Model** | Maven scaffolding, Liquibase migrations (`2026082601-create-iam-tables.json`), domain entities (`User`, `Role`, `Group`, `ScopeNode`, `UserRoleAssignment`, `GroupRoleAssignment`), ownership contracts in `his-domain` (`ScopeOwned`, `UserOwned`, `CurrentActor`). | ✅ **Completed** |
 | **Phase 2: Scope Hierarchy & Subtree Engine** | `ScopeNode` path generation, re-parenting cascade, `ScopeHierarchyService`, `ScopeSubtreeResolver`, JPA entity & repositories, and subtree inheritance unit tests. | ✅ **Completed** |
-| **Phase 3: Pluggable Auth & JWT Security** | `AuthenticationProvider` SPI, `LocalPasswordAuthProvider` (BCrypt), `EffectiveAccessResolver`, JWT token provider & claims builder, `JwtAuthenticationFilter`, `SecurityContextAccessor` bridge, `/api/v1/auth/*` endpoints (`/login`, `/refresh`, `/me`). | ✅ **Completed** |
+| **Phase 3: Pluggable Auth & JWT Security** | `AuthenticationProvider` SPI, `LocalPasswordAuthProvider` (BCrypt), `OidcAuthProvider`, `ApiKeyAuthProvider`, `EffectiveAccessResolver`, JWT token provider & claims builder, `JwtAuthenticationFilter`, `SecurityContextAccessor` bridge, `/api/v1/auth/*` endpoints (`/login`, `/refresh`, `/me`). | ✅ **Completed** |
 | **Phase 4: Scoped RBAC, Groups & REST CRUD** | Use cases & REST controllers for Users, Roles, Permissions, Groups, Scope Tree, and assignments with lifecycle safeguards. | 🔄 *Next* |
 | **Phase 5: Verification & Integration Tests** | Full Testcontainers integration tests, tenant context propagation, group inheritance, and bootstrap auto-configuration tests. | ⏳ *Planned* |
 
@@ -122,23 +122,16 @@ public interface CurrentActor {
 A `ScopeNode` represents an organizational unit (e.g. branch, division, department, clinic, or team). It does not use rigid enum types; depth is governed by tree structure:
 
 ```java
-public record ScopeNode(
-        ScopeNodeId id,
-        TenantId tenantId,
-        ScopeNodeId parentId,
-        String code,
-        String name,
-        String path,              // Materialized path: /<tenantId>/<rootId>/<childId>/
-        Instant createdAt,
-        Instant updatedAt) implements Auditable {
-
-    public static ScopeNode create(ScopeNodeId id, TenantId tenantId, ScopeNodeId parentId, 
-                                   String code, String name, String parentPath, Instant now) {
-        String calculatedPath = (parentId == null)
-                ? "/" + tenantId.value() + "/" + id.value() + "/"
-                : parentPath + id.value() + "/";
-        return new ScopeNode(id, tenantId, parentId, code, name, calculatedPath, now, now);
-    }
+public class ScopeNode implements TenantOwned {
+    private final ScopeNodeId id;
+    private final TenantId tenantId;
+    private ScopeNodeId parentId;
+    private String code;
+    private String name;
+    private String path;              // Materialized path: /<tenantId>/<rootId>/<childId>/
+    private final Instant createdAt;
+    private Instant updatedAt;
+    // ...
 }
 ```
 
@@ -178,6 +171,8 @@ flowchart TD
     subgraph SPI["his-iam Provider SPI & Engine"]
         Router["AuthenticationProviderRouter"]
         LocalProvider["LocalPasswordAuthProvider (BCrypt)"]
+        OidcProvider["OidcAuthProvider (Federation & JIT)"]
+        ApiKeyProvider["ApiKeyAuthProvider (M2M)"]
         Resolver["EffectiveAccessResolver"]
         ScopeEngine["ScopeSubtreeResolver"]
         JwtIssuer["JwtTokenProvider"]
@@ -196,7 +191,13 @@ flowchart TD
     ApiKey -.-> Router
 
     Router --> LocalProvider
+    Router --> OidcProvider
+    Router --> ApiKeyProvider
+
     LocalProvider --> Resolver
+    OidcProvider --> Resolver
+    ApiKeyProvider --> Resolver
+
     Resolver --> ScopeEngine
     ScopeEngine --> JwtIssuer
 
@@ -209,27 +210,227 @@ flowchart TD
 ### 6.2 Provider SPI & Security Components
 
 - **`AuthenticationProvider`**: Core SPI contract supporting extensible authentication mechanisms (`PASSWORD`, `OIDC_TOKEN`, `SAML_ASSERTION`, `API_KEY`).
-- **`AuthenticationProviderRouter`**: Dynamically routes incoming credentials to the appropriate registered provider.
+- **`AuthenticationProviderRouter`**: Dynamically routes incoming credentials to the appropriate registered provider based on `supports(AuthCredentialType)`.
 - **`LocalPasswordAuthProvider`**: Implements local database credential verification with BCrypt hashing and account lifecycle status checks (`ACTIVE`, `SUSPENDED`, `DEACTIVATED`).
 - **`OidcAuthProvider`**: Validates federated OIDC ID token credentials and integrates with `FederatedIdentityService`.
 - **`ApiKeyAuthProvider`**: Validates machine-to-machine API keys for lab devices and background worker processes via `ApiKeyValidatorPort`.
 - **`FederatedIdentityService`**: Handles identity linking to `iam_user_identity` and Just-In-Time (JIT) user provisioning, synchronizing external IdP group claims with tenant `iam_group` mappings (`external_idp_group_name`).
 - **`EffectiveAccessResolver`**: Resolves composite permissions, roles, and accessible scope nodes by aggregating direct user role assignments and group-inherited role assignments with subtree inheritance.
-- **`JwtTokenProvider`**: Issues HMAC-SHA256 access and refresh tokens. Embeds rich contextual claims:
-  - `sub`: User ID
-  - `email`: User email
-  - `tenantId`: Tenant UUID (null for platform superadmin)
-  - `isSuperAdmin`: Platform superadmin flag
-  - `isTenantWide`: Tenant-wide access flag
-  - `groups`: List of assigned group codes
-  - `roles`: List of effective role codes
-  - `permissions`: Flattened distinct permission strings
-  - `scopeNodeIds`: Accessible scope node UUIDs
-  - `scopePaths`: Accessible materialized path prefixes
+- **`JwtTokenProvider`**: Issues HMAC-SHA256 access and refresh tokens. Embeds rich contextual claims (`sub`, `email`, `tenantId`, `isSuperAdmin`, `isTenantWide`, `groups`, `roles`, `permissions`, `scopeNodeIds`, `scopePaths`).
 - **`SecurityContextAccessor`**: Modern Java 25 `ScopedValue`-based accessor implementing `CurrentActorProvider`. Guarantees clean thread-boundary isolation and automatic scope cleanup.
 - **`JwtAuthenticationFilter`**: Spring `OncePerRequestFilter` that extracts `Authorization: Bearer <token>`, establishes the `CurrentActor` scope, and synchronizes the multi-tenant scope via `TenantContextScope`.
 
-### 6.3 Authentication REST Endpoints
+---
+
+### 6.3 Authentication Provider Sequence Diagrams
+
+#### 6.3.1 Local Password Authentication Flow (`LocalPasswordAuthProvider`)
+
+The default authentication mechanism for direct database credentials using BCrypt password hashing:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Client
+    participant Controller as AuthController
+    participant Service as AuthenticationService
+    participant Router as AuthProviderRouter
+    participant LocalProvider as LocalPasswordAuthProvider
+    participant UserRepo as UserRepository
+    participant Encoder as PasswordEncoderPort
+    participant AccessResolver as EffectiveAccessResolver
+    participant ScopeResolver as ScopeSubtreeResolver
+    participant JwtProvider as JwtTokenProvider
+
+    Client->>Controller: POST /api/v1/auth/login (email, password, tenantId)
+    Controller->>Service: authenticate(LoginCommand)
+    Service->>Service: build PasswordAuthCredentials(email, password, tenantId)
+    Service->>Router: authenticate(credentials)
+    Router->>LocalProvider: authenticate(credentials)
+    
+    LocalProvider->>UserRepo: findByEmail(email)
+    UserRepo-->>LocalProvider: Optional<User>
+    
+    alt User Not Found or Inactive
+        LocalProvider-->>Service: throw AuthenticationException("Invalid credentials" / "Account suspended")
+        Service-->>Controller: Domain Exception
+        Controller-->>Client: 401 Unauthorized / RFC 7807 Problem Details
+    end
+    
+    LocalProvider->>Encoder: matches(rawPassword, user.getPasswordHash())
+    Encoder-->>LocalProvider: true
+    LocalProvider-->>Router: AuthenticatedIdentity(userId, email, tenantId, isSuperAdmin)
+    Router-->>Service: AuthenticatedIdentity
+
+    Service->>AccessResolver: resolve(userId, tenantId)
+    AccessResolver->>AccessResolver: Aggregate Direct User Roles & Group Roles
+    AccessResolver->>ScopeResolver: resolveAccessibleScopeNodeIds(assignedScopes, inherit=true)
+    ScopeResolver-->>AccessResolver: Set<ScopeNodeId>
+    AccessResolver-->>Service: EffectiveAccess(roles, permissions, scopeNodeIds, isTenantWide)
+
+    Service->>JwtProvider: issueTokens(identity, effectiveAccess)
+    JwtProvider-->>Service: TokenResponse(accessToken, refreshToken, userProfile)
+    Service-->>Controller: TokenResponse
+    Controller-->>Client: 200 OK (TokenResponse)
+```
+
+---
+
+#### 6.3.2 OIDC / SSO Federated Identity Flow (`OidcAuthProvider`)
+
+Supports external enterprise Identity Providers (e.g., Keycloak, Azure AD, Okta) with automated Just-In-Time (JIT) user provisioning and external group claim synchronization:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Client
+    participant IdP as External OIDC IdP (Keycloak / Azure AD)
+    participant Controller as AuthController
+    participant Service as AuthenticationService
+    participant Router as AuthProviderRouter
+    participant OidcProvider as OidcAuthProvider
+    participant FedService as FederatedIdentityService
+    participant IdentityRepo as UserIdentityRepository
+    participant UserRepo as UserRepository
+    participant GroupRepo as GroupRepository
+    participant AccessResolver as EffectiveAccessResolver
+    participant JwtProvider as JwtTokenProvider
+
+    Client->>IdP: Authenticate & Obtain OIDC ID Token
+    IdP-->>Client: id_token (JWT with sub, email, groups, issuer)
+    Client->>Controller: POST /api/v1/auth/login (OidcAuthCredentials)
+    Controller->>Service: authenticate(LoginCommand)
+    Service->>Router: authenticate(OidcAuthCredentials)
+    Router->>OidcProvider: authenticate(credentials)
+
+    OidcProvider->>OidcProvider: Verify ID Token signature & claims
+    OidcProvider->>FedService: provisionOrLink(subjectId, issuer, email, name, tenantId, idpGroups)
+
+    FedService->>IdentityRepo: findByProviderAndExternalSubject("OIDC", subjectId)
+    
+    alt Identity Exists
+        IdentityRepo-->>FedService: Optional<UserIdentity>
+        FedService->>UserRepo: findById(userId)
+        UserRepo-->>FedService: User
+    else JIT Provisioning (First-time SSO Login)
+        IdentityRepo-->>FedService: Optional.empty()
+        FedService->>UserRepo: findByEmail(email)
+        alt User does not exist in tenant
+            FedService->>UserRepo: save(newUser with status ACTIVE)
+            UserRepo-->>FedService: created User
+        end
+        FedService->>IdentityRepo: save(UserIdentity(provider=OIDC, externalSubjectId, issuerUrl))
+    end
+
+    opt Synchronize External Group Claims
+        FedService->>GroupRepo: findByTenantIdAndExternalIdpGroupNameIn(tenantId, idpGroups)
+        GroupRepo-->>FedService: List<Group>
+        FedService->>FedService: Synchronize UserGroupMembership bindings
+    end
+
+    FedService-->>OidcProvider: User
+    OidcProvider-->>Router: AuthenticatedIdentity(userId, email, tenantId, isSuperAdmin)
+    Router-->>Service: AuthenticatedIdentity
+
+    Service->>AccessResolver: resolve(userId, tenantId)
+    AccessResolver-->>Service: EffectiveAccess(roles, permissions, scopeNodeIds)
+    Service->>JwtProvider: issueTokens(identity, effectiveAccess)
+    JwtProvider-->>Service: TokenResponse
+    Service-->>Controller: TokenResponse
+    Controller-->>Client: 200 OK (TokenResponse)
+```
+
+---
+
+#### 6.3.3 API Key Authentication Flow (`ApiKeyAuthProvider`)
+
+Enables machine-to-machine (M2M) integration for automated laboratory equipment, background sync daemons, and HL7/FHIR adapters:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Machine as Lab Analyzer / Background Worker
+    participant Controller as AuthController
+    participant Service as AuthenticationService
+    participant Router as AuthProviderRouter
+    participant ApiKeyProvider as ApiKeyAuthProvider
+    participant ValidatorPort as ApiKeyValidatorPort
+    participant UserRepo as UserRepository
+    participant AccessResolver as EffectiveAccessResolver
+    participant JwtProvider as JwtTokenProvider
+
+    Machine->>Controller: POST /api/v1/auth/login (ApiKeyAuthCredentials)
+    Note over Machine,Controller: Header: X-API-KEY or Body: ApiKeyAuthCredentials(rawKey, tenantId)
+    Controller->>Service: authenticate(LoginCommand)
+    Service->>Router: authenticate(ApiKeyAuthCredentials)
+    Router->>ApiKeyProvider: authenticate(credentials)
+
+    ApiKeyProvider->>ValidatorPort: validateApiKey(rawKey, tenantId)
+    
+    alt Invalid or Revoked API Key
+        ValidatorPort-->>ApiKeyProvider: Optional.empty()
+        ApiKeyProvider-->>Service: throw AuthenticationException("Invalid API key")
+        Service-->>Controller: Domain Exception
+        Controller-->>Machine: 401 Unauthorized
+    else Valid API Key
+        ValidatorPort-->>ApiKeyProvider: ApiKeyDetails(serviceUserId, tenantId, description)
+        ApiKeyProvider->>UserRepo: findById(serviceUserId)
+        UserRepo-->>ApiKeyProvider: User (Service Account)
+        ApiKeyProvider-->>Router: AuthenticatedIdentity(serviceUserId, email, tenantId, isSuperAdmin=false)
+        Router-->>Service: AuthenticatedIdentity
+    end
+
+    Service->>AccessResolver: resolve(serviceUserId, tenantId)
+    AccessResolver-->>Service: EffectiveAccess(roles, permissions, scopeNodeIds)
+    Service->>JwtProvider: issueTokens(identity, effectiveAccess)
+    JwtProvider-->>Service: TokenResponse(accessToken, refreshToken, userProfile)
+    Service-->>Controller: TokenResponse
+    Controller-->>Machine: 200 OK (TokenResponse)
+```
+
+---
+
+#### 6.3.4 Runtime Request Execution & Java 25 `ScopedValue` Context Binding
+
+Illustrates how downstream business services access the authenticated actor and multi-tenant context safely across thread boundaries:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Client
+    participant Filter as JwtAuthenticationFilter
+    participant JwtProvider as JwtTokenProvider
+    participant ScopedActor as SecurityContextAccessor (ScopedValue)
+    participant ScopedTenant as ScopedValueTenantContext
+    participant Controller as ClinicalController (/api/v1/patients)
+    participant DomainService as MedicalRecordService
+
+    Client->>Filter: GET /api/v1/patients/123 (Authorization: Bearer <jwt>)
+    Filter->>JwtProvider: validateAndParseClaims(jwt)
+    JwtProvider-->>Filter: Claims(sub, tenantId, roles, permissions, scopePaths)
+    
+    Filter->>Filter: Build CurrentActor & TenantId instances
+    
+    Filter->>ScopedActor: ScopedValue.where(CURRENT_ACTOR, actor)
+    Filter->>ScopedTenant: ScopedValue.where(TENANT_CONTEXT, tenant)
+    
+    Note over Filter,Controller: Executes downstream chain inside ScopedValue context
+    Filter->>Controller: chain.doFilter(request, response)
+    Controller->>DomainService: getPatientRecord(patientId)
+    
+    DomainService->>ScopedActor: CurrentActor.get()
+    ScopedActor-->>DomainService: CurrentActor (permissions, canAccessScope)
+    DomainService->>DomainService: Verify ScopeOwned & UserOwned constraints
+    
+    DomainService-->>Controller: PatientRecord
+    Controller-->>Filter: 200 OK (Patient JSON)
+    Filter-->>Client: 200 OK (Patient JSON)
+    Note over Filter: ScopedValue automatically unbinds upon request exit
+```
+
+---
+
+### 6.4 Authentication REST Endpoints
 
 | Method | Endpoint | Request Body | Description |
 |---|---|---|---|
@@ -266,5 +467,7 @@ IAM migrations are isolated in `his-iam/src/main/resources/db/changelog/iam/`:
   - Implemented `EffectiveAccessResolver` resolving composite roles, permissions, and hierarchical scopes from direct and group assignments.
   - Implemented `JwtTokenProvider` issuing signed access and refresh tokens with custom claims, and `SecurityContextAccessor` / `JwtAuthenticationFilter` providing the `CurrentActor` bridge using Java 25 `ScopedValue`.
   - Implemented `AuthenticateUserUseCase`, `AuthenticationService`, and `/api/v1/auth/*` REST endpoints (`/login`, `/refresh`, `/me`) with `IamExceptionHandler`.
+  - Added Section 9 to `.agents/rules/clean-code.md` establishing mandatory Javadoc and `@author` standards.
+  - Added complete Javadocs across all IAM domain, application, adapter, and config components.
   - Added 89 unit & slice tests covering the entire IAM security subsystem with 100% pass rate.
-  - Authored comprehensive `docs/iam-walkthrough.md`.
+  - Authored comprehensive `docs/iam-walkthrough.md` with detailed sequence diagrams for every `AuthenticationProvider` implementation and runtime request context binding.
