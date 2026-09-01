@@ -19,6 +19,8 @@ import io.github.edmaputra.uwati.iam.application.port.in.AuthenticateUserUseCase
 
 /**
  * REST controller exposing authentication and identity endpoints under {@code /api/v1/auth}.
+ *
+ * @author edmaputra
  */
 @RestController
 @RequestMapping("/api/v1/auth")

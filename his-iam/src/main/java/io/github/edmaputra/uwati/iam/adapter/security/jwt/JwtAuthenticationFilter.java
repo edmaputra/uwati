@@ -23,6 +23,8 @@ import io.github.edmaputra.uwati.iam.domain.exception.AuthenticationException;
  * HTTP filter that extracts the Bearer token from the {@code Authorization} header,
  * verifies it via {@link JwtTokenProvider}, and establishes the request-scoped {@link CurrentActor}
  * and {@link TenantContextScope}.
+ *
+ * @author edmaputra
  */
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 

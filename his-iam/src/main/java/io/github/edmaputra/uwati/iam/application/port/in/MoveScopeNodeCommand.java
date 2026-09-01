@@ -12,6 +12,7 @@ import io.github.edmaputra.uwati.iam.domain.model.ScopeNodeId;
  * @param tenantId    the tenant ID
  * @param id          the scope node ID to move
  * @param newParentId the new parent scope node ID (null to move to root)
+ * @author edmaputra
  */
 public record MoveScopeNodeCommand(
 		TenantId tenantId,

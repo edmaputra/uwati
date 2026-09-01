@@ -16,6 +16,8 @@ import io.github.edmaputra.uwati.iam.domain.repository.ScopeNodeRepository;
 
 /**
  * Spring Boot auto-configuration for IAM hierarchical scope tree persistence and services.
+ *
+ * @author edmaputra
  */
 @AutoConfiguration
 @EntityScan(basePackages = "io.github.edmaputra.uwati.iam.adapter.persistence.entity")

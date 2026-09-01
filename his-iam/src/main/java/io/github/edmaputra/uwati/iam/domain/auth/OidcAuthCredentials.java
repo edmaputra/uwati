@@ -16,6 +16,7 @@ import io.github.edmaputra.uwati.domain.tenancy.domain.TenantId;
  * @param issuerUrl      the OIDC issuer URL
  * @param externalGroups list of external group or role claim strings from the IdP
  * @param tenantId       the target tenant ID if authenticating into a specific tenant
+ * @author edmaputra
  */
 public record OidcAuthCredentials(
 		String idToken,

@@ -8,6 +8,8 @@ import lombok.Getter;
 
 /**
  * Pure domain entity representing a federated identity provider linkage for a local user.
+ *
+ * @author edmaputra
  */
 @Getter
 public class UserIdentity {

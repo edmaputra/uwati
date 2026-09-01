@@ -9,6 +9,8 @@ import io.github.edmaputra.uwati.iam.domain.model.ScopeNodeId;
 
 /**
  * Outbound repository port for ScopeNode domain entity.
+ *
+ * @author edmaputra
  */
 public interface ScopeNodeRepository {
 

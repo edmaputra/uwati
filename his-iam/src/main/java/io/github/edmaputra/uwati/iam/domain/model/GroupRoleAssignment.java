@@ -11,6 +11,8 @@ import lombok.Getter;
 /**
  * Pure domain entity representing an assignment of a {@link Role} to a {@link Group},
  * inheriting permissions to all members of the group.
+ *
+ * @author edmaputra
  */
 @Getter
 public class GroupRoleAssignment implements TenantOwned {

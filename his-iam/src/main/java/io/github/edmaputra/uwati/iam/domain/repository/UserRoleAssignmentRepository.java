@@ -10,6 +10,8 @@ import io.github.edmaputra.uwati.iam.domain.model.UserRoleAssignmentId;
 
 /**
  * Domain repository port for managing direct {@link UserRoleAssignment} bindings.
+ *
+ * @author edmaputra
  */
 public interface UserRoleAssignmentRepository {
 

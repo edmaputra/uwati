@@ -13,6 +13,8 @@ import io.github.edmaputra.uwati.iam.domain.model.ProviderType;
 /**
  * Authentication provider for OpenID Connect (OIDC) federated credentials.
  * Delegates to {@link FederatedIdentityService} for JIT provisioning and group claim synchronization.
+ *
+ * @author edmaputra
  */
 public class OidcAuthProvider implements AuthenticationProvider {
 

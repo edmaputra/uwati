@@ -7,6 +7,7 @@ import java.util.Objects;
  *
  * @param email       the user's email address
  * @param rawPassword the user's raw unhashed password
+ * @author edmaputra
  */
 public record PasswordAuthCredentials(String email, String rawPassword) implements AuthCredentials {
 

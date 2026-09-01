@@ -56,6 +56,8 @@ import io.github.edmaputra.uwati.iam.domain.repository.UserRoleAssignmentReposit
 /**
  * Spring Boot auto-configuration for IAM security, authentication SPI providers,
  * JWT token engine, persistence adapters, and security context bridges.
+ *
+ * @author edmaputra
  */
 @AutoConfiguration
 @EnableConfigurationProperties(JwtProperties.class)

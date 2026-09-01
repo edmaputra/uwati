@@ -9,6 +9,8 @@ import io.github.edmaputra.uwati.domain.tenancy.application.OperationContext;
 
 /**
  * Universal domain event envelope for all Identity and Access Management mutations.
+ *
+ * @author edmaputra
  */
 public record IamEvent(
 		String eventType,

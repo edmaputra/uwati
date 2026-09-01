@@ -14,6 +14,8 @@ import lombok.Setter;
 
 /**
  * JPA entity representing a user account in the {@code iam_user} table.
+ *
+ * @author edmaputra
  */
 @Entity
 @Table(name = "iam_user")

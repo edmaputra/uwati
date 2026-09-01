@@ -4,6 +4,8 @@ import io.github.edmaputra.uwati.iam.domain.model.RoleId;
 
 /**
  * Thrown when a role cannot be found in the catalog.
+ *
+ * @author edmaputra
  */
 public class RoleNotFoundException extends RuntimeException {
 

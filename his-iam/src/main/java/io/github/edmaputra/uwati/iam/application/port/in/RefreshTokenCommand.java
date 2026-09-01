@@ -6,6 +6,8 @@ import java.util.Objects;
  * Inbound command encapsulating a refresh token to request a new access token.
  *
  * @param refreshToken the signed JWT refresh token string
+ *
+ * @author edmaputra
  */
 public record RefreshTokenCommand(String refreshToken) {
 

@@ -6,6 +6,8 @@ import java.util.Optional;
 /**
  * Cross-cutting operation context that carries the identity of the actor
  * performing the action and an optional correlation ID for request tracing.
+ *
+ * @author edmaputra
  */
 public record OperationContext(String actor, String correlationId) {
 

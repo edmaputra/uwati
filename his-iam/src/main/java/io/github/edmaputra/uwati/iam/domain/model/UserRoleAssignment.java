@@ -10,6 +10,8 @@ import lombok.Getter;
 /**
  * Pure domain entity representing a direct assignment of a {@link Role} to a {@link User},
  * scoped globally, tenant-wide, or bounded to a specific {@link ScopeNode} hierarchy.
+ *
+ * @author edmaputra
  */
 @Getter
 public class UserRoleAssignment {

@@ -10,6 +10,8 @@ import io.github.edmaputra.uwati.iam.domain.model.UserIdentityId;
 
 /**
  * Domain repository port for managing federated {@link UserIdentity} linkages.
+ *
+ * @author edmaputra
  */
 public interface UserIdentityRepository {
 

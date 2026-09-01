@@ -13,6 +13,7 @@ import io.github.edmaputra.uwati.iam.domain.model.ScopeNodeId;
  * @param parentId optional parent scope node ID (null for root node)
  * @param code     the unique node code
  * @param name     the human-readable name
+ * @author edmaputra
  */
 public record CreateScopeNodeCommand(
 		TenantId tenantId,

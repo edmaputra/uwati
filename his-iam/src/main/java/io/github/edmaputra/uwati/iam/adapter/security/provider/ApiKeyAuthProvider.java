@@ -13,6 +13,8 @@ import io.github.edmaputra.uwati.iam.domain.exception.AuthenticationException;
 /**
  * Authentication provider for machine-to-machine (M2M) API keys.
  * Validates API keys via {@link ApiKeyValidatorPort}.
+ *
+ * @author edmaputra
  */
 public class ApiKeyAuthProvider implements AuthenticationProvider {
 

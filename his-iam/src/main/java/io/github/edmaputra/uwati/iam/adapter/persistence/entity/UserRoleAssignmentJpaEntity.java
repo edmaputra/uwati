@@ -14,6 +14,8 @@ import lombok.Setter;
 
 /**
  * JPA entity representing a direct user role-to-scope assignment in the {@code iam_user_role_assignment} table.
+ *
+ * @author edmaputra
  */
 @Entity
 @Table(name = "iam_user_role_assignment")

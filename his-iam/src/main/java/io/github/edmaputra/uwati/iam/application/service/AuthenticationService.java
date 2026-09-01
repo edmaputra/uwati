@@ -25,6 +25,8 @@ import io.github.edmaputra.uwati.iam.domain.repository.UserRepository;
 /**
  * Application service implementing {@link AuthenticateUserUseCase}.
  * Orchestrates credential authentication, effective access computation, and signed JWT token issuance.
+ *
+ * @author edmaputra
  */
 public class AuthenticationService implements AuthenticateUserUseCase {
 

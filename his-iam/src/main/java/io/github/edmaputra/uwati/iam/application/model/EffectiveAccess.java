@@ -20,6 +20,7 @@ import io.github.edmaputra.uwati.iam.domain.model.UserId;
  * @param permissions            flattened distinct permission strings
  * @param accessibleScopeNodeIds resolved accessible scope node UUIDs
  * @param accessibleScopePaths   resolved accessible scope materialized path prefixes
+ * @author edmaputra
  */
 public record EffectiveAccess(
 		UserId userId,

@@ -15,6 +15,8 @@ import io.github.edmaputra.uwati.iam.domain.repository.RoleRepository;
 
 /**
  * Persistence adapter implementing {@link RoleRepository} backed by Spring Data JPA.
+ *
+ * @author edmaputra
  */
 public class RoleRepositoryAdapter implements RoleRepository {
 

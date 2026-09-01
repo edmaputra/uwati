@@ -14,6 +14,8 @@ import io.github.edmaputra.uwati.iam.domain.repository.ScopeNodeRepository;
 
 /**
  * Persistence adapter implementing {@link ScopeNodeRepository} backed by Spring Data JPA.
+ *
+ * @author edmaputra
  */
 public class ScopeNodeRepositoryAdapter implements ScopeNodeRepository {
 

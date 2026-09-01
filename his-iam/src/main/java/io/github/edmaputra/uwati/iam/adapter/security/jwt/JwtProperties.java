@@ -8,6 +8,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param secret                       the secret signing key (minimum 256 bits)
  * @param accessTokenExpirationSeconds  access token validity duration in seconds (default 3600s = 1 hour)
  * @param refreshTokenExpirationSeconds refresh token validity duration in seconds (default 604800s = 7 days)
+ * @author edmaputra
  */
 @ConfigurationProperties(prefix = "uwati.iam.jwt")
 public record JwtProperties(

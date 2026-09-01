@@ -9,6 +9,8 @@ import io.github.edmaputra.uwati.iam.domain.model.RoleId;
 
 /**
  * Domain repository port for managing {@link Role} catalog entities.
+ *
+ * @author edmaputra
  */
 public interface RoleRepository {
 

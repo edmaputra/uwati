@@ -9,6 +9,8 @@ import io.github.edmaputra.uwati.iam.domain.model.GroupId;
 
 /**
  * Domain repository port for managing {@link Group} entities.
+ *
+ * @author edmaputra
  */
 public interface GroupRepository {
 

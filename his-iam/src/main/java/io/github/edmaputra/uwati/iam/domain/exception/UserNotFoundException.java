@@ -4,6 +4,8 @@ import io.github.edmaputra.uwati.iam.domain.model.UserId;
 
 /**
  * Thrown when a user account cannot be found by ID or email.
+ *
+ * @author edmaputra
  */
 public class UserNotFoundException extends RuntimeException {
 

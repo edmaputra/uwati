@@ -10,6 +10,7 @@ import io.github.edmaputra.uwati.iam.domain.model.ScopeNodeId;
  *
  * @param tenantId the tenant ID
  * @param id       the scope node ID to delete
+ * @author edmaputra
  */
 public record DeleteScopeNodeCommand(
 		TenantId tenantId,

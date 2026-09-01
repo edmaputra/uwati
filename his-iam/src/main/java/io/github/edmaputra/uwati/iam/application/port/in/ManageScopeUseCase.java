@@ -10,6 +10,8 @@ import io.github.edmaputra.uwati.iam.domain.model.ScopeNodeId;
 
 /**
  * Inbound port for managing organizational scope hierarchies, re-parenting nodes, and querying trees.
+ *
+ * @author edmaputra
  */
 public interface ManageScopeUseCase {
 

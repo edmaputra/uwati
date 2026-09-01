@@ -9,6 +9,8 @@ import lombok.Getter;
 /**
  * Pure domain aggregate representing a user account in the Uwati IAM subsystem.
  * Encapsulates lifecycle states, password hashes, and profile metadata.
+ *
+ * @author edmaputra
  */
 @Getter
 public class User {

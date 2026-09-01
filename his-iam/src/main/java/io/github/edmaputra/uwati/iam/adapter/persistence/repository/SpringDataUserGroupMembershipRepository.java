@@ -11,6 +11,8 @@ import io.github.edmaputra.uwati.iam.adapter.persistence.entity.UserGroupMembers
 
 /**
  * Spring Data JPA repository for {@link UserGroupMembershipJpaEntity}.
+ *
+ * @author edmaputra
  */
 @Repository
 public interface SpringDataUserGroupMembershipRepository extends JpaRepository<UserGroupMembershipJpaEntity, UserGroupMembershipJpaId> {

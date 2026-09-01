@@ -15,6 +15,8 @@ import io.github.edmaputra.uwati.iam.domain.repository.GroupRepository;
 
 /**
  * Persistence adapter implementing {@link GroupRepository} backed by Spring Data JPA.
+ *
+ * @author edmaputra
  */
 public class GroupRepositoryAdapter implements GroupRepository {
 

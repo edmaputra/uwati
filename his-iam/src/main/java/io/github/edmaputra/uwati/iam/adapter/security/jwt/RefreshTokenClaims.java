@@ -14,6 +14,7 @@ import io.github.edmaputra.uwati.iam.domain.model.UserId;
  * @param tenantId  optional tenant ID the refresh token was scoped to
  * @param issuedAt  timestamp when the refresh token was issued
  * @param expiresAt timestamp when the refresh token expires
+ * @author edmaputra
  */
 public record RefreshTokenClaims(
 		UserId userId,

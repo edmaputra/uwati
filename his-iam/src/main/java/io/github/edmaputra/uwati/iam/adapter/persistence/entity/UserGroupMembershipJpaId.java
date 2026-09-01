@@ -13,6 +13,8 @@ import lombok.Setter;
 
 /**
  * Composite embedded ID for {@link UserGroupMembershipJpaEntity}.
+ *
+ * @author edmaputra
  */
 @Embeddable
 @Getter

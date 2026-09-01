@@ -29,6 +29,8 @@ import io.github.edmaputra.uwati.iam.domain.repository.UserRoleAssignmentReposit
 /**
  * Access resolution engine that computes the composite effective permissions, roles, and scope boundaries for a user.
  * Merges direct user assignments with group-inherited assignments and resolves downward scope hierarchies.
+ *
+ * @author edmaputra
  */
 public class EffectiveAccessResolver {
 

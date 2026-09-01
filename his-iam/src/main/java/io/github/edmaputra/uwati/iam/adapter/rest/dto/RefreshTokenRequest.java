@@ -8,6 +8,8 @@ import io.github.edmaputra.uwati.iam.application.port.in.RefreshTokenCommand;
  * REST request body for exchanging a refresh token.
  *
  * @param refreshToken the signed JWT refresh token string
+ *
+ * @author edmaputra
  */
 public record RefreshTokenRequest(String refreshToken) {
 

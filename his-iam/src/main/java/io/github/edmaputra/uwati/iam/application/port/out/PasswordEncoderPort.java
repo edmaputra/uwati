@@ -2,6 +2,8 @@ package io.github.edmaputra.uwati.iam.application.port.out;
 
 /**
  * Outbound port for one-way password hashing and verification.
+ *
+ * @author edmaputra
  */
 public interface PasswordEncoderPort {
 

@@ -25,6 +25,8 @@ import io.github.edmaputra.uwati.iam.domain.repository.ScopeNodeRepository;
 /**
  * Application service implementing {@link ManageScopeUseCase}.
  * Manages scope tree hierarchy, path generation, cycle detection, re-parenting cascades, and audit events.
+ *
+ * @author edmaputra
  */
 public class ScopeHierarchyService implements ManageScopeUseCase {
 

@@ -13,6 +13,8 @@ import lombok.Getter;
  * Domain entity representing an IAM role and its assigned permission keys.
  * <p>
  * Roles can either be global/system roles (immutable across tenants) or custom tenant-specific roles.
+ *
+ * @author edmaputra
  */
 @Getter
 public class Role {

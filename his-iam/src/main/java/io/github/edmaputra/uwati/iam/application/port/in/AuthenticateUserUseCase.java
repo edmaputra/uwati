@@ -6,6 +6,8 @@ import io.github.edmaputra.uwati.iam.application.model.UserProfileResponse;
 
 /**
  * Inbound port defining authentication use cases including user login, token refresh, and profile retrieval.
+ *
+ * @author edmaputra
  */
 public interface AuthenticateUserUseCase {
 

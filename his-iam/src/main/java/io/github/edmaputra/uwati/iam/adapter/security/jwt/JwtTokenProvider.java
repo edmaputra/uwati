@@ -27,6 +27,8 @@ import io.github.edmaputra.uwati.iam.domain.model.UserId;
 /**
  * Provider responsible for issuing and verifying HMAC-SHA256 signed JSON Web Tokens (JWT).
  * Embeds tenant context, effective roles, permissions, and hierarchical scopes into access token claims.
+ *
+ * @author edmaputra
  */
 public class JwtTokenProvider {
 

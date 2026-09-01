@@ -14,6 +14,8 @@ import io.github.edmaputra.uwati.iam.domain.repository.ScopeNodeRepository;
 
 /**
  * Service for resolving hierarchical scope subtrees and verifying descendant scope access boundaries.
+ *
+ * @author edmaputra
  */
 public class ScopeSubtreeResolver {
 

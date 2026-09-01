@@ -17,6 +17,7 @@ import io.github.edmaputra.uwati.iam.domain.model.ScopeNode;
  * @param name     the human-readable name
  * @param path     the materialized hierarchy path
  * @param children list of child tree nodes
+ * @author edmaputra
  */
 public record ScopeTreeNode(
 		UUID id,

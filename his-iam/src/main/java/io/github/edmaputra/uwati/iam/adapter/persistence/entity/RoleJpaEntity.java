@@ -20,6 +20,8 @@ import lombok.Setter;
 
 /**
  * JPA entity representing a role catalog record in the {@code iam_role} table.
+ *
+ * @author edmaputra
  */
 @Entity
 @Table(name = "iam_role")

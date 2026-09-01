@@ -9,6 +9,8 @@ import io.github.edmaputra.uwati.domain.util.UuidV7;
  * Strongly-typed value object representing a unique ScopeNode identifier (UUIDv7).
  *
  * @param value the underlying UUID value
+ *
+ * @author edmaputra
  */
 public record ScopeNodeId(UUID value) {
 

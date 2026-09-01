@@ -2,6 +2,8 @@ package io.github.edmaputra.uwati.iam.domain.event;
 
 /**
  * Standard event type constants for IAM domain events.
+ *
+ * @author edmaputra
  */
 public final class IamEventTypes {
 

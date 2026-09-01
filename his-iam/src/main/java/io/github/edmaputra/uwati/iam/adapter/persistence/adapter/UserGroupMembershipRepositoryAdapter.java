@@ -13,6 +13,8 @@ import io.github.edmaputra.uwati.iam.domain.repository.UserGroupMembershipReposi
 
 /**
  * Persistence adapter implementing {@link UserGroupMembershipRepository} backed by Spring Data JPA.
+ *
+ * @author edmaputra
  */
 public class UserGroupMembershipRepositoryAdapter implements UserGroupMembershipRepository {
 

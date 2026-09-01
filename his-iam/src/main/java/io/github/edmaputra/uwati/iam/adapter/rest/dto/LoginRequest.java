@@ -12,6 +12,7 @@ import io.github.edmaputra.uwati.iam.application.port.in.LoginCommand;
  * @param email    user email address
  * @param password raw user password
  * @param tenantId optional tenant context UUID
+ * @author edmaputra
  */
 public record LoginRequest(String email, String password, UUID tenantId) {
 

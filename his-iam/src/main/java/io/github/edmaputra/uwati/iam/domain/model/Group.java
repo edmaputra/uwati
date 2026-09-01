@@ -11,6 +11,8 @@ import lombok.Getter;
 /**
  * Pure domain entity representing a user group or team within a tenant.
  * Supports mapping external IdP group claims for automated federation assignments.
+ *
+ * @author edmaputra
  */
 @Getter
 public class Group implements TenantOwned {

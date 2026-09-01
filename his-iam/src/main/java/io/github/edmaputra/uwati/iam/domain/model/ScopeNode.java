@@ -11,6 +11,8 @@ import lombok.Getter;
 /**
  * Pure domain entity representing a hierarchical organizational unit or facility scope node.
  * Uses materialized paths (e.g. {@code /<tenantId>/<rootId>/<childId>/}) for high-performance subtree inheritance.
+ *
+ * @author edmaputra
  */
 @Getter
 public class ScopeNode implements TenantOwned {

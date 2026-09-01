@@ -12,6 +12,7 @@ import io.github.edmaputra.uwati.iam.domain.model.ScopeNodeId;
  * @param id       the scope node ID
  * @param code     the updated code
  * @param name     the updated name
+ * @author edmaputra
  */
 public record UpdateScopeNodeCommand(
 		TenantId tenantId,

@@ -10,6 +10,7 @@ import java.util.Objects;
  * @param tokenType    the token type (defaults to "Bearer")
  * @param expiresIn    the access token validity duration in seconds
  * @param user         the authenticated user profile response
+ * @author edmaputra
  */
 public record TokenResponse(
 		String accessToken,

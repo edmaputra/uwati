@@ -10,6 +10,8 @@ import io.github.edmaputra.uwati.domain.security.CurrentActorProvider;
 /**
  * Accessor implementing {@link CurrentActorProvider} backed by modern Java 25 {@link ScopedValue}.
  * Provides boundary-safe, thread-local-free scoping of the authenticated actor across virtual and platform threads.
+ *
+ * @author edmaputra
  */
 public class SecurityContextAccessor implements CurrentActorProvider {
 

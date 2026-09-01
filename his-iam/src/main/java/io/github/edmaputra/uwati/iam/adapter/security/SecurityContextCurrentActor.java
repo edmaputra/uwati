@@ -19,6 +19,7 @@ import io.github.edmaputra.uwati.domain.security.CurrentActor;
  * @param permissions            set of distinct permission strings
  * @param accessibleScopeNodeIds set of accessible scope node UUIDs
  * @param accessibleScopePaths   set of accessible materialized path prefixes
+ * @author edmaputra
  */
 public record SecurityContextCurrentActor(
 		UUID userId,

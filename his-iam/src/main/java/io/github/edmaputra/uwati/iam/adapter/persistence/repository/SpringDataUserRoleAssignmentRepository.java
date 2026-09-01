@@ -10,6 +10,8 @@ import io.github.edmaputra.uwati.iam.adapter.persistence.entity.UserRoleAssignme
 
 /**
  * Spring Data JPA repository for {@link UserRoleAssignmentJpaEntity}.
+ *
+ * @author edmaputra
  */
 @Repository
 public interface SpringDataUserRoleAssignmentRepository extends JpaRepository<UserRoleAssignmentJpaEntity, UUID> {

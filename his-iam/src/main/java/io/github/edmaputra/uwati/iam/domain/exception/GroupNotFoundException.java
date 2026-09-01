@@ -4,6 +4,8 @@ import io.github.edmaputra.uwati.iam.domain.model.GroupId;
 
 /**
  * Thrown when a user group cannot be found.
+ *
+ * @author edmaputra
  */
 public class GroupNotFoundException extends RuntimeException {
 

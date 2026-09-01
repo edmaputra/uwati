@@ -6,6 +6,8 @@ import java.util.Objects;
  * Encapsulates machine-to-machine (M2M) API key authentication credentials.
  *
  * @param apiKey the raw API key token string
+ *
+ * @author edmaputra
  */
 public record ApiKeyAuthCredentials(String apiKey) implements AuthCredentials {
 

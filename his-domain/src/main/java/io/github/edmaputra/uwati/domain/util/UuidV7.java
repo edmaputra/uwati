@@ -10,6 +10,8 @@ import java.util.UUID;
  *
  * <p>UUIDv7 encodes a 48-bit millisecond timestamp in the most significant bits,
  * providing natural time-sorting and index locality in B-Tree databases.
+ *
+ * @author edmaputra
  */
 public final class UuidV7 {
 

@@ -14,6 +14,8 @@ import lombok.Setter;
 
 /**
  * JPA entity representing a group-level role-to-scope assignment in the {@code iam_group_role_assignment} table.
+ *
+ * @author edmaputra
  */
 @Entity
 @Table(name = "iam_group_role_assignment")

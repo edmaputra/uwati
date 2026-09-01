@@ -13,6 +13,7 @@ import io.github.edmaputra.uwati.iam.domain.model.UserId;
  * @param fullName            the user's full name
  * @param platformSuperAdmin  flag indicating if the user is a platform superadmin
  * @param providerType        the provider type that authenticated this identity
+ * @author edmaputra
  */
 public record AuthenticatedIdentity(
 		UserId userId,

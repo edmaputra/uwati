@@ -10,6 +10,7 @@ import io.github.edmaputra.uwati.domain.tenancy.domain.TenantId;
  * @param email    the user's email address
  * @param password the user's raw password
  * @param tenantId optional tenant ID context for scoping permissions
+ * @author edmaputra
  */
 public record LoginCommand(
 		String email,

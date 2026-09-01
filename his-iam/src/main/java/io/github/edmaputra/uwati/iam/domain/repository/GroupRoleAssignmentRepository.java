@@ -10,6 +10,8 @@ import io.github.edmaputra.uwati.iam.domain.model.GroupRoleAssignmentId;
 
 /**
  * Domain repository port for managing group-level {@link GroupRoleAssignment} bindings.
+ *
+ * @author edmaputra
  */
 public interface GroupRoleAssignmentRepository {
 

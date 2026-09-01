@@ -4,6 +4,8 @@ import io.github.edmaputra.uwati.iam.domain.model.ScopeNodeId;
 
 /**
  * Thrown when a scope node cannot be found in the tenant hierarchy.
+ *
+ * @author edmaputra
  */
 public class ScopeNodeNotFoundException extends RuntimeException {
 

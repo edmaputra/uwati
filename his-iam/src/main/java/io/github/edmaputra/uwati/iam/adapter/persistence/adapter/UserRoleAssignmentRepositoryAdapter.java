@@ -16,6 +16,8 @@ import io.github.edmaputra.uwati.iam.domain.repository.UserRoleAssignmentReposit
 
 /**
  * Persistence adapter implementing {@link UserRoleAssignmentRepository} backed by Spring Data JPA.
+ *
+ * @author edmaputra
  */
 public class UserRoleAssignmentRepositoryAdapter implements UserRoleAssignmentRepository {
 

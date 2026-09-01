@@ -2,6 +2,8 @@ package io.github.edmaputra.uwati.iam.domain.exception;
 
 /**
  * Thrown when credential authentication fails or an account is inactive.
+ *
+ * @author edmaputra
  */
 public class AuthenticationException extends RuntimeException {
 

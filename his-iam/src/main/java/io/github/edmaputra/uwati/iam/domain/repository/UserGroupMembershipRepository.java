@@ -8,6 +8,8 @@ import io.github.edmaputra.uwati.iam.domain.model.UserId;
 
 /**
  * Domain repository port for managing {@link UserGroupMembership} associations.
+ *
+ * @author edmaputra
  */
 public interface UserGroupMembershipRepository {
 

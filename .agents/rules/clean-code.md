@@ -195,6 +195,8 @@ public void validateSettings(TenantSetting setting) {
 
   return GenericJacksonJsonRedisSerializer.builder()
           .enableDefaultTyping(typeValidator)
+          .build();
+  ```
 
 ---
 
@@ -202,18 +204,21 @@ public void validateSettings(TenantSetting setting) {
 
 - **Mandatory Class, Interface, Record, and Enum Javadoc**:
   - Every Java class, interface, `record`, and `enum` MUST have a descriptive Javadoc block summarizing its purpose, domain context, and architectural role (Inbound Port, Outbound Port, Domain Entity, Adapter, etc.).
+  - **`@author` Tag Requirement**: Every type-level Javadoc must include the `@author` tag (e.g. `@author edmaputra`).
 - **Public & Protected Methods Documentation**:
-  - All public and protected methods across interfaces, ports, and domain services must be documented with clear descriptions, `@param` for inputs, `@return` for results, and `@throws` for expected domain/runtime exceptions.
+  - All public and protected methods across interfaces, ports, domain services, and adapters must be documented with clear descriptions, `@param` for inputs, `@return` for results, and `@throws` for expected domain/runtime exceptions.
 - **Record & Domain Invariants**:
   - Document domain invariant constraints, validation rules, and structural behaviors (e.g. subtree inheritance, token expiry).
 - **Concise & Meaningful**:
   - Avoid empty or tautological comments (e.g. `/** Gets the name. */`). Provide real context on intent, behavior, and lifecycle.
 
 ```java
-// ✅ GOOD: Meaningful class and method Javadoc
+// ✅ GOOD: Meaningful class and method Javadoc with @author tag
 /**
  * Inbound port for managing user authentication lifecycle and token issuance.
  * Coordinates credential verification across registered {@link AuthenticationProvider}s.
+ *
+ * @author edmaputra
  */
 public interface AuthenticateUserUseCase {
 
@@ -227,4 +232,3 @@ public interface AuthenticateUserUseCase {
     TokenResponse login(LoginCommand command);
 }
 ```
-

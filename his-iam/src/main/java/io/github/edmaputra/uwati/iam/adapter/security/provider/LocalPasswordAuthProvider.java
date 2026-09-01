@@ -16,6 +16,8 @@ import io.github.edmaputra.uwati.iam.domain.repository.UserRepository;
 /**
  * Authentication provider for local email and password credentials.
  * Checks BCrypt password hashes and verifies user lifecycle states (active, suspended, deactivated).
+ *
+ * @author edmaputra
  */
 public class LocalPasswordAuthProvider implements AuthenticationProvider {
 

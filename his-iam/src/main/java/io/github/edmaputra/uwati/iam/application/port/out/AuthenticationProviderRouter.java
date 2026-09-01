@@ -9,6 +9,8 @@ import io.github.edmaputra.uwati.iam.domain.exception.AuthenticationException;
 
 /**
  * Composite router that dispatches incoming {@link AuthCredentials} to the appropriate registered {@link AuthenticationProvider}.
+ *
+ * @author edmaputra
  */
 public class AuthenticationProviderRouter {
 

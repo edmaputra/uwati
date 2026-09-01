@@ -13,6 +13,8 @@ import io.github.edmaputra.uwati.iam.adapter.persistence.entity.RoleJpaEntity;
 
 /**
  * Spring Data JPA repository for {@link RoleJpaEntity}.
+ *
+ * @author edmaputra
  */
 @Repository
 public interface SpringDataRoleRepository extends JpaRepository<RoleJpaEntity, UUID> {
