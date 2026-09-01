@@ -251,27 +251,39 @@ sequenceDiagram
     LocalProvider->>UserRepo: findByEmail(email)
     UserRepo-->>LocalProvider: Optional<User>
     
-    alt User Not Found or Inactive
-        LocalProvider-->>Service: throw AuthenticationException("Invalid credentials" / "Account suspended")
+    alt User Not Found
+        LocalProvider-->>Service: throw AuthenticationException("Invalid credentials.")
         Service-->>Controller: Domain Exception
-        Controller-->>Client: 401 Unauthorized / RFC 7807 Problem Details
+        Controller-->>Client: 401 Unauthorized (RFC 7807 Problem Details)
+    else Account Suspended or Deactivated
+        LocalProvider-->>Service: throw AuthenticationException("User account is suspended/deactivated.")
+        Service-->>Controller: Domain Exception
+        Controller-->>Client: 401 Unauthorized (RFC 7807 Problem Details)
+    else Valid User Record
+        LocalProvider->>Encoder: matches(rawPassword, user.getPasswordHash())
+        
+        alt Password Does NOT Match (matches == false)
+            Encoder-->>LocalProvider: false
+            LocalProvider-->>Service: throw AuthenticationException("Invalid credentials.")
+            Service-->>Controller: Domain Exception
+            Controller-->>Client: 401 Unauthorized (RFC 7807 Problem Details)
+        else Password Matches (matches == true)
+            Encoder-->>LocalProvider: true
+            LocalProvider-->>Router: AuthenticatedIdentity(userId, email, fullName, isSuperAdmin)
+            Router-->>Service: AuthenticatedIdentity
+
+            Service->>AccessResolver: resolve(userId, tenantId)
+            AccessResolver->>AccessResolver: Aggregate Direct User Roles & Group Roles
+            AccessResolver->>ScopeResolver: resolveAccessibleScopeNodeIds(assignedScopes, inherit=true)
+            ScopeResolver-->>AccessResolver: Set<ScopeNodeId>
+            AccessResolver-->>Service: EffectiveAccess(roles, permissions, scopeNodeIds, isTenantWide)
+
+            Service->>JwtProvider: issueTokens(identity, effectiveAccess)
+            JwtProvider-->>Service: TokenResponse(accessToken, refreshToken, userProfile)
+            Service-->>Controller: TokenResponse
+            Controller-->>Client: 200 OK (TokenResponse)
+        end
     end
-    
-    LocalProvider->>Encoder: matches(rawPassword, user.getPasswordHash())
-    Encoder-->>LocalProvider: true
-    LocalProvider-->>Router: AuthenticatedIdentity(userId, email, tenantId, isSuperAdmin)
-    Router-->>Service: AuthenticatedIdentity
-
-    Service->>AccessResolver: resolve(userId, tenantId)
-    AccessResolver->>AccessResolver: Aggregate Direct User Roles & Group Roles
-    AccessResolver->>ScopeResolver: resolveAccessibleScopeNodeIds(assignedScopes, inherit=true)
-    ScopeResolver-->>AccessResolver: Set<ScopeNodeId>
-    AccessResolver-->>Service: EffectiveAccess(roles, permissions, scopeNodeIds, isTenantWide)
-
-    Service->>JwtProvider: issueTokens(identity, effectiveAccess)
-    JwtProvider-->>Service: TokenResponse(accessToken, refreshToken, userProfile)
-    Service-->>Controller: TokenResponse
-    Controller-->>Client: 200 OK (TokenResponse)
 ```
 
 ---
