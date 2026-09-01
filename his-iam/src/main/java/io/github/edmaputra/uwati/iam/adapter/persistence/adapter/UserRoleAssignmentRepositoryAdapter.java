@@ -6,7 +6,7 @@ import java.util.Optional;
 
 import io.github.edmaputra.uwati.domain.tenancy.domain.TenantId;
 import io.github.edmaputra.uwati.iam.adapter.persistence.entity.UserRoleAssignmentJpaEntity;
-import io.github.edmaputra.uwati.iam.adapter.persistence.repository.SpringDataUserRoleAssignmentRepository;
+import io.github.edmaputra.uwati.iam.adapter.persistence.repository.UserRoleAssignmentJpaRepository;
 import io.github.edmaputra.uwati.iam.domain.model.RoleId;
 import io.github.edmaputra.uwati.iam.domain.model.ScopeNodeId;
 import io.github.edmaputra.uwati.iam.domain.model.UserId;
@@ -21,15 +21,15 @@ import io.github.edmaputra.uwati.iam.domain.repository.UserRoleAssignmentReposit
  */
 public class UserRoleAssignmentRepositoryAdapter implements UserRoleAssignmentRepository {
 
-	private final SpringDataUserRoleAssignmentRepository repository;
+	private final UserRoleAssignmentJpaRepository repository;
 
 	/**
 	 * Constructs the adapter with the underlying Spring Data repository.
 	 *
 	 * @param repository the Spring Data repository
 	 */
-	public UserRoleAssignmentRepositoryAdapter(SpringDataUserRoleAssignmentRepository repository) {
-		this.repository = Objects.requireNonNull(repository, "SpringDataUserRoleAssignmentRepository must not be null.");
+	public UserRoleAssignmentRepositoryAdapter(UserRoleAssignmentJpaRepository repository) {
+		this.repository = Objects.requireNonNull(repository, "UserRoleAssignmentJpaRepository must not be null.");
 	}
 
 	@Override

@@ -5,7 +5,7 @@ import java.util.Objects;
 
 import io.github.edmaputra.uwati.iam.adapter.persistence.entity.UserGroupMembershipJpaEntity;
 import io.github.edmaputra.uwati.iam.adapter.persistence.entity.UserGroupMembershipJpaId;
-import io.github.edmaputra.uwati.iam.adapter.persistence.repository.SpringDataUserGroupMembershipRepository;
+import io.github.edmaputra.uwati.iam.adapter.persistence.repository.UserGroupMembershipJpaRepository;
 import io.github.edmaputra.uwati.iam.domain.model.GroupId;
 import io.github.edmaputra.uwati.iam.domain.model.UserGroupMembership;
 import io.github.edmaputra.uwati.iam.domain.model.UserId;
@@ -18,15 +18,15 @@ import io.github.edmaputra.uwati.iam.domain.repository.UserGroupMembershipReposi
  */
 public class UserGroupMembershipRepositoryAdapter implements UserGroupMembershipRepository {
 
-	private final SpringDataUserGroupMembershipRepository repository;
+	private final UserGroupMembershipJpaRepository repository;
 
 	/**
 	 * Constructs the adapter with the underlying Spring Data repository.
 	 *
 	 * @param repository the Spring Data repository
 	 */
-	public UserGroupMembershipRepositoryAdapter(SpringDataUserGroupMembershipRepository repository) {
-		this.repository = Objects.requireNonNull(repository, "SpringDataUserGroupMembershipRepository must not be null.");
+	public UserGroupMembershipRepositoryAdapter(UserGroupMembershipJpaRepository repository) {
+		this.repository = Objects.requireNonNull(repository, "UserGroupMembershipJpaRepository must not be null.");
 	}
 
 	@Override

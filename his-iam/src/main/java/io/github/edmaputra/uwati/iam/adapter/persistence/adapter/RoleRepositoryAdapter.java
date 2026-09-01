@@ -8,7 +8,7 @@ import java.util.stream.StreamSupport;
 
 import io.github.edmaputra.uwati.domain.tenancy.domain.TenantId;
 import io.github.edmaputra.uwati.iam.adapter.persistence.entity.RoleJpaEntity;
-import io.github.edmaputra.uwati.iam.adapter.persistence.repository.SpringDataRoleRepository;
+import io.github.edmaputra.uwati.iam.adapter.persistence.repository.RoleJpaRepository;
 import io.github.edmaputra.uwati.iam.domain.model.Role;
 import io.github.edmaputra.uwati.iam.domain.model.RoleId;
 import io.github.edmaputra.uwati.iam.domain.repository.RoleRepository;
@@ -20,15 +20,15 @@ import io.github.edmaputra.uwati.iam.domain.repository.RoleRepository;
  */
 public class RoleRepositoryAdapter implements RoleRepository {
 
-	private final SpringDataRoleRepository repository;
+	private final RoleJpaRepository repository;
 
 	/**
 	 * Constructs the adapter with the underlying Spring Data repository.
 	 *
 	 * @param repository the Spring Data repository
 	 */
-	public RoleRepositoryAdapter(SpringDataRoleRepository repository) {
-		this.repository = Objects.requireNonNull(repository, "SpringDataRoleRepository must not be null.");
+	public RoleRepositoryAdapter(RoleJpaRepository repository) {
+		this.repository = Objects.requireNonNull(repository, "RoleJpaRepository must not be null.");
 	}
 
 	@Override

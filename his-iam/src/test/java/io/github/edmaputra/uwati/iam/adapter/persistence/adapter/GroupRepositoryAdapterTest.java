@@ -12,7 +12,7 @@ import org.mockito.Mockito;
 
 import io.github.edmaputra.uwati.domain.tenancy.domain.TenantId;
 import io.github.edmaputra.uwati.iam.adapter.persistence.entity.GroupJpaEntity;
-import io.github.edmaputra.uwati.iam.adapter.persistence.repository.SpringDataGroupRepository;
+import io.github.edmaputra.uwati.iam.adapter.persistence.repository.GroupJpaRepository;
 import io.github.edmaputra.uwati.iam.domain.model.Group;
 import io.github.edmaputra.uwati.iam.domain.model.GroupId;
 
@@ -21,13 +21,13 @@ import static org.mockito.Mockito.when;
 
 class GroupRepositoryAdapterTest {
 
-	private SpringDataGroupRepository springDataRepository;
+	private GroupJpaRepository repository;
 	private GroupRepositoryAdapter adapter;
 
 	@BeforeEach
 	void setUp() {
-		springDataRepository = Mockito.mock(SpringDataGroupRepository.class);
-		adapter = new GroupRepositoryAdapter(springDataRepository);
+		repository = Mockito.mock(GroupJpaRepository.class);
+		adapter = new GroupRepositoryAdapter(repository);
 	}
 
 	@Test
@@ -47,7 +47,7 @@ class GroupRepositoryAdapterTest {
 				now,
 				now);
 
-		when(springDataRepository.findById(id)).thenReturn(Optional.of(entity));
+		when(repository.findById(id)).thenReturn(Optional.of(entity));
 
 		Optional<Group> result = adapter.findById(new GroupId(id));
 
@@ -71,7 +71,7 @@ class GroupRepositoryAdapterTest {
 				Instant.now(),
 				Instant.now());
 
-		when(springDataRepository.findAllByTenantId(tenantId.value())).thenReturn(List.of(entity));
+		when(repository.findAllByTenantId(tenantId.value())).thenReturn(List.of(entity));
 
 		List<Group> groups = adapter.findAllByTenantId(tenantId);
 

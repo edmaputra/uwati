@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import io.github.edmaputra.uwati.iam.adapter.persistence.entity.UserJpaEntity;
-import io.github.edmaputra.uwati.iam.adapter.persistence.repository.SpringDataUserRepository;
+import io.github.edmaputra.uwati.iam.adapter.persistence.repository.UserJpaRepository;
 import io.github.edmaputra.uwati.iam.domain.model.User;
 import io.github.edmaputra.uwati.iam.domain.model.UserId;
 import io.github.edmaputra.uwati.iam.domain.model.UserStatus;
@@ -22,13 +22,13 @@ import static org.mockito.Mockito.when;
 
 class UserRepositoryAdapterTest {
 
-	private SpringDataUserRepository springDataRepository;
+	private UserJpaRepository repository;
 	private UserRepositoryAdapter adapter;
 
 	@BeforeEach
 	void setUp() {
-		springDataRepository = Mockito.mock(SpringDataUserRepository.class);
-		adapter = new UserRepositoryAdapter(springDataRepository);
+		repository = Mockito.mock(UserJpaRepository.class);
+		adapter = new UserRepositoryAdapter(repository);
 	}
 
 	@Test
@@ -46,7 +46,7 @@ class UserRepositoryAdapterTest {
 				now,
 				now);
 
-		when(springDataRepository.findById(id)).thenReturn(Optional.of(entity));
+		when(repository.findById(id)).thenReturn(Optional.of(entity));
 
 		Optional<User> result = adapter.findById(new UserId(id));
 
@@ -71,13 +71,13 @@ class UserRepositoryAdapterTest {
 				user.getCreatedAt(),
 				user.getUpdatedAt());
 
-		when(springDataRepository.save(any(UserJpaEntity.class))).thenReturn(savedEntity);
+		when(repository.save(any(UserJpaEntity.class))).thenReturn(savedEntity);
 
 		User saved = adapter.save(user);
 
 		assertThat(saved).isNotNull();
 		assertThat(saved.getId()).isEqualTo(user.getId());
-		verify(springDataRepository).save(any(UserJpaEntity.class));
+		verify(repository).save(any(UserJpaEntity.class));
 	}
 
 	@Test
@@ -85,6 +85,6 @@ class UserRepositoryAdapterTest {
 	void shouldDeleteUser() {
 		UserId userId = UserId.generate();
 		adapter.delete(userId);
-		verify(springDataRepository).deleteById(userId.value());
+		verify(repository).deleteById(userId.value());
 	}
 }

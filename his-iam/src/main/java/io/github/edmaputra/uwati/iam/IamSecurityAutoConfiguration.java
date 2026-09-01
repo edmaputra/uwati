@@ -20,13 +20,13 @@ import io.github.edmaputra.uwati.iam.adapter.persistence.adapter.UserGroupMember
 import io.github.edmaputra.uwati.iam.adapter.persistence.adapter.UserIdentityRepositoryAdapter;
 import io.github.edmaputra.uwati.iam.adapter.persistence.adapter.UserRepositoryAdapter;
 import io.github.edmaputra.uwati.iam.adapter.persistence.adapter.UserRoleAssignmentRepositoryAdapter;
-import io.github.edmaputra.uwati.iam.adapter.persistence.repository.SpringDataGroupRepository;
-import io.github.edmaputra.uwati.iam.adapter.persistence.repository.SpringDataGroupRoleAssignmentRepository;
-import io.github.edmaputra.uwati.iam.adapter.persistence.repository.SpringDataRoleRepository;
-import io.github.edmaputra.uwati.iam.adapter.persistence.repository.SpringDataUserGroupMembershipRepository;
-import io.github.edmaputra.uwati.iam.adapter.persistence.repository.SpringDataUserIdentityRepository;
-import io.github.edmaputra.uwati.iam.adapter.persistence.repository.SpringDataUserRepository;
-import io.github.edmaputra.uwati.iam.adapter.persistence.repository.SpringDataUserRoleAssignmentRepository;
+import io.github.edmaputra.uwati.iam.adapter.persistence.repository.GroupJpaRepository;
+import io.github.edmaputra.uwati.iam.adapter.persistence.repository.GroupRoleAssignmentJpaRepository;
+import io.github.edmaputra.uwati.iam.adapter.persistence.repository.RoleJpaRepository;
+import io.github.edmaputra.uwati.iam.adapter.persistence.repository.UserGroupMembershipJpaRepository;
+import io.github.edmaputra.uwati.iam.adapter.persistence.repository.UserIdentityJpaRepository;
+import io.github.edmaputra.uwati.iam.adapter.persistence.repository.UserJpaRepository;
+import io.github.edmaputra.uwati.iam.adapter.persistence.repository.UserRoleAssignmentJpaRepository;
 import io.github.edmaputra.uwati.iam.adapter.rest.AuthController;
 import io.github.edmaputra.uwati.iam.adapter.rest.IamExceptionHandler;
 import io.github.edmaputra.uwati.iam.adapter.security.BCryptPasswordEncoderAdapter;
@@ -68,43 +68,43 @@ public class IamSecurityAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public UserRepository userRepository(SpringDataUserRepository repository) {
+	public UserRepository userRepository(UserJpaRepository repository) {
 		return new UserRepositoryAdapter(repository);
 	}
 
 	@Bean
 	@ConditionalOnMissingBean
-	public RoleRepository roleRepository(SpringDataRoleRepository repository) {
+	public RoleRepository roleRepository(RoleJpaRepository repository) {
 		return new RoleRepositoryAdapter(repository);
 	}
 
 	@Bean
 	@ConditionalOnMissingBean
-	public GroupRepository groupRepository(SpringDataGroupRepository repository) {
+	public GroupRepository groupRepository(GroupJpaRepository repository) {
 		return new GroupRepositoryAdapter(repository);
 	}
 
 	@Bean
 	@ConditionalOnMissingBean
-	public UserGroupMembershipRepository userGroupMembershipRepository(SpringDataUserGroupMembershipRepository repository) {
+	public UserGroupMembershipRepository userGroupMembershipRepository(UserGroupMembershipJpaRepository repository) {
 		return new UserGroupMembershipRepositoryAdapter(repository);
 	}
 
 	@Bean
 	@ConditionalOnMissingBean
-	public UserRoleAssignmentRepository userRoleAssignmentRepository(SpringDataUserRoleAssignmentRepository repository) {
+	public UserRoleAssignmentRepository userRoleAssignmentRepository(UserRoleAssignmentJpaRepository repository) {
 		return new UserRoleAssignmentRepositoryAdapter(repository);
 	}
 
 	@Bean
 	@ConditionalOnMissingBean
-	public GroupRoleAssignmentRepository groupRoleAssignmentRepository(SpringDataGroupRoleAssignmentRepository repository) {
+	public GroupRoleAssignmentRepository groupRoleAssignmentRepository(GroupRoleAssignmentJpaRepository repository) {
 		return new GroupRoleAssignmentRepositoryAdapter(repository);
 	}
 
 	@Bean
 	@ConditionalOnMissingBean
-	public UserIdentityRepository userIdentityRepository(SpringDataUserIdentityRepository repository) {
+	public UserIdentityRepository userIdentityRepository(UserIdentityJpaRepository repository) {
 		return new UserIdentityRepositoryAdapter(repository);
 	}
 

@@ -5,7 +5,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import io.github.edmaputra.uwati.iam.adapter.persistence.entity.UserIdentityJpaEntity;
-import io.github.edmaputra.uwati.iam.adapter.persistence.repository.SpringDataUserIdentityRepository;
+import io.github.edmaputra.uwati.iam.adapter.persistence.repository.UserIdentityJpaRepository;
 import io.github.edmaputra.uwati.iam.domain.model.ProviderType;
 import io.github.edmaputra.uwati.iam.domain.model.UserId;
 import io.github.edmaputra.uwati.iam.domain.model.UserIdentity;
@@ -19,15 +19,15 @@ import io.github.edmaputra.uwati.iam.domain.repository.UserIdentityRepository;
  */
 public class UserIdentityRepositoryAdapter implements UserIdentityRepository {
 
-	private final SpringDataUserIdentityRepository repository;
+	private final UserIdentityJpaRepository repository;
 
 	/**
 	 * Constructs the adapter with the underlying Spring Data repository.
 	 *
 	 * @param repository the Spring Data repository
 	 */
-	public UserIdentityRepositoryAdapter(SpringDataUserIdentityRepository repository) {
-		this.repository = Objects.requireNonNull(repository, "SpringDataUserIdentityRepository must not be null.");
+	public UserIdentityRepositoryAdapter(UserIdentityJpaRepository repository) {
+		this.repository = Objects.requireNonNull(repository, "UserIdentityJpaRepository must not be null.");
 	}
 
 	@Override

@@ -13,24 +13,22 @@ import org.mockito.Mockito;
 
 import io.github.edmaputra.uwati.domain.tenancy.domain.TenantId;
 import io.github.edmaputra.uwati.iam.adapter.persistence.entity.RoleJpaEntity;
-import io.github.edmaputra.uwati.iam.adapter.persistence.repository.SpringDataRoleRepository;
+import io.github.edmaputra.uwati.iam.adapter.persistence.repository.RoleJpaRepository;
 import io.github.edmaputra.uwati.iam.domain.model.Role;
 import io.github.edmaputra.uwati.iam.domain.model.RoleId;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class RoleRepositoryAdapterTest {
 
-	private SpringDataRoleRepository springDataRepository;
+	private RoleJpaRepository repository;
 	private RoleRepositoryAdapter adapter;
 
 	@BeforeEach
 	void setUp() {
-		springDataRepository = Mockito.mock(SpringDataRoleRepository.class);
-		adapter = new RoleRepositoryAdapter(springDataRepository);
+		repository = Mockito.mock(RoleJpaRepository.class);
+		adapter = new RoleRepositoryAdapter(repository);
 	}
 
 	@Test
@@ -51,7 +49,7 @@ class RoleRepositoryAdapterTest {
 				now,
 				now);
 
-		when(springDataRepository.findById(id)).thenReturn(Optional.of(entity));
+		when(repository.findById(id)).thenReturn(Optional.of(entity));
 
 		Optional<Role> result = adapter.findById(new RoleId(id));
 
@@ -75,7 +73,7 @@ class RoleRepositoryAdapterTest {
 				Instant.now(),
 				Instant.now());
 
-		when(springDataRepository.findAllByTenantIdOrGlobal(tenantId.value())).thenReturn(List.of(entity));
+		when(repository.findAllByTenantIdOrGlobal(tenantId.value())).thenReturn(List.of(entity));
 
 		List<Role> roles = adapter.findAllByTenantIdOrGlobal(tenantId);
 

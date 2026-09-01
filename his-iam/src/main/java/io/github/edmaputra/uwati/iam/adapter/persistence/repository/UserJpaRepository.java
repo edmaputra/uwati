@@ -14,7 +14,7 @@ import io.github.edmaputra.uwati.iam.adapter.persistence.entity.UserJpaEntity;
  * @author edmaputra
  */
 @Repository
-public interface SpringDataUserRepository extends JpaRepository<UserJpaEntity, UUID> {
+public interface UserJpaRepository extends JpaRepository<UserJpaEntity, UUID> {
 
 	/**
 	 * Finds a user entity by case-insensitive email.

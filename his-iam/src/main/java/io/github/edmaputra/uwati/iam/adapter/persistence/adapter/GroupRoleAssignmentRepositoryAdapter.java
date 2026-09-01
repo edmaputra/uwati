@@ -8,7 +8,7 @@ import java.util.stream.StreamSupport;
 
 import io.github.edmaputra.uwati.domain.tenancy.domain.TenantId;
 import io.github.edmaputra.uwati.iam.adapter.persistence.entity.GroupRoleAssignmentJpaEntity;
-import io.github.edmaputra.uwati.iam.adapter.persistence.repository.SpringDataGroupRoleAssignmentRepository;
+import io.github.edmaputra.uwati.iam.adapter.persistence.repository.GroupRoleAssignmentJpaRepository;
 import io.github.edmaputra.uwati.iam.domain.model.GroupId;
 import io.github.edmaputra.uwati.iam.domain.model.GroupRoleAssignment;
 import io.github.edmaputra.uwati.iam.domain.model.GroupRoleAssignmentId;
@@ -23,15 +23,15 @@ import io.github.edmaputra.uwati.iam.domain.repository.GroupRoleAssignmentReposi
  */
 public class GroupRoleAssignmentRepositoryAdapter implements GroupRoleAssignmentRepository {
 
-	private final SpringDataGroupRoleAssignmentRepository repository;
+	private final GroupRoleAssignmentJpaRepository repository;
 
 	/**
 	 * Constructs the adapter with the underlying Spring Data repository.
 	 *
 	 * @param repository the Spring Data repository
 	 */
-	public GroupRoleAssignmentRepositoryAdapter(SpringDataGroupRoleAssignmentRepository repository) {
-		this.repository = Objects.requireNonNull(repository, "SpringDataGroupRoleAssignmentRepository must not be null.");
+	public GroupRoleAssignmentRepositoryAdapter(GroupRoleAssignmentJpaRepository repository) {
+		this.repository = Objects.requireNonNull(repository, "GroupRoleAssignmentJpaRepository must not be null.");
 	}
 
 	@Override

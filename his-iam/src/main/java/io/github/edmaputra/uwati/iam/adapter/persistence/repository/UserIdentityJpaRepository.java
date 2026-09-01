@@ -15,7 +15,7 @@ import io.github.edmaputra.uwati.iam.adapter.persistence.entity.UserIdentityJpaE
  * @author edmaputra
  */
 @Repository
-public interface SpringDataUserIdentityRepository extends JpaRepository<UserIdentityJpaEntity, UUID> {
+public interface UserIdentityJpaRepository extends JpaRepository<UserIdentityJpaEntity, UUID> {
 
 	/**
 	 * Finds an identity by provider type and external subject ID.

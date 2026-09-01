@@ -15,7 +15,7 @@ import io.github.edmaputra.uwati.iam.adapter.persistence.entity.UserGroupMembers
  * @author edmaputra
  */
 @Repository
-public interface SpringDataUserGroupMembershipRepository extends JpaRepository<UserGroupMembershipJpaEntity, UserGroupMembershipJpaId> {
+public interface UserGroupMembershipJpaRepository extends JpaRepository<UserGroupMembershipJpaEntity, UserGroupMembershipJpaId> {
 
 	/**
 	 * Finds all memberships for a user.

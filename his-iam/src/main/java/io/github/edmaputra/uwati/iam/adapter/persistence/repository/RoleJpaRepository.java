@@ -17,7 +17,7 @@ import io.github.edmaputra.uwati.iam.adapter.persistence.entity.RoleJpaEntity;
  * @author edmaputra
  */
 @Repository
-public interface SpringDataRoleRepository extends JpaRepository<RoleJpaEntity, UUID> {
+public interface RoleJpaRepository extends JpaRepository<RoleJpaEntity, UUID> {
 
 	/**
 	 * Finds a tenant-specific role by tenant ID and code.

@@ -1,7 +1,6 @@
 package io.github.edmaputra.uwati.iam.adapter.persistence.adapter;
 
 import java.time.Instant;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -11,7 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import io.github.edmaputra.uwati.iam.adapter.persistence.entity.UserIdentityJpaEntity;
-import io.github.edmaputra.uwati.iam.adapter.persistence.repository.SpringDataUserIdentityRepository;
+import io.github.edmaputra.uwati.iam.adapter.persistence.repository.UserIdentityJpaRepository;
 import io.github.edmaputra.uwati.iam.domain.model.ProviderType;
 import io.github.edmaputra.uwati.iam.domain.model.UserId;
 import io.github.edmaputra.uwati.iam.domain.model.UserIdentity;
@@ -24,13 +23,13 @@ import static org.mockito.Mockito.when;
 
 class UserIdentityRepositoryAdapterTest {
 
-	private SpringDataUserIdentityRepository springDataRepository;
+	private UserIdentityJpaRepository repository;
 	private UserIdentityRepositoryAdapter adapter;
 
 	@BeforeEach
 	void setUp() {
-		springDataRepository = Mockito.mock(SpringDataUserIdentityRepository.class);
-		adapter = new UserIdentityRepositoryAdapter(springDataRepository);
+		repository = Mockito.mock(UserIdentityJpaRepository.class);
+		adapter = new UserIdentityRepositoryAdapter(repository);
 	}
 
 	@Test
@@ -46,7 +45,7 @@ class UserIdentityRepositoryAdapterTest {
 				"https://auth.hospital.org",
 				Instant.now());
 
-		when(springDataRepository.findById(id)).thenReturn(Optional.of(entity));
+		when(repository.findById(id)).thenReturn(Optional.of(entity));
 
 		Optional<UserIdentity> result = adapter.findById(new UserIdentityId(id));
 
@@ -69,7 +68,7 @@ class UserIdentityRepositoryAdapterTest {
 				"https://auth.hospital.org",
 				Instant.now());
 
-		when(springDataRepository.findByProviderTypeAndExternalSubjectId("OIDC_GENERIC", "sub-12345"))
+		when(repository.findByProviderTypeAndExternalSubjectId("OIDC_GENERIC", "sub-12345"))
 				.thenReturn(Optional.of(entity));
 
 		Optional<UserIdentity> result = adapter.findByProviderTypeAndExternalSubjectId(ProviderType.OIDC_GENERIC, "sub-12345");
@@ -95,7 +94,7 @@ class UserIdentityRepositoryAdapterTest {
 				identity.optionalIssuerUrl().orElse(null),
 				identity.getCreatedAt());
 
-		when(springDataRepository.save(any(UserIdentityJpaEntity.class))).thenReturn(savedEntity);
+		when(repository.save(any(UserIdentityJpaEntity.class))).thenReturn(savedEntity);
 
 		UserIdentity saved = adapter.save(identity);
 
@@ -108,6 +107,6 @@ class UserIdentityRepositoryAdapterTest {
 	void shouldDeleteIdentity() {
 		UserIdentityId identityId = UserIdentityId.generate();
 		adapter.delete(identityId);
-		verify(springDataRepository).deleteById(identityId.value());
+		verify(repository).deleteById(identityId.value());
 	}
 }

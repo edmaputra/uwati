@@ -12,24 +12,23 @@ import org.mockito.Mockito;
 
 import io.github.edmaputra.uwati.domain.tenancy.domain.TenantId;
 import io.github.edmaputra.uwati.iam.adapter.persistence.entity.UserRoleAssignmentJpaEntity;
-import io.github.edmaputra.uwati.iam.adapter.persistence.repository.SpringDataUserRoleAssignmentRepository;
+import io.github.edmaputra.uwati.iam.adapter.persistence.repository.UserRoleAssignmentJpaRepository;
 import io.github.edmaputra.uwati.iam.domain.model.UserId;
 import io.github.edmaputra.uwati.iam.domain.model.UserRoleAssignment;
 import io.github.edmaputra.uwati.iam.domain.model.UserRoleAssignmentId;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class UserRoleAssignmentRepositoryAdapterTest {
 
-	private SpringDataUserRoleAssignmentRepository springDataRepository;
+	private UserRoleAssignmentJpaRepository repository;
 	private UserRoleAssignmentRepositoryAdapter adapter;
 
 	@BeforeEach
 	void setUp() {
-		springDataRepository = Mockito.mock(SpringDataUserRoleAssignmentRepository.class);
-		adapter = new UserRoleAssignmentRepositoryAdapter(springDataRepository);
+		repository = Mockito.mock(UserRoleAssignmentJpaRepository.class);
+		adapter = new UserRoleAssignmentRepositoryAdapter(repository);
 	}
 
 	@Test
@@ -49,7 +48,7 @@ class UserRoleAssignmentRepositoryAdapterTest {
 				true,
 				Instant.now());
 
-		when(springDataRepository.findById(id)).thenReturn(Optional.of(entity));
+		when(repository.findById(id)).thenReturn(Optional.of(entity));
 
 		Optional<UserRoleAssignment> result = adapter.findById(new UserRoleAssignmentId(id));
 
@@ -73,7 +72,7 @@ class UserRoleAssignmentRepositoryAdapterTest {
 				true,
 				Instant.now());
 
-		when(springDataRepository.findAllByUserIdAndTenantId(userId, tenantId)).thenReturn(List.of(entity));
+		when(repository.findAllByUserIdAndTenantId(userId, tenantId)).thenReturn(List.of(entity));
 
 		List<UserRoleAssignment> list = adapter.findAllByUserIdAndTenantId(new UserId(userId), new TenantId(tenantId));
 

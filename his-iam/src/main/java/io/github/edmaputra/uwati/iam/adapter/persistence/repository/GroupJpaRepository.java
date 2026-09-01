@@ -15,7 +15,7 @@ import io.github.edmaputra.uwati.iam.adapter.persistence.entity.GroupJpaEntity;
  * @author edmaputra
  */
 @Repository
-public interface SpringDataGroupRepository extends JpaRepository<GroupJpaEntity, UUID> {
+public interface GroupJpaRepository extends JpaRepository<GroupJpaEntity, UUID> {
 
 	/**
 	 * Finds a group by tenant ID and code.

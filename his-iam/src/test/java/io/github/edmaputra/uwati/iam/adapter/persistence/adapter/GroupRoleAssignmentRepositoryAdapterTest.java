@@ -12,7 +12,7 @@ import org.mockito.Mockito;
 
 import io.github.edmaputra.uwati.domain.tenancy.domain.TenantId;
 import io.github.edmaputra.uwati.iam.adapter.persistence.entity.GroupRoleAssignmentJpaEntity;
-import io.github.edmaputra.uwati.iam.adapter.persistence.repository.SpringDataGroupRoleAssignmentRepository;
+import io.github.edmaputra.uwati.iam.adapter.persistence.repository.GroupRoleAssignmentJpaRepository;
 import io.github.edmaputra.uwati.iam.domain.model.GroupId;
 import io.github.edmaputra.uwati.iam.domain.model.GroupRoleAssignment;
 import io.github.edmaputra.uwati.iam.domain.model.GroupRoleAssignmentId;
@@ -23,13 +23,13 @@ import static org.mockito.Mockito.when;
 
 class GroupRoleAssignmentRepositoryAdapterTest {
 
-	private SpringDataGroupRoleAssignmentRepository springDataRepository;
+	private GroupRoleAssignmentJpaRepository repository;
 	private GroupRoleAssignmentRepositoryAdapter adapter;
 
 	@BeforeEach
 	void setUp() {
-		springDataRepository = Mockito.mock(SpringDataGroupRoleAssignmentRepository.class);
-		adapter = new GroupRoleAssignmentRepositoryAdapter(springDataRepository);
+		repository = Mockito.mock(GroupRoleAssignmentJpaRepository.class);
+		adapter = new GroupRoleAssignmentRepositoryAdapter(repository);
 	}
 
 	@Test
@@ -49,7 +49,7 @@ class GroupRoleAssignmentRepositoryAdapterTest {
 				true,
 				Instant.now());
 
-		when(springDataRepository.findById(id)).thenReturn(Optional.of(entity));
+		when(repository.findById(id)).thenReturn(Optional.of(entity));
 
 		Optional<GroupRoleAssignment> result = adapter.findById(new GroupRoleAssignmentId(id));
 
@@ -73,7 +73,7 @@ class GroupRoleAssignmentRepositoryAdapterTest {
 				true,
 				Instant.now());
 
-		when(springDataRepository.findAllByGroupIdIn(any())).thenReturn(List.of(entity));
+		when(repository.findAllByGroupIdIn(any())).thenReturn(List.of(entity));
 
 		List<GroupRoleAssignment> list = adapter.findAllByGroupIds(List.of(new GroupId(groupId)));
 

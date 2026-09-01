@@ -14,7 +14,7 @@ import io.github.edmaputra.uwati.iam.adapter.persistence.entity.UserRoleAssignme
  * @author edmaputra
  */
 @Repository
-public interface SpringDataUserRoleAssignmentRepository extends JpaRepository<UserRoleAssignmentJpaEntity, UUID> {
+public interface UserRoleAssignmentJpaRepository extends JpaRepository<UserRoleAssignmentJpaEntity, UUID> {
 
 	/**
 	 * Finds all role assignments for a user.

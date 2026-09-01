@@ -8,7 +8,7 @@ import java.util.stream.StreamSupport;
 
 import io.github.edmaputra.uwati.domain.tenancy.domain.TenantId;
 import io.github.edmaputra.uwati.iam.adapter.persistence.entity.GroupJpaEntity;
-import io.github.edmaputra.uwati.iam.adapter.persistence.repository.SpringDataGroupRepository;
+import io.github.edmaputra.uwati.iam.adapter.persistence.repository.GroupJpaRepository;
 import io.github.edmaputra.uwati.iam.domain.model.Group;
 import io.github.edmaputra.uwati.iam.domain.model.GroupId;
 import io.github.edmaputra.uwati.iam.domain.repository.GroupRepository;
@@ -20,15 +20,15 @@ import io.github.edmaputra.uwati.iam.domain.repository.GroupRepository;
  */
 public class GroupRepositoryAdapter implements GroupRepository {
 
-	private final SpringDataGroupRepository repository;
+	private final GroupJpaRepository repository;
 
 	/**
 	 * Constructs the adapter with the underlying Spring Data repository.
 	 *
 	 * @param repository the Spring Data repository
 	 */
-	public GroupRepositoryAdapter(SpringDataGroupRepository repository) {
-		this.repository = Objects.requireNonNull(repository, "SpringDataGroupRepository must not be null.");
+	public GroupRepositoryAdapter(GroupJpaRepository repository) {
+		this.repository = Objects.requireNonNull(repository, "GroupJpaRepository must not be null.");
 	}
 
 	@Override

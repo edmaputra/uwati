@@ -14,7 +14,7 @@ import io.github.edmaputra.uwati.iam.adapter.persistence.entity.GroupRoleAssignm
  * @author edmaputra
  */
 @Repository
-public interface SpringDataGroupRoleAssignmentRepository extends JpaRepository<GroupRoleAssignmentJpaEntity, UUID> {
+public interface GroupRoleAssignmentJpaRepository extends JpaRepository<GroupRoleAssignmentJpaEntity, UUID> {
 
 	/**
 	 * Finds all role assignments for a group.

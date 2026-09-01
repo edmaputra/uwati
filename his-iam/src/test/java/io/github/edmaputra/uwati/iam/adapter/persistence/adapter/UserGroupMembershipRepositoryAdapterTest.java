@@ -11,7 +11,7 @@ import org.mockito.Mockito;
 
 import io.github.edmaputra.uwati.iam.adapter.persistence.entity.UserGroupMembershipJpaEntity;
 import io.github.edmaputra.uwati.iam.adapter.persistence.entity.UserGroupMembershipJpaId;
-import io.github.edmaputra.uwati.iam.adapter.persistence.repository.SpringDataUserGroupMembershipRepository;
+import io.github.edmaputra.uwati.iam.adapter.persistence.repository.UserGroupMembershipJpaRepository;
 import io.github.edmaputra.uwati.iam.domain.model.GroupId;
 import io.github.edmaputra.uwati.iam.domain.model.UserGroupMembership;
 import io.github.edmaputra.uwati.iam.domain.model.UserId;
@@ -22,13 +22,13 @@ import static org.mockito.Mockito.when;
 
 class UserGroupMembershipRepositoryAdapterTest {
 
-	private SpringDataUserGroupMembershipRepository springDataRepository;
+	private UserGroupMembershipJpaRepository repository;
 	private UserGroupMembershipRepositoryAdapter adapter;
 
 	@BeforeEach
 	void setUp() {
-		springDataRepository = Mockito.mock(SpringDataUserGroupMembershipRepository.class);
-		adapter = new UserGroupMembershipRepositoryAdapter(springDataRepository);
+		repository = Mockito.mock(UserGroupMembershipJpaRepository.class);
+		adapter = new UserGroupMembershipRepositoryAdapter(repository);
 	}
 
 	@Test
@@ -40,7 +40,7 @@ class UserGroupMembershipRepositoryAdapterTest {
 				new UserGroupMembershipJpaId(groupId, userId),
 				Instant.now());
 
-		when(springDataRepository.findAllByIdUserId(userId)).thenReturn(List.of(entity));
+		when(repository.findAllByIdUserId(userId)).thenReturn(List.of(entity));
 
 		List<UserGroupMembership> memberships = adapter.findAllByUserId(new UserId(userId));
 
@@ -57,6 +57,6 @@ class UserGroupMembershipRepositoryAdapterTest {
 
 		adapter.delete(groupId, userId);
 
-		verify(springDataRepository).deleteById(new UserGroupMembershipJpaId(groupId.value(), userId.value()));
+		verify(repository).deleteById(new UserGroupMembershipJpaId(groupId.value(), userId.value()));
 	}
 }
