@@ -62,8 +62,9 @@ The `his-iam` module is a self-contained, vertical plugin that delivers:
 | **Phase 1: Foundation & Data Model** | Maven scaffolding, Liquibase migrations (`2026082601-create-iam-tables.json`), domain entities (`User`, `Role`, `Group`, `ScopeNode`, `UserRoleAssignment`, `GroupRoleAssignment`), ownership contracts in `his-domain` (`ScopeOwned`, `UserOwned`, `CurrentActor`). | ✅ **Completed** |
 | **Phase 2: Scope Hierarchy & Subtree Engine** | `ScopeNode` path generation, re-parenting cascade, `ScopeHierarchyService`, `ScopeSubtreeResolver`, JPA entity & repositories, and subtree inheritance unit tests. | ✅ **Completed** |
 | **Phase 3: Pluggable Auth & JWT Security** | `AuthenticationProvider` SPI, `LocalPasswordAuthProvider` (BCrypt), `OidcAuthProvider`, `ApiKeyAuthProvider`, `EffectiveAccessResolver`, JWT token provider & claims builder, `JwtAuthenticationFilter`, `SecurityContextAccessor` bridge, `/api/v1/auth/*` endpoints (`/login`, `/refresh`, `/me`). | ✅ **Completed** |
-| **Phase 4: Scoped RBAC, Groups & REST CRUD** | Use cases & REST controllers for Users, Roles, Permissions, Groups, Scope Tree, and assignments with lifecycle safeguards. | 🔄 *Next* |
+| **Phase 4: Scoped RBAC, Groups & REST CRUD** | Use cases & REST controllers for Users, Roles, Permissions, Groups, Scope Tree, and assignments with lifecycle safeguards (`ManageUserUseCase`, `ManageGroupUseCase`, `ManageRoleUseCase`, `ManageScopeUseCase`, `UserController`, `GroupController`, `RoleController`, `ScopeNodeController`). | ✅ **Completed** |
 | **Phase 5: Verification & Integration Tests** | Full Testcontainers integration tests, tenant context propagation, group inheritance, and bootstrap auto-configuration tests. | ⏳ *Planned* |
+
 
 ---
 
@@ -452,7 +453,68 @@ sequenceDiagram
 
 ---
 
-## 7. Database Migrations (`his-iam`)
+## 7. IAM Management & Administration REST Endpoints
+
+### 7.1 User Management (`/api/v1/iam/users`)
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/v1/iam/users` | Provisions a new user account with optional initial role and group binding. |
+| `GET` | `/api/v1/iam/users` | Lists users matching optional search query (`search`) and lifecycle status (`status`) in a tenant. |
+| `GET` | `/api/v1/iam/users/{id}` | Retrieves full user details including direct role bindings and linked SSO identities. |
+| `PUT` | `/api/v1/iam/users/{id}` | Updates a user's full name. |
+| `PATCH` | `/api/v1/iam/users/{id}/status` | Updates lifecycle status (`ACTIVE`, `SUSPENDED`, `DEACTIVATED`). |
+| `PUT` | `/api/v1/iam/users/{id}/password` | Resets/updates user password. |
+| `DELETE` | `/api/v1/iam/users/{id}` | Deletes a user and removes role bindings, memberships, and external identities. |
+| `GET` | `/api/v1/iam/users/{id}/effective-access` | Computes and returns effective permissions, roles, and scope boundaries. |
+| `GET` | `/api/v1/iam/users/{id}/identities` | Lists linked federated identities. |
+| `DELETE` | `/api/v1/iam/users/{id}/identities/{identityId}` | Unlinks an external federated identity. |
+| `GET` | `/api/v1/iam/users/{userId}/assignments` | Lists direct role-to-scope bindings. |
+| `POST` | `/api/v1/iam/users/{userId}/assignments` | Binds a role to a user at tenant or scope level. |
+| `DELETE` | `/api/v1/iam/users/{userId}/assignments/{assignmentId}` | Revokes a direct role assignment. |
+
+### 7.2 User Groups & Teams (`/api/v1/iam/groups`)
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/v1/iam/groups?tenantId={id}` | Creates a user group with optional external IdP mapping. |
+| `GET` | `/api/v1/iam/groups?tenantId={id}` | Lists all groups for a tenant. |
+| `GET` | `/api/v1/iam/groups/{id}?tenantId={id}` | Retrieves group details. |
+| `PUT` | `/api/v1/iam/groups/{id}?tenantId={id}` | Updates group metadata and IdP claim binding. |
+| `DELETE` | `/api/v1/iam/groups/{id}?tenantId={id}` | Deletes a group and cascades cleanup to memberships and role bindings. |
+| `GET` | `/api/v1/iam/groups/{id}/members?tenantId={id}` | Lists member users in a group. |
+| `POST` | `/api/v1/iam/groups/{id}/members?tenantId={id}` | Adds a user to a group. |
+| `DELETE` | `/api/v1/iam/groups/{id}/members/{userId}?tenantId={id}` | Removes a user from a group. |
+| `GET` | `/api/v1/iam/groups/{id}/assignments?tenantId={id}` | Lists group-level role assignments. |
+| `POST` | `/api/v1/iam/groups/{id}/assignments?tenantId={id}` | Assigns a role to a group at tenant or scope level. |
+| `DELETE` | `/api/v1/iam/groups/{id}/assignments/{assignmentId}` | Revokes a group role assignment. |
+
+### 7.3 Roles & Permissions (`/api/v1/iam/roles`, `/api/v1/iam/permissions`)
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/v1/iam/roles?tenantId={id}` | Creates a custom tenant role. |
+| `GET` | `/api/v1/iam/roles?tenantId={id}` | Lists roles available to tenant (supports filter: `ALL`, `SYSTEM`, `CUSTOM`). |
+| `GET` | `/api/v1/iam/roles/{id}` | Retrieves role definition and permissions. |
+| `PUT` | `/api/v1/iam/roles/{id}` | Updates custom role details and permissions (system roles are immutable). |
+| `DELETE` | `/api/v1/iam/roles/{id}` | Deletes a custom role (safeguarded against assigned roles and system roles). |
+| `GET` | `/api/v1/iam/permissions` | Lists system permissions catalog. |
+
+### 7.4 Scope Hierarchy (`/api/v1/iam/scopes`)
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/v1/iam/scopes?tenantId={id}` | Creates a root or child scope node. |
+| `GET` | `/api/v1/iam/scopes?tenantId={id}&tree=true` | Returns nested scope tree representation (`ScopeTreeNode`). |
+| `GET` | `/api/v1/iam/scopes?tenantId={id}&tree=false` | Returns flat list of scope nodes. |
+| `GET` | `/api/v1/iam/scopes/{id}?tenantId={id}` | Retrieves scope node details. |
+| `PUT` | `/api/v1/iam/scopes/{id}?tenantId={id}` | Updates scope node code and display name. |
+| `PUT` | `/api/v1/iam/scopes/{id}/parent?tenantId={id}` | Moves/re-parents a scope node and cascades path updates to descendants. |
+| `DELETE` | `/api/v1/iam/scopes/{id}?tenantId={id}` | Deletes a leaf scope node. |
+
+---
+
+## 8. Database Migrations (`his-iam`)
 
 IAM migrations are isolated in `his-iam/src/main/resources/db/changelog/iam/`:
 - **`2026082601-create-iam-tables.json`**:
@@ -466,7 +528,7 @@ IAM migrations are isolated in `his-iam/src/main/resources/db/changelog/iam/`:
 
 ---
 
-## 8. Development Log & Changelog
+## 9. Development Log & Changelog
 
 - **2026-08-28 / 2026-08-30**:
   - Scaffolded `his-iam` module and multi-tenant domain models.
@@ -481,5 +543,12 @@ IAM migrations are isolated in `his-iam/src/main/resources/db/changelog/iam/`:
   - Implemented `AuthenticateUserUseCase`, `AuthenticationService`, and `/api/v1/auth/*` REST endpoints (`/login`, `/refresh`, `/me`) with `IamExceptionHandler`.
   - Added Section 9 to `.agents/rules/clean-code.md` establishing mandatory Javadoc and `@author` standards.
   - Added complete Javadocs across all IAM domain, application, adapter, and config components.
-  - Added 89 unit & slice tests covering the entire IAM security subsystem with 100% pass rate.
-  - Authored comprehensive `docs/iam-walkthrough.md` with detailed sequence diagrams for every `AuthenticationProvider` implementation and runtime request context binding.
+- **2026-09-02 (Phase 4: Scoped RBAC, Groups & Comprehensive Management CRUD)**:
+  - Created system permissions catalog in [`Permissions.java`](file:///home/edmaputra/.gemini/antigravity/worktrees/uwati/continue_iam_module_development/his-iam/src/main/java/io/github/edmaputra/uwati/iam/domain/model/Permissions.java).
+  - Implemented domain commands: `CreateUserCommand`, `UpdateUserProfileCommand`, `ChangeUserStatusCommand`, `UpdatePasswordCommand`, `DeleteUserCommand`, `AssignUserRoleCommand`, `CreateGroupCommand`, `UpdateGroupCommand`, `DeleteGroupCommand`, `AddGroupMemberCommand`, `RemoveGroupMemberCommand`, `AssignGroupRoleCommand`, `CreateRoleCommand`, `UpdateRoleCommand`, `DeleteRoleCommand`.
+  - Implemented inbound ports: `ManageUserUseCase`, `ManageGroupUseCase`, `ManageRoleUseCase`.
+  - Implemented application services: `UserService`, `GroupService`, `RoleService`.
+  - Implemented REST DTOs and Controllers: `UserController` (`/api/v1/iam/users`), `GroupController` (`/api/v1/iam/groups`), `RoleController` (`/api/v1/iam/roles`), `ScopeNodeController` (`/api/v1/iam/scopes`).
+  - Consolidated auto-configuration architecture: created dedicated `IamJpaAutoConfiguration` and `IamManagementAutoConfiguration`, avoiding duplicate JPA repository bean collisions in `his-bootstrap`.
+  - Added full test suite with 100 passing tests in `his-iam` and 0 build failures across the entire multi-module repository.
+

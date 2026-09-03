@@ -66,6 +66,12 @@ public class UserIdentityRepositoryAdapter implements UserIdentityRepository {
 		repository.deleteById(id.value());
 	}
 
+	@Override
+	public void deleteAllByUserId(UserId userId) {
+		Objects.requireNonNull(userId, "UserId must not be null.");
+		repository.deleteAllByUserId(userId.value());
+	}
+
 	private UserIdentity toDomain(UserIdentityJpaEntity entity) {
 		return new UserIdentity(
 				new UserIdentityId(entity.getId()),

@@ -33,4 +33,12 @@ public interface UserIdentityJpaRepository extends JpaRepository<UserIdentityJpa
 	 * @return list of identities
 	 */
 	List<UserIdentityJpaEntity> findAllByUserId(UUID userId);
+
+	/**
+	 * Deletes all identities associated with a user ID.
+	 *
+	 * @param userId the user ID
+	 */
+	void deleteAllByUserId(UUID userId);
 }
+

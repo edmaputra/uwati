@@ -26,4 +26,33 @@ public record GroupId(UUID value) {
 	public static GroupId generate() {
 		return new GroupId(UuidV7.generate());
 	}
+
+	/**
+	 * Creates a GroupId from an existing UUID.
+	 *
+	 * @param value the UUID
+	 * @return new {@link GroupId}
+	 */
+	public static GroupId of(UUID value) {
+		return new GroupId(value);
+	}
+
+	/**
+	 * Creates a GroupId from a UUID string representation.
+	 *
+	 * @param value the UUID string
+	 * @return new {@link GroupId}
+	 */
+	public static GroupId from(String value) {
+		if (value == null || value.isBlank()) {
+			throw new IllegalArgumentException("Group ID must not be blank.");
+		}
+		return new GroupId(UUID.fromString(value.trim()));
+	}
+
+	@Override
+	public String toString() {
+		return value.toString();
+	}
 }
+

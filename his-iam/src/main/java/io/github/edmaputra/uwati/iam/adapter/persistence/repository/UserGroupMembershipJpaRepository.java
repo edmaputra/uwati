@@ -41,4 +41,19 @@ public interface UserGroupMembershipJpaRepository extends JpaRepository<UserGrou
 	 * @return true if membership exists
 	 */
 	boolean existsByIdGroupIdAndIdUserId(UUID groupId, UUID userId);
+
+	/**
+	 * Deletes all memberships belonging to a group.
+	 *
+	 * @param groupId the group UUID
+	 */
+	void deleteAllByIdGroupId(UUID groupId);
+
+	/**
+	 * Deletes all memberships for a user.
+	 *
+	 * @param userId the user UUID
+	 */
+	void deleteAllByIdUserId(UUID userId);
 }
+

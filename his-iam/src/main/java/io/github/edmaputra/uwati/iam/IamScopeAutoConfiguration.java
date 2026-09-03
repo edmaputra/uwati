@@ -2,39 +2,24 @@ package io.github.edmaputra.uwati.iam;
 
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.context.annotation.Import;
 
-import io.github.edmaputra.uwati.iam.adapter.persistence.adapter.ScopeNodeRepositoryAdapter;
-import io.github.edmaputra.uwati.iam.adapter.persistence.repository.ScopeNodeJpaRepository;
+import io.github.edmaputra.uwati.iam.adapter.rest.ScopeNodeController;
 import io.github.edmaputra.uwati.iam.application.port.in.ManageScopeUseCase;
 import io.github.edmaputra.uwati.iam.application.service.ScopeHierarchyService;
 import io.github.edmaputra.uwati.iam.application.service.ScopeSubtreeResolver;
 import io.github.edmaputra.uwati.iam.domain.repository.ScopeNodeRepository;
 
 /**
- * Spring Boot auto-configuration for IAM hierarchical scope tree persistence and services.
+ * Spring Boot auto-configuration for IAM hierarchical scope tree services and controllers.
  *
  * @author edmaputra
  */
-@AutoConfiguration
-@EntityScan(basePackages = "io.github.edmaputra.uwati.iam.adapter.persistence.entity")
-@EnableJpaRepositories(basePackages = "io.github.edmaputra.uwati.iam.adapter.persistence.repository")
+@AutoConfiguration(after = IamJpaAutoConfiguration.class)
+@Import(ScopeNodeController.class)
 public class IamScopeAutoConfiguration {
-
-	/**
-	 * Registers the {@link ScopeNodeRepository} bean.
-	 *
-	 * @param repository the Spring Data JPA repository
-	 * @return scope node repository adapter
-	 */
-	@Bean
-	@ConditionalOnMissingBean
-	public ScopeNodeRepository scopeNodeRepository(ScopeNodeJpaRepository repository) {
-		return new ScopeNodeRepositoryAdapter(repository);
-	}
 
 	/**
 	 * Registers the {@link ManageScopeUseCase} bean.
@@ -63,3 +48,4 @@ public class IamScopeAutoConfiguration {
 		return new ScopeSubtreeResolver(scopeNodeRepository);
 	}
 }
+
