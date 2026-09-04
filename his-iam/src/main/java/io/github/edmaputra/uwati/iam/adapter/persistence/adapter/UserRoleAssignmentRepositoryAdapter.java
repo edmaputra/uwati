@@ -56,6 +56,18 @@ public class UserRoleAssignmentRepositoryAdapter implements UserRoleAssignmentRe
 	}
 
 	@Override
+	public boolean existsByRoleId(RoleId roleId) {
+		Objects.requireNonNull(roleId, "RoleId must not be null.");
+		return repository.existsByRoleId(roleId.value());
+	}
+
+	@Override
+	public boolean existsByScopeNodeId(ScopeNodeId scopeNodeId) {
+		Objects.requireNonNull(scopeNodeId, "ScopeNodeId must not be null.");
+		return repository.existsByScopeNodeId(scopeNodeId.value());
+	}
+
+	@Override
 	public UserRoleAssignment save(UserRoleAssignment assignment) {
 		Objects.requireNonNull(assignment, "UserRoleAssignment must not be null.");
 		UserRoleAssignmentJpaEntity entity = toEntity(assignment);
@@ -67,6 +79,12 @@ public class UserRoleAssignmentRepositoryAdapter implements UserRoleAssignmentRe
 	public void delete(UserRoleAssignmentId id) {
 		Objects.requireNonNull(id, "UserRoleAssignmentId must not be null.");
 		repository.deleteById(id.value());
+	}
+
+	@Override
+	public void deleteAllByUserId(UserId userId) {
+		Objects.requireNonNull(userId, "UserId must not be null.");
+		repository.deleteAllByUserId(userId.value());
 	}
 
 	private UserRoleAssignment toDomain(UserRoleAssignmentJpaEntity entity) {

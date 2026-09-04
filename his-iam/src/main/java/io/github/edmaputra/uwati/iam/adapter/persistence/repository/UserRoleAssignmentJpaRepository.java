@@ -32,4 +32,28 @@ public interface UserRoleAssignmentJpaRepository extends JpaRepository<UserRoleA
 	 * @return list of assignments
 	 */
 	List<UserRoleAssignmentJpaEntity> findAllByUserIdAndTenantId(UUID userId, UUID tenantId);
+
+	/**
+	 * Checks if any assignment references the role ID.
+	 *
+	 * @param roleId the role UUID
+	 * @return true if exists
+	 */
+	boolean existsByRoleId(UUID roleId);
+
+	/**
+	 * Checks if any assignment references the scope node ID.
+	 *
+	 * @param scopeNodeId the scope node UUID
+	 * @return true if exists
+	 */
+	boolean existsByScopeNodeId(UUID scopeNodeId);
+
+	/**
+	 * Deletes all role assignments for a user.
+	 *
+	 * @param userId the user UUID
+	 */
+	void deleteAllByUserId(UUID userId);
 }
+

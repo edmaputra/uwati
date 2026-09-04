@@ -53,4 +53,19 @@ public interface UserGroupMembershipRepository {
 	 * @param userId  the user ID
 	 */
 	void delete(GroupId groupId, UserId userId);
+
+	/**
+	 * Deletes all memberships belonging to a group.
+	 *
+	 * @param groupId the group ID
+	 */
+	void deleteAllByGroupId(GroupId groupId);
+
+	/**
+	 * Deletes all memberships for a user.
+	 *
+	 * @param userId the user ID
+	 */
+	void deleteAllByUserId(UserId userId);
 }
+

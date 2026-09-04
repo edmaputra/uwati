@@ -67,6 +67,18 @@ public class UserGroupMembershipRepositoryAdapter implements UserGroupMembership
 		repository.deleteById(new UserGroupMembershipJpaId(groupId.value(), userId.value()));
 	}
 
+	@Override
+	public void deleteAllByGroupId(GroupId groupId) {
+		Objects.requireNonNull(groupId, "GroupId must not be null.");
+		repository.deleteAllByIdGroupId(groupId.value());
+	}
+
+	@Override
+	public void deleteAllByUserId(UserId userId) {
+		Objects.requireNonNull(userId, "UserId must not be null.");
+		repository.deleteAllByIdUserId(userId.value());
+	}
+
 	private UserGroupMembership toDomain(UserGroupMembershipJpaEntity entity) {
 		return new UserGroupMembership(
 				new GroupId(entity.getId().getGroupId()),

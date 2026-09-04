@@ -54,4 +54,12 @@ public interface UserIdentityRepository {
 	 * @param id the user identity ID
 	 */
 	void delete(UserIdentityId id);
+
+	/**
+	 * Deletes all federated identities linked to a user.
+	 *
+	 * @param userId the user ID
+	 */
+	void deleteAllByUserId(UserId userId);
 }
+

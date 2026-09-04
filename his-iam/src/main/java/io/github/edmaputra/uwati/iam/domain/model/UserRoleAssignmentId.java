@@ -26,4 +26,33 @@ public record UserRoleAssignmentId(UUID value) {
 	public static UserRoleAssignmentId generate() {
 		return new UserRoleAssignmentId(UuidV7.generate());
 	}
+
+	/**
+	 * Creates a UserRoleAssignmentId from an existing UUID.
+	 *
+	 * @param value the UUID
+	 * @return new {@link UserRoleAssignmentId}
+	 */
+	public static UserRoleAssignmentId of(UUID value) {
+		return new UserRoleAssignmentId(value);
+	}
+
+	/**
+	 * Creates a UserRoleAssignmentId from a UUID string representation.
+	 *
+	 * @param value the UUID string
+	 * @return new {@link UserRoleAssignmentId}
+	 */
+	public static UserRoleAssignmentId from(String value) {
+		if (value == null || value.isBlank()) {
+			throw new IllegalArgumentException("UserRoleAssignment ID must not be blank.");
+		}
+		return new UserRoleAssignmentId(UUID.fromString(value.trim()));
+	}
+
+	@Override
+	public String toString() {
+		return value.toString();
+	}
 }
+

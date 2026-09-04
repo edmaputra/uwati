@@ -59,54 +59,10 @@ import io.github.edmaputra.uwati.iam.domain.repository.UserRoleAssignmentReposit
  *
  * @author edmaputra
  */
-@AutoConfiguration
+@AutoConfiguration(after = IamJpaAutoConfiguration.class)
 @EnableConfigurationProperties(JwtProperties.class)
-@EntityScan(basePackages = "io.github.edmaputra.uwati.iam.adapter.persistence.entity")
-@EnableJpaRepositories(basePackages = "io.github.edmaputra.uwati.iam.adapter.persistence.repository")
 @Import({AuthController.class, IamExceptionHandler.class})
 public class IamSecurityAutoConfiguration {
-
-	@Bean
-	@ConditionalOnMissingBean
-	public UserRepository userRepository(UserJpaRepository repository) {
-		return new UserRepositoryAdapter(repository);
-	}
-
-	@Bean
-	@ConditionalOnMissingBean
-	public RoleRepository roleRepository(RoleJpaRepository repository) {
-		return new RoleRepositoryAdapter(repository);
-	}
-
-	@Bean
-	@ConditionalOnMissingBean
-	public GroupRepository groupRepository(GroupJpaRepository repository) {
-		return new GroupRepositoryAdapter(repository);
-	}
-
-	@Bean
-	@ConditionalOnMissingBean
-	public UserGroupMembershipRepository userGroupMembershipRepository(UserGroupMembershipJpaRepository repository) {
-		return new UserGroupMembershipRepositoryAdapter(repository);
-	}
-
-	@Bean
-	@ConditionalOnMissingBean
-	public UserRoleAssignmentRepository userRoleAssignmentRepository(UserRoleAssignmentJpaRepository repository) {
-		return new UserRoleAssignmentRepositoryAdapter(repository);
-	}
-
-	@Bean
-	@ConditionalOnMissingBean
-	public GroupRoleAssignmentRepository groupRoleAssignmentRepository(GroupRoleAssignmentJpaRepository repository) {
-		return new GroupRoleAssignmentRepositoryAdapter(repository);
-	}
-
-	@Bean
-	@ConditionalOnMissingBean
-	public UserIdentityRepository userIdentityRepository(UserIdentityJpaRepository repository) {
-		return new UserIdentityRepositoryAdapter(repository);
-	}
 
 	@Bean
 	@ConditionalOnMissingBean

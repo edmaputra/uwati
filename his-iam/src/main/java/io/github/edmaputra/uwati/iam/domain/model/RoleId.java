@@ -26,4 +26,33 @@ public record RoleId(UUID value) {
 	public static RoleId generate() {
 		return new RoleId(UuidV7.generate());
 	}
+
+	/**
+	 * Creates a RoleId from an existing UUID.
+	 *
+	 * @param value the UUID
+	 * @return new {@link RoleId}
+	 */
+	public static RoleId of(UUID value) {
+		return new RoleId(value);
+	}
+
+	/**
+	 * Creates a RoleId from a UUID string representation.
+	 *
+	 * @param value the UUID string
+	 * @return new {@link RoleId}
+	 */
+	public static RoleId from(String value) {
+		if (value == null || value.isBlank()) {
+			throw new IllegalArgumentException("Role ID must not be blank.");
+		}
+		return new RoleId(UUID.fromString(value.trim()));
+	}
+
+	@Override
+	public String toString() {
+		return value.toString();
+	}
 }
+

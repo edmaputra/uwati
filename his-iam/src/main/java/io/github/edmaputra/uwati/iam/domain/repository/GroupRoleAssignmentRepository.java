@@ -48,6 +48,22 @@ public interface GroupRoleAssignmentRepository {
 	List<GroupRoleAssignment> findAllByTenantId(TenantId tenantId);
 
 	/**
+	 * Checks if any group role assignment references the specified role ID.
+	 *
+	 * @param roleId the role ID
+	 * @return true if an assignment exists
+	 */
+	boolean existsByRoleId(io.github.edmaputra.uwati.iam.domain.model.RoleId roleId);
+
+	/**
+	 * Checks if any group role assignment references the specified scope node ID.
+	 *
+	 * @param scopeNodeId the scope node ID
+	 * @return true if an assignment exists
+	 */
+	boolean existsByScopeNodeId(io.github.edmaputra.uwati.iam.domain.model.ScopeNodeId scopeNodeId);
+
+	/**
 	 * Saves a group role assignment.
 	 *
 	 * @param assignment the assignment to persist
@@ -61,4 +77,11 @@ public interface GroupRoleAssignmentRepository {
 	 * @param id the assignment ID
 	 */
 	void delete(GroupRoleAssignmentId id);
+
+	/**
+	 * Deletes all role assignments for a group.
+	 *
+	 * @param groupId the group ID
+	 */
+	void deleteAllByGroupId(GroupId groupId);
 }

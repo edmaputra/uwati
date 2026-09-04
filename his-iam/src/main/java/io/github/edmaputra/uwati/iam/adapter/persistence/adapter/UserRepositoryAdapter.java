@@ -1,8 +1,12 @@
 package io.github.edmaputra.uwati.iam.adapter.persistence.adapter;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.StreamSupport;
 
+import io.github.edmaputra.uwati.domain.tenancy.domain.TenantId;
 import io.github.edmaputra.uwati.iam.adapter.persistence.entity.UserJpaEntity;
 import io.github.edmaputra.uwati.iam.adapter.persistence.repository.UserJpaRepository;
 import io.github.edmaputra.uwati.iam.domain.model.User;
@@ -47,6 +51,26 @@ public class UserRepositoryAdapter implements UserRepository {
 	}
 
 	@Override
+	public List<User> findAllByIds(Iterable<UserId> ids) {
+		Objects.requireNonNull(ids, "User IDs must not be null.");
+		List<UUID> uuids = StreamSupport.stream(ids.spliterator(), false)
+				.map(UserId::value)
+				.toList();
+		return repository.findAllById(uuids).stream().map(this::toDomain).toList();
+	}
+
+	@Override
+	public List<User> findAll() {
+		return repository.findAll().stream().map(this::toDomain).toList();
+	}
+
+	@Override
+	public List<User> findAllByTenantId(TenantId tenantId) {
+		Objects.requireNonNull(tenantId, "TenantId must not be null.");
+		return repository.findAllByTenantId(tenantId.value()).stream().map(this::toDomain).toList();
+	}
+
+	@Override
 	public User save(User user) {
 		Objects.requireNonNull(user, "User must not be null.");
 		UserJpaEntity entity = toEntity(user);
@@ -84,3 +108,4 @@ public class UserRepositoryAdapter implements UserRepository {
 				user.getUpdatedAt());
 	}
 }
+

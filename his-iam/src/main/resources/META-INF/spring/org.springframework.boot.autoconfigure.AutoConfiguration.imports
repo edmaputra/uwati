@@ -1,3 +1,6 @@
 io.github.edmaputra.uwati.iam.IamLiquibaseAutoConfiguration
+io.github.edmaputra.uwati.iam.IamJpaAutoConfiguration
 io.github.edmaputra.uwati.iam.IamScopeAutoConfiguration
 io.github.edmaputra.uwati.iam.IamSecurityAutoConfiguration
+io.github.edmaputra.uwati.iam.IamManagementAutoConfiguration
+

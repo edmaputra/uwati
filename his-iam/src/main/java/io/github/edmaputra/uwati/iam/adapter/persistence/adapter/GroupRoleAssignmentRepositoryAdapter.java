@@ -68,6 +68,18 @@ public class GroupRoleAssignmentRepositoryAdapter implements GroupRoleAssignment
 	}
 
 	@Override
+	public boolean existsByRoleId(RoleId roleId) {
+		Objects.requireNonNull(roleId, "RoleId must not be null.");
+		return repository.existsByRoleId(roleId.value());
+	}
+
+	@Override
+	public boolean existsByScopeNodeId(ScopeNodeId scopeNodeId) {
+		Objects.requireNonNull(scopeNodeId, "ScopeNodeId must not be null.");
+		return repository.existsByScopeNodeId(scopeNodeId.value());
+	}
+
+	@Override
 	public GroupRoleAssignment save(GroupRoleAssignment assignment) {
 		Objects.requireNonNull(assignment, "GroupRoleAssignment must not be null.");
 		GroupRoleAssignmentJpaEntity entity = toEntity(assignment);
@@ -79,6 +91,12 @@ public class GroupRoleAssignmentRepositoryAdapter implements GroupRoleAssignment
 	public void delete(GroupRoleAssignmentId id) {
 		Objects.requireNonNull(id, "GroupRoleAssignmentId must not be null.");
 		repository.deleteById(id.value());
+	}
+
+	@Override
+	public void deleteAllByGroupId(GroupId groupId) {
+		Objects.requireNonNull(groupId, "GroupId must not be null.");
+		repository.deleteAllByGroupId(groupId.value());
 	}
 
 	private GroupRoleAssignment toDomain(GroupRoleAssignmentJpaEntity entity) {

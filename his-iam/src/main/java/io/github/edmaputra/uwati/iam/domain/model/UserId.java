@@ -26,4 +26,33 @@ public record UserId(UUID value) {
 	public static UserId generate() {
 		return new UserId(UuidV7.generate());
 	}
+
+	/**
+	 * Creates a UserId from an existing UUID.
+	 *
+	 * @param value the UUID
+	 * @return new {@link UserId}
+	 */
+	public static UserId of(UUID value) {
+		return new UserId(value);
+	}
+
+	/**
+	 * Creates a UserId from a UUID string representation.
+	 *
+	 * @param value the UUID string
+	 * @return new {@link UserId}
+	 */
+	public static UserId from(String value) {
+		if (value == null || value.isBlank()) {
+			throw new IllegalArgumentException("User ID must not be blank.");
+		}
+		return new UserId(UUID.fromString(value.trim()));
+	}
+
+	@Override
+	public String toString() {
+		return value.toString();
+	}
 }
+

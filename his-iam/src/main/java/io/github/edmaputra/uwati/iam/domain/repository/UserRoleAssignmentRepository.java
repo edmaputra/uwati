@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Optional;
 
 import io.github.edmaputra.uwati.domain.tenancy.domain.TenantId;
+import io.github.edmaputra.uwati.iam.domain.model.RoleId;
+import io.github.edmaputra.uwati.iam.domain.model.ScopeNodeId;
 import io.github.edmaputra.uwati.iam.domain.model.UserId;
 import io.github.edmaputra.uwati.iam.domain.model.UserRoleAssignment;
 import io.github.edmaputra.uwati.iam.domain.model.UserRoleAssignmentId;
@@ -41,6 +43,22 @@ public interface UserRoleAssignmentRepository {
 	List<UserRoleAssignment> findAllByUserIdAndTenantId(UserId userId, TenantId tenantId);
 
 	/**
+	 * Checks if any user role assignment references the specified role ID.
+	 *
+	 * @param roleId the role ID
+	 * @return true if an assignment exists
+	 */
+	boolean existsByRoleId(RoleId roleId);
+
+	/**
+	 * Checks if any user role assignment references the specified scope node ID.
+	 *
+	 * @param scopeNodeId the scope node ID
+	 * @return true if an assignment exists
+	 */
+	boolean existsByScopeNodeId(ScopeNodeId scopeNodeId);
+
+	/**
 	 * Saves a user role assignment.
 	 *
 	 * @param assignment the assignment to persist
@@ -54,4 +72,12 @@ public interface UserRoleAssignmentRepository {
 	 * @param id the assignment ID
 	 */
 	void delete(UserRoleAssignmentId id);
+
+	/**
+	 * Deletes all role assignments for a user.
+	 *
+	 * @param userId the user ID
+	 */
+	void deleteAllByUserId(UserId userId);
 }
+
