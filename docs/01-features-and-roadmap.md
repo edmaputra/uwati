@@ -48,11 +48,11 @@ Uwati HIS is structured under strict architectural boundaries to guarantee modul
 └──────────────┬──────────────────────────────┬───────────────────────────────┘
                │                              │
 ┌──────────────▼──────────────┐┌──────────────▼──────────────┐┌───────────────▼──────────────┐
-│       his-persistence       ││           his-iam           ││          his-cache            │
-│  - Tenant-Aware Repositories││  - Pluggable Auth (SPI)     ││  - Valkey / Redis Engine      │
-│  - Liquibase Migrations     ││  - Scope Hierarchy Tree     ││  - Multi-Tenant Namespacing   │
-│  - PostgreSQL Entities      ││  - Unified JWT Token Bridge ││  - Repository Decorators      │
-│  - Immutable Audit Listener ││  - 3-Tier Security Scoping  ││  - Distributed Locks          │
+│       his-persistence       ││        ed-iam-starter       ││          his-cache            │
+│  - Tenant-Aware Repositories││  (Modularized Starter Lib)  ││  - Valkey / Redis Engine      │
+│  - Liquibase Migrations     ││  - Pluggable Auth (SPI)     ││  - Multi-Tenant Namespacing   │
+│  - PostgreSQL Entities      ││  - Scope Hierarchy Tree     ││  - Repository Decorators      │
+│  - Immutable Audit Listener ││  - Scoped RBAC & Management ││  - Distributed Locks          │
 └──────────────┬──────────────┘└──────────────┬──────────────┘└───────────────┬───────────────┘
                │                              │                               │
                └──────────────────────┬───────┴───────────────────────────────┘
@@ -81,7 +81,7 @@ Uwati HIS is structured under strict architectural boundaries to guarantee modul
 ```
 
 1. **Hexagonal Architecture (Ports and Adapters)**:
-   All business logic resides in `his-core` and `his-domain`. Adapters (`his-rest`, `his-persistence`, `his-cache`, `his-iam`) depend inward on core ports. Core logic has zero dependencies on web frameworks or ORMs.
+   All business logic resides in `his-core` and `his-domain`. Adapters (`his-rest`, `his-persistence`, `his-cache`) and integrated starters (`ed-iam-starter`) depend inward on core ports. Core logic has zero dependencies on web frameworks or ORMs.
 2. **First-Class Multi-Tenancy**:
    Shared application and shared database with strict tenant discriminator enforcement (`TenantId`). Request boundaries use Java 25 `ScopedValue` for zero-leakage, thread-safe context propagation without mutable ThreadLocal hazards.
 3. **3-Tier Data Ownership**:
@@ -101,7 +101,7 @@ Uwati HIS is structured under strict architectural boundaries to guarantee modul
 ### Phase 0: Modern Project Setup & Scaffolding (Complete)
 
 - **Java 25 & Spring Boot 4.1.0**: Baseline runtime leveraging the latest platform features (records, pattern matching, scoped values).
-- **Multi-Module Layout**: Clear segregation across `his-domain`, `his-core`, `his-rest`, `his-persistence`, `his-iam`, `his-cache`, and `his-bootstrap`.
+- **Multi-Module Layout**: Clear segregation across `his-domain`, `his-core`, `his-rest`, `his-persistence`, `his-cache`, and `his-bootstrap`, with IAM modularized into the external `ed-iam-starter` dependency.
 - **Database Versioning**: Relational schema managed via Liquibase changelogs (`PostgreSQL 17+`).
 - **Containerized Testing**: Testcontainers configuration for automated PostgreSQL and Valkey integration testing.
 
@@ -161,7 +161,7 @@ Uwati HIS is structured under strict architectural boundaries to guarantee modul
 ### Phase 4: Identity & Access Management (IAM) Foundation (Complete)
 
 - **Vertical Plugin Scaffolding**:
-  - Autonomous `his-iam` module with its own migrations (`db/iam/*`), entities, services, and controllers.
+  - Autonomous IAM module design with its own migrations, entities, services, and controllers.
 - **Pluggable Authentication Providers (SPI)**:
   - `AuthenticationProvider` interface supporting modular identity backends.
   - `LocalPasswordAuthProvider`: BCrypt password hashing with brute-force protection.
@@ -178,6 +178,25 @@ Uwati HIS is structured under strict architectural boundaries to guarantee modul
 
 > Walkthrough reference: [iam-walkthrough.md](iam-walkthrough.md) and [plan/iam-plugin-architecture-plan.md](plan/iam-plugin-architecture-plan.md)
 
+### Phase 5: IAM Scoped RBAC, User Management & REST Administration (Complete)
+
+- **Role & Permission Management API**:
+  - Full CRUD operations for tenant roles and platform superadmin roles (`RoleController`, `RoleService`).
+  - Comprehensive granular permission registry (`Permissions` catalog with categories across tenancy, IAM, clinical, pharmacy, billing, and system).
+  - Built-in safeguards: System role immutability and cascade assignment deletion protection.
+- **User & Membership Management**:
+  - Complete user lifecycle: Create, update profile, status transitions (`ACTIVE`, `SUSPENDED`, `DEACTIVATED`), and password management (`UserController`, `UserService`).
+  - Multi-tenant group memberships (`GroupController`, `GroupService`) and direct user role assignments.
+- **Scope Tree Administration**:
+  - Full CRUD and tree navigation endpoints (`ScopeNodeController`, `ScopeHierarchyService`).
+  - Organizational re-parenting with automatic materialized path cascade re-indexing.
+- **Effective Access Resolution**:
+  - `EffectiveAccessResolver` computing effective roles and permissions combining direct user assignments, group inheritance, and downward hierarchical scope inheritance.
+- **Modularized Starter Extraction**:
+  - Decoupled from internal module into published standalone `ed-iam-starter` (0.0.1) dependency auto-configured in `his-bootstrap`.
+
+> Walkthrough reference: [iam-walkthrough.md](iam-walkthrough.md)
+
 ---
 
 ## Roadmap & Planned Features
@@ -185,15 +204,15 @@ Uwati HIS is structured under strict architectural boundaries to guarantee modul
 ```mermaid
 timeline
     title Uwati HIS Implementation Roadmap
-    section Platform Core
+    section Platform Core & Identity
         Phase 0 - Scaffolding : Done
         Phase 1 - Tenancy : Done
         Phase 2 - Audit Trail : Done
         Phase 3 - Valkey Cache : Done
         Phase 4 - IAM Engine : Done
+        Phase 5 - IAM RBAC & REST : Done
     section Organization & Staff
-        Phase 5 - IAM REST & RBAC : Next
-        Phase 6 - Facility & Practitioners : Planned
+        Phase 6 - Facility & Practitioners : Next
     section Patient & Clinical Care
         Phase 7 - Patient MPI & MRN : Planned
         Phase 8 - Outpatient EMR (SOAP) : Planned
@@ -210,25 +229,7 @@ timeline
 
 ---
 
-### Phase 5: IAM Scoped RBAC, User Management & REST Administration
-
-Complete the operational administration APIs for the IAM plugin.
-
-- [ ] **Role & Permission Management API**:
-  - CRUD operations for tenant roles and platform superadmin roles.
-  - Granular permission registry (e.g., `clinical:record:write`, `pharmacy:dispense:approve`, `billing:invoice:void`).
-- [ ] **User & Membership Management**:
-  - User lifecycle management (invitation, status update, password reset, lockout unlock).
-  - Multi-tenant user memberships and group memberships.
-- [ ] **Scope Tree Administration**:
-  - REST endpoints to add, rename, re-parent, and deactivate organizational scope nodes.
-  - Automatic cascade re-indexing of materialized paths during organizational restructuring.
-- [ ] **Effective Access Resolution**:
-  - Pre-computed role and permission matrix combining direct user assignments, group inheritance, and downward scope inheritance.
-
----
-
-### Phase 6: Organizational Structure, Facilities & Healthcare Practitioners
+### Phase 6: Organizational Structure, Facilities & Healthcare Practitioners (Next)
 
 Model the physical and operational realities of healthcare institutions.
 
@@ -469,5 +470,5 @@ For in-depth technical walkthroughs, domain contracts, and code examples, consul
 | [tenant-management-walkthrough.md](tenant-management-walkthrough.md) | **Tenancy** | Multi-tenant isolation model, `ScopedValue` context, and provisioning lifecycle. |
 | [audit-trail-walkthrough.md](audit-trail-walkthrough.md) | **Audit Trail** | Hexagonal immutable audit architecture and JSON diffing engine. |
 | [cache-walkthrough.md](cache-walkthrough.md) | **Caching** | Valkey engine integration, multi-tenant namespace partitioning, and resilience. |
-| [iam-walkthrough.md](iam-walkthrough.md) | **IAM Walkthrough** | Pluggable Auth SPI, JWT bridge, and materialized path scope hierarchy. |
+| [iam-walkthrough.md](iam-walkthrough.md) | **IAM Walkthrough** | Pluggable Auth SPI, JWT bridge, materialized path scope hierarchy, scoped RBAC, and modularized starter integration. |
 | [plan/iam-plugin-architecture-plan.md](plan/iam-plugin-architecture-plan.md) | **IAM Plan** | Detailed technical specification and implementation plan for the IAM plugin. |
