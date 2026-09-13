@@ -21,6 +21,12 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 
 import com.jayway.jsonpath.JsonPath;
 
+import java.util.Set;
+import org.springframework.http.HttpHeaders;
+import io.github.edmaputra.iam.adapter.security.jwt.JwtTokenProvider;
+import io.github.edmaputra.iam.application.model.EffectiveAccess;
+import io.github.edmaputra.iam.domain.model.UserId;
+import io.github.edmaputra.iam.domain.tenancy.TenantId;
 import io.github.edmaputra.uwati.TestcontainersConfiguration;
 import io.github.edmaputra.uwati.bootstrap.UwatiApplication;
 import io.github.edmaputra.uwati.test.RequiresDocker;
@@ -37,10 +43,16 @@ class FacilityAndServiceUnitIntegrationTests {
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
 
+	@Autowired
+	private JwtTokenProvider jwtTokenProvider;
+
 	private WebTestClient webTestClient;
 
 	private final String tenantIdA = "01918a20-0000-7000-8000-000000000001";
 	private final String tenantIdB = "01918a20-0000-7000-8000-000000000002";
+
+	private String tokenAdminA;
+	private String tokenAdminB;
 
 	@BeforeEach
 	void setup() {
@@ -55,6 +67,44 @@ class FacilityAndServiceUnitIntegrationTests {
 		// Seed tenants in database
 		seedTenant(tenantIdA, "Hospital Group A", "RS A");
 		seedTenant(tenantIdB, "Hospital Group B", "RS B");
+
+		tokenAdminA = createToken("admin-a@corp.com", tenantIdA, Set.of(
+				"organization:facility:create",
+				"organization:facility:read",
+				"organization:facility:update",
+				"organization:facility:status",
+				"organization:service-unit:create",
+				"organization:service-unit:read",
+				"organization:service-unit:update",
+				"organization:service-unit:status"
+		));
+		tokenAdminB = createToken("admin-b@corp.com", tenantIdB, Set.of(
+				"organization:facility:create",
+				"organization:facility:read",
+				"organization:facility:update",
+				"organization:facility:status",
+				"organization:service-unit:create",
+				"organization:service-unit:read",
+				"organization:service-unit:update",
+				"organization:service-unit:status"
+		));
+	}
+
+	private String createToken(String email, String tenantId, Set<String> permissions) {
+		TenantId tid = tenantId != null ? new TenantId(UUID.fromString(tenantId)) : null;
+		EffectiveAccess access = new EffectiveAccess(
+				UserId.generate(),
+				email,
+				tid,
+				false,
+				false,
+				Set.of(),
+				Set.of("ROLE_ADMIN"),
+				permissions,
+				Set.of(),
+				Set.of()
+		);
+		return jwtTokenProvider.createAccessToken(access);
 	}
 
 	private void seedTenant(String id, String legalName, String displayName) {
@@ -72,23 +122,47 @@ class FacilityAndServiceUnitIntegrationTests {
 		@Test
 		@DisplayName("creates a facility, publishes event, persists audit entry, and allows retrieval")
 		void createsAndRetrievesFacility() {
+			String validFacilityJson = """
+					{
+					  "code": "RS-PUSAT",
+					  "name": "RS Uwati Pusat",
+					  "type": "HOSPITAL",
+					  "classification": "CLASS_B",
+					  "nationalRegistryCode": "3171012",
+					  "address": "Jl. Gatot Subroto No. 10",
+					  "phone": "021-1234567"
+					}
+					""";
+
+			// 1. Verify unauthenticated request is rejected with 401 Unauthorized
+			webTestClient.post()
+					.uri("/api/v1/facilities")
+					.header("X-Tenant-Id", tenantIdA)
+					.contentType(APPLICATION_JSON)
+					.bodyValue(validFacilityJson)
+					.exchange()
+					.expectStatus().isUnauthorized();
+
+			// 2. Verify unauthorized request (lacking permission) is rejected with 403 Forbidden
+			String readOnlyToken = createToken("readonly@corp.com", tenantIdA, Set.of("organization:facility:read"));
+			webTestClient.post()
+					.uri("/api/v1/facilities")
+					.header(HttpHeaders.AUTHORIZATION, "Bearer " + readOnlyToken)
+					.header("X-Tenant-Id", tenantIdA)
+					.contentType(APPLICATION_JSON)
+					.bodyValue(validFacilityJson)
+					.exchange()
+					.expectStatus().isForbidden();
+
+			// 3. Authorized request creates facility
 			byte[] createResponse = webTestClient.post()
 					.uri("/api/v1/facilities")
+					.header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenAdminA)
 					.header("X-Tenant-Id", tenantIdA)
 					.header("X-Actor-Id", "admin-1")
 					.header("X-Correlation-Id", "corr-fac-01")
 					.contentType(APPLICATION_JSON)
-					.bodyValue("""
-							{
-							  "code": "RS-PUSAT",
-							  "name": "RS Uwati Pusat",
-							  "type": "HOSPITAL",
-							  "classification": "CLASS_B",
-							  "nationalRegistryCode": "3171012",
-							  "address": "Jl. Gatot Subroto No. 10",
-							  "phone": "021-1234567"
-							}
-							""")
+					.bodyValue(validFacilityJson)
 					.exchange()
 					.expectStatus().isCreated()
 					.expectHeader().valueEquals("X-Correlation-Id", "corr-fac-01")
@@ -117,6 +191,7 @@ class FacilityAndServiceUnitIntegrationTests {
 			// Retrieve by ID
 			webTestClient.get()
 					.uri("/api/v1/facilities/" + facilityId)
+					.header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenAdminA)
 					.header("X-Tenant-Id", tenantIdA)
 					.exchange()
 					.expectStatus().isOk()
@@ -127,6 +202,7 @@ class FacilityAndServiceUnitIntegrationTests {
 			// Update facility
 			webTestClient.put()
 					.uri("/api/v1/facilities/" + facilityId)
+					.header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenAdminA)
 					.header("X-Tenant-Id", tenantIdA)
 					.header("X-Actor-Id", "admin-updater")
 					.header("X-Correlation-Id", "corr-fac-upd")
@@ -157,6 +233,7 @@ class FacilityAndServiceUnitIntegrationTests {
 			// Change status
 			webTestClient.patch()
 					.uri("/api/v1/facilities/" + facilityId + "/status")
+					.header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenAdminA)
 					.header("X-Tenant-Id", tenantIdA)
 					.header("X-Actor-Id", "admin-deactivator")
 					.contentType(APPLICATION_JSON)
@@ -173,6 +250,7 @@ class FacilityAndServiceUnitIntegrationTests {
 			// Verify duplicate code rejected
 			webTestClient.post()
 					.uri("/api/v1/facilities")
+					.header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenAdminA)
 					.header("X-Tenant-Id", tenantIdA)
 					.contentType(APPLICATION_JSON)
 					.bodyValue("""
@@ -189,6 +267,7 @@ class FacilityAndServiceUnitIntegrationTests {
 			// Multi-tenant isolation: Tenant B cannot see Tenant A's facility
 			webTestClient.get()
 					.uri("/api/v1/facilities/" + facilityId)
+					.header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenAdminB)
 					.header("X-Tenant-Id", tenantIdB)
 					.exchange()
 					.expectStatus().isNotFound();
@@ -205,6 +284,7 @@ class FacilityAndServiceUnitIntegrationTests {
 			// First create a facility under Tenant A
 			byte[] facResponse = webTestClient.post()
 					.uri("/api/v1/facilities")
+					.header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenAdminA)
 					.header("X-Tenant-Id", tenantIdA)
 					.contentType(APPLICATION_JSON)
 					.bodyValue("""
@@ -223,21 +303,44 @@ class FacilityAndServiceUnitIntegrationTests {
 			assertThat(facResponse).isNotNull();
 			String facilityId = JsonPath.read(new String(facResponse, StandardCharsets.UTF_8), "$.id");
 
-			// Create a service unit
+			String unitJson = String.format("""
+					{
+					  "facilityId": "%s",
+					  "code": "POLI-UMUM",
+					  "name": "Poli Umum",
+					  "type": "OUTPATIENT_CLINIC"
+					}
+					""", facilityId);
+
+			// 1. Verify unauthenticated service unit creation is rejected with 401
+			webTestClient.post()
+					.uri("/api/v1/service-units")
+					.header("X-Tenant-Id", tenantIdA)
+					.contentType(APPLICATION_JSON)
+					.bodyValue(unitJson)
+					.exchange()
+					.expectStatus().isUnauthorized();
+
+			// 2. Verify unauthorized service unit creation is rejected with 403
+			String readOnlyToken = createToken("readonly@corp.com", tenantIdA, Set.of("organization:service-unit:read"));
+			webTestClient.post()
+					.uri("/api/v1/service-units")
+					.header(HttpHeaders.AUTHORIZATION, "Bearer " + readOnlyToken)
+					.header("X-Tenant-Id", tenantIdA)
+					.contentType(APPLICATION_JSON)
+					.bodyValue(unitJson)
+					.exchange()
+					.expectStatus().isForbidden();
+
+			// 3. Authorized request creates a service unit
 			byte[] unitResponse = webTestClient.post()
 					.uri("/api/v1/service-units")
+					.header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenAdminA)
 					.header("X-Tenant-Id", tenantIdA)
 					.header("X-Actor-Id", "unit-creator")
 					.header("X-Correlation-Id", "corr-unit-01")
 					.contentType(APPLICATION_JSON)
-					.bodyValue(String.format("""
-							{
-							  "facilityId": "%s",
-							  "code": "POLI-UMUM",
-							  "name": "Poli Umum",
-							  "type": "OUTPATIENT_CLINIC"
-							}
-							""", facilityId))
+					.bodyValue(unitJson)
 					.exchange()
 					.expectStatus().isCreated()
 					.expectHeader().valueEquals("X-Correlation-Id", "corr-unit-01")
@@ -265,6 +368,7 @@ class FacilityAndServiceUnitIntegrationTests {
 			// Get by ID
 			webTestClient.get()
 					.uri("/api/v1/service-units/" + serviceUnitId)
+					.header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenAdminA)
 					.header("X-Tenant-Id", tenantIdA)
 					.exchange()
 					.expectStatus().isOk()
@@ -275,6 +379,7 @@ class FacilityAndServiceUnitIntegrationTests {
 			// List by facilityId
 			webTestClient.get()
 					.uri("/api/v1/service-units?facilityId=" + facilityId)
+					.header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenAdminA)
 					.header("X-Tenant-Id", tenantIdA)
 					.exchange()
 					.expectStatus().isOk()
@@ -285,6 +390,7 @@ class FacilityAndServiceUnitIntegrationTests {
 			// Update service unit
 			webTestClient.put()
 					.uri("/api/v1/service-units/" + serviceUnitId)
+					.header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenAdminA)
 					.header("X-Tenant-Id", tenantIdA)
 					.contentType(APPLICATION_JSON)
 					.bodyValue("""
@@ -301,6 +407,7 @@ class FacilityAndServiceUnitIntegrationTests {
 			// Change status
 			webTestClient.patch()
 					.uri("/api/v1/service-units/" + serviceUnitId + "/status")
+					.header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenAdminA)
 					.header("X-Tenant-Id", tenantIdA)
 					.contentType(APPLICATION_JSON)
 					.bodyValue("""
@@ -316,6 +423,7 @@ class FacilityAndServiceUnitIntegrationTests {
 			// Reject duplicate unit code in same facility
 			webTestClient.post()
 					.uri("/api/v1/service-units")
+					.header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenAdminA)
 					.header("X-Tenant-Id", tenantIdA)
 					.contentType(APPLICATION_JSON)
 					.bodyValue(String.format("""
@@ -332,6 +440,7 @@ class FacilityAndServiceUnitIntegrationTests {
 			// Multi-tenant isolation: Tenant B cannot access Tenant A's service unit
 			webTestClient.get()
 					.uri("/api/v1/service-units/" + serviceUnitId)
+					.header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenAdminB)
 					.header("X-Tenant-Id", tenantIdB)
 					.exchange()
 					.expectStatus().isNotFound();

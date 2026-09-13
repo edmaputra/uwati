@@ -193,7 +193,7 @@ Uwati HIS is structured under strict architectural boundaries to guarantee modul
 - **Effective Access Resolution**:
   - `EffectiveAccessResolver` computing effective roles and permissions combining direct user assignments, group inheritance, and downward hierarchical scope inheritance.
 - **Modularized Starter Extraction**:
-  - Decoupled from internal module into published standalone `ed-iam-starter` (0.0.1) dependency auto-configured in `his-bootstrap`.
+  - Decoupled from internal module into published standalone `ed-iam-starter` (0.1.0) dependency auto-configured in `his-bootstrap`, featuring declarative `@RequirePermission` authorization.
 
 > Walkthrough reference: [iam-walkthrough.md](iam-walkthrough.md)
 

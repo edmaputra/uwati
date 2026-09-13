@@ -12,10 +12,22 @@ import io.github.edmaputra.uwati.domain.organization.ServiceUnitNotFoundExceptio
 import io.github.edmaputra.uwati.domain.tenancy.application.MissingTenantContextException;
 import io.github.edmaputra.uwati.domain.tenancy.domain.DuplicateTenantDisplayNameException;
 import io.github.edmaputra.uwati.domain.tenancy.domain.InvalidTenantSettingException;
+import io.github.edmaputra.iam.domain.exception.AccessDeniedException;
+import io.github.edmaputra.iam.domain.exception.AuthenticationException;
 import io.github.edmaputra.uwati.domain.tenancy.domain.TenantNotFoundException;
 
 @RestControllerAdvice
 public class RestExceptionHandler {
+
+	@ExceptionHandler(AuthenticationException.class)
+	public ProblemDetail handleAuthentication(AuthenticationException ex) {
+		return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, ex.getMessage());
+	}
+
+	@ExceptionHandler(AccessDeniedException.class)
+	public ProblemDetail handleAccessDenied(AccessDeniedException ex) {
+		return ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, ex.getMessage());
+	}
 
 	@ExceptionHandler({ TenantNotFoundException.class, FacilityNotFoundException.class, ServiceUnitNotFoundException.class })
 	public ProblemDetail handleNotFound(RuntimeException ex) {

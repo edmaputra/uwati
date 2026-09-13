@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.github.edmaputra.iam.domain.security.annotation.RequirePermission;
 import io.github.edmaputra.uwati.adapter.rest.OperationContextResolver;
 import io.github.edmaputra.uwati.domain.organization.FacilityId;
 import io.github.edmaputra.uwati.domain.organization.ServiceUnit;
@@ -42,6 +43,7 @@ public class ServiceUnitController {
 	private final FindServiceUnitUseCase findServiceUnitUseCase;
 
 	@PostMapping
+	@RequirePermission("organization:service-unit:create")
 	public ResponseEntity<ServiceUnitResponse> create(
 			@RequestBody CreateServiceUnitRequest request,
 			HttpServletRequest httpRequest) {
@@ -57,6 +59,7 @@ public class ServiceUnitController {
 	}
 
 	@GetMapping("/{id}")
+	@RequirePermission("organization:service-unit:read")
 	public ResponseEntity<ServiceUnitResponse> getById(@PathVariable UUID id) {
 		ServiceUnit serviceUnit = findServiceUnitUseCase.findById(new ServiceUnitId(id))
 				.orElseThrow(() -> new ServiceUnitNotFoundException(new ServiceUnitId(id)));
@@ -64,6 +67,7 @@ public class ServiceUnitController {
 	}
 
 	@GetMapping
+	@RequirePermission("organization:service-unit:read")
 	public ResponseEntity<List<ServiceUnitResponse>> list(
 			@RequestParam UUID facilityId,
 			@RequestParam(required = false) ServiceUnitType type,
@@ -73,6 +77,7 @@ public class ServiceUnitController {
 	}
 
 	@PutMapping("/{id}")
+	@RequirePermission("organization:service-unit:update")
 	public ResponseEntity<ServiceUnitResponse> update(
 			@PathVariable UUID id,
 			@RequestBody UpdateServiceUnitRequest request,
@@ -89,6 +94,7 @@ public class ServiceUnitController {
 	}
 
 	@PatchMapping("/{id}/status")
+	@RequirePermission("organization:service-unit:status")
 	public ResponseEntity<ServiceUnitResponse> changeStatus(
 			@PathVariable UUID id,
 			@RequestBody ChangeServiceUnitStatusRequest request,

@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.github.edmaputra.iam.domain.security.annotation.RequirePermission;
 import io.github.edmaputra.uwati.adapter.rest.OperationContextResolver;
 import io.github.edmaputra.uwati.domain.organization.Facility;
 import io.github.edmaputra.uwati.domain.organization.FacilityId;
@@ -41,6 +42,7 @@ public class FacilityController {
 	private final FindFacilityUseCase findFacilityUseCase;
 
 	@PostMapping
+	@RequirePermission("organization:facility:create")
 	public ResponseEntity<FacilityResponse> create(
 			@RequestBody CreateFacilityRequest request,
 			HttpServletRequest httpRequest) {
@@ -56,6 +58,7 @@ public class FacilityController {
 	}
 
 	@GetMapping("/{id}")
+	@RequirePermission("organization:facility:read")
 	public ResponseEntity<FacilityResponse> getById(@PathVariable UUID id) {
 		Facility facility = findFacilityUseCase.findById(new FacilityId(id))
 				.orElseThrow(() -> new FacilityNotFoundException(new FacilityId(id)));
@@ -63,6 +66,7 @@ public class FacilityController {
 	}
 
 	@GetMapping
+	@RequirePermission("organization:facility:read")
 	public ResponseEntity<List<FacilityResponse>> list(
 			@RequestParam(required = false) FacilityType type,
 			@RequestParam(required = false) FacilityStatus status) {
@@ -71,6 +75,7 @@ public class FacilityController {
 	}
 
 	@PutMapping("/{id}")
+	@RequirePermission("organization:facility:update")
 	public ResponseEntity<FacilityResponse> update(
 			@PathVariable UUID id,
 			@RequestBody UpdateFacilityRequest request,
@@ -87,6 +92,7 @@ public class FacilityController {
 	}
 
 	@PatchMapping("/{id}/status")
+	@RequirePermission("organization:facility:status")
 	public ResponseEntity<FacilityResponse> changeStatus(
 			@PathVariable UUID id,
 			@RequestBody ChangeFacilityStatusRequest request,
