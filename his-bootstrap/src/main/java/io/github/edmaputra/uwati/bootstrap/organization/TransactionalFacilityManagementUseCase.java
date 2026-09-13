@@ -23,6 +23,15 @@ import io.github.edmaputra.uwati.domain.organization.port.out.OrganizationEventP
 import io.github.edmaputra.uwati.domain.tenancy.application.OperationContext;
 import io.github.edmaputra.uwati.domain.tenancy.application.TenantContext;
 
+/**
+ * Transactional decorator and Spring service bean wiring for facility use cases.
+ * <p>
+ * Wraps {@link FacilityManagementService} with Spring declarative transaction boundaries
+ * for mutation and read-only operations.
+ *
+ * @author edmaputra
+ * @since 0.0.1
+ */
 @Service
 public class TransactionalFacilityManagementUseCase implements
 		CreateFacilityUseCase,
@@ -32,6 +41,13 @@ public class TransactionalFacilityManagementUseCase implements
 
 	private final FacilityManagementService delegate;
 
+	/**
+	 * Constructs the transactional facility use case with required dependencies.
+	 *
+	 * @param tenantContext context provider for current tenant
+	 * @param facilityRepository repository for facility entities
+	 * @param eventPublisher publisher for organization events
+	 */
 	public TransactionalFacilityManagementUseCase(
 			TenantContext tenantContext,
 			FacilityRepository facilityRepository,
@@ -39,30 +55,64 @@ public class TransactionalFacilityManagementUseCase implements
 		this.delegate = new FacilityManagementService(tenantContext, facilityRepository, eventPublisher);
 	}
 
+	/**
+	 * Creates a new facility within a transaction.
+	 *
+	 * @param command the facility creation command
+	 * @param context the operation context containing actor and correlation metadata
+	 * @return the created facility entity
+	 */
 	@Override
 	@Transactional
 	public Facility execute(CreateFacilityCommand command, OperationContext context) {
 		return delegate.execute(command, context);
 	}
 
+	/**
+	 * Updates an existing facility within a transaction.
+	 *
+	 * @param command the facility update command
+	 * @param context the operation context containing actor and correlation metadata
+	 * @return the updated facility entity
+	 */
 	@Override
 	@Transactional
 	public Facility execute(UpdateFacilityCommand command, OperationContext context) {
 		return delegate.execute(command, context);
 	}
 
+	/**
+	 * Changes facility operational status within a transaction.
+	 *
+	 * @param command the facility status change command
+	 * @param context the operation context containing actor and correlation metadata
+	 * @return the facility entity with updated status
+	 */
 	@Override
 	@Transactional
 	public Facility execute(ChangeFacilityStatusCommand command, OperationContext context) {
 		return delegate.execute(command, context);
 	}
 
+	/**
+	 * Finds a facility by its identifier within a read-only transaction.
+	 *
+	 * @param id the unique facility identifier
+	 * @return an {@link Optional} containing the facility if found, or empty if not found
+	 */
 	@Override
 	@Transactional(readOnly = true)
 	public Optional<Facility> findById(FacilityId id) {
 		return delegate.findById(id);
 	}
 
+	/**
+	 * Finds all facilities matching optional filters within a read-only transaction.
+	 *
+	 * @param type the optional facility type filter, or {@code null}
+	 * @param status the optional facility status filter, or {@code null}
+	 * @return list of matching facilities
+	 */
 	@Override
 	@Transactional(readOnly = true)
 	public List<Facility> findAll(FacilityType type, FacilityStatus status) {

@@ -15,12 +15,31 @@ import io.github.edmaputra.uwati.domain.tenancy.domain.TenantStatus;
 import io.github.edmaputra.uwati.domain.tenancy.domain.event.TenantCreated;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Application service implementing {@link CreateTenantUseCase}.
+ * <p>
+ * Handles creation of new tenants or returns existing matching tenants, ensuring uniqueness
+ * of display names and publishing {@link TenantCreated} domain events upon creation.
+ *
+ * @author edmaputra
+ * @since 0.0.1
+ */
 @RequiredArgsConstructor
 public class CreateTenantService implements CreateTenantUseCase {
 
 	private final TenantRepository tenantRepository;
 	private final TenantEventPublisher eventPublisher;
 
+	/**
+	 * Creates a new tenant or returns an existing tenant matching legal and display names.
+	 *
+	 * @param command the tenant creation command containing legal and display names
+	 * @param context the operation context containing actor and correlation identifiers
+	 * @return the newly created or existing matching tenant entity
+	 * @throws NullPointerException if {@code command} or {@code context} is null
+	 * @throws IllegalArgumentException if legal name or display name is blank
+	 * @throws DuplicateTenantDisplayNameException if display name already exists for a different legal entity
+	 */
 	@Override
 	public Tenant execute(CreateTenantCommand command, OperationContext context) {
 		Objects.requireNonNull(command, "Create tenant command must not be null.");

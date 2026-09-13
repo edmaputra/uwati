@@ -31,6 +31,15 @@ import io.github.edmaputra.uwati.domain.tenancy.application.TenantContext;
 import io.github.edmaputra.uwati.domain.tenancy.domain.TenantId;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Application service implementing inbound use cases for service unit management.
+ * <p>
+ * Coordinates creating service units, updating their definitions, transitioning operational status,
+ * and querying service unit hierarchies while validating tenant and facility context and publishing domain events.
+ *
+ * @author edmaputra
+ * @since 0.0.1
+ */
 @RequiredArgsConstructor
 public class ServiceUnitManagementService implements
 		CreateServiceUnitUseCase,
@@ -43,6 +52,17 @@ public class ServiceUnitManagementService implements
 	private final ServiceUnitRepository serviceUnitRepository;
 	private final OrganizationEventPublisher eventPublisher;
 
+	/**
+	 * Creates a new service unit within a facility under the current tenant context.
+	 *
+	 * @param command the creation command containing service unit details such as code, name, and facility ID
+	 * @param context the operation context containing actor and correlation metadata
+	 * @return the newly created and persisted service unit entity
+	 * @throws NullPointerException if {@code command} or {@code context} is null
+	 * @throws IllegalStateException if the current tenant context is not set
+	 * @throws FacilityNotFoundException if the parent facility cannot be found
+	 * @throws DuplicateServiceUnitCodeException if a service unit with the same code already exists in the facility
+	 */
 	@Override
 	public ServiceUnit execute(CreateServiceUnitCommand command, OperationContext context) {
 		Objects.requireNonNull(command, "Create service unit command must not be null.");
@@ -78,6 +98,16 @@ public class ServiceUnitManagementService implements
 		return saved;
 	}
 
+	/**
+	 * Updates properties of an existing service unit.
+	 *
+	 * @param command the update command containing updated name, type, and scope node
+	 * @param context the operation context containing actor and correlation metadata
+	 * @return the updated service unit entity
+	 * @throws NullPointerException if {@code command} or {@code context} is null
+	 * @throws IllegalStateException if the current tenant context is not set
+	 * @throws ServiceUnitNotFoundException if the service unit does not exist
+	 */
 	@Override
 	public ServiceUnit execute(UpdateServiceUnitCommand command, OperationContext context) {
 		Objects.requireNonNull(command, "Update service unit command must not be null.");
@@ -93,6 +123,16 @@ public class ServiceUnitManagementService implements
 		return saved;
 	}
 
+	/**
+	 * Transitions the operational status of an existing service unit.
+	 *
+	 * @param command the command containing target status
+	 * @param context the operation context containing actor and correlation metadata
+	 * @return the service unit entity with updated status
+	 * @throws NullPointerException if {@code command} or {@code context} is null
+	 * @throws IllegalStateException if the current tenant context is not set
+	 * @throws ServiceUnitNotFoundException if the service unit does not exist
+	 */
 	@Override
 	public ServiceUnit execute(ChangeServiceUnitStatusCommand command, OperationContext context) {
 		Objects.requireNonNull(command, "Change service unit status command must not be null.");
@@ -113,6 +153,14 @@ public class ServiceUnitManagementService implements
 		return saved;
 	}
 
+	/**
+	 * Finds a service unit by its unique identifier within the current tenant scope.
+	 *
+	 * @param id the unique service unit identifier
+	 * @return an {@link Optional} containing the service unit if found, or empty if not found
+	 * @throws NullPointerException if {@code id} is null
+	 * @throws IllegalStateException if the current tenant context is not set
+	 */
 	@Override
 	public Optional<ServiceUnit> findById(ServiceUnitId id) {
 		Objects.requireNonNull(id, "Service Unit ID must not be null.");
@@ -120,6 +168,16 @@ public class ServiceUnitManagementService implements
 		return serviceUnitRepository.findById(id);
 	}
 
+	/**
+	 * Finds all service units belonging to a facility with optional type and status filtering.
+	 *
+	 * @param facilityId the parent facility identifier
+	 * @param type optional filter for service unit type, or {@code null} for all types
+	 * @param status optional filter for operational status, or {@code null} for all statuses
+	 * @return list of matching service units
+	 * @throws NullPointerException if {@code facilityId} is null
+	 * @throws IllegalStateException if the current tenant context is not set
+	 */
 	@Override
 	public List<ServiceUnit> findByFacilityId(FacilityId facilityId, ServiceUnitType type, ServiceUnitStatus status) {
 		Objects.requireNonNull(facilityId, "Facility ID must not be null.");

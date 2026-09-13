@@ -79,6 +79,7 @@ class CreateTenantIntegrationTests {
 							""")
 					.exchange()
 					.expectStatus().isCreated()
+					.expectHeader().valueMatches("Location", ".*/api/platform/tenants/.*")
 					.expectHeader().valueEquals("X-Correlation-Id", "corr-create-tenant-123")
 					.expectHeader().contentTypeCompatibleWith(APPLICATION_JSON)
 					.expectBody()
@@ -208,7 +209,7 @@ class CreateTenantIntegrationTests {
 		}
 
 		@Test
-		@DisplayName("rejects creation with 400 Bad Request when legal name is blank")
+		@DisplayName("rejects creation with 422 Unprocessable Entity when legal name is blank")
 		void rejectsBlankLegalName() {
 			webTestClient.post()
 					.uri("/api/platform/tenants")
@@ -220,13 +221,18 @@ class CreateTenantIntegrationTests {
 							}
 							""")
 					.exchange()
-					.expectStatus().isBadRequest();
+					.expectStatus().isEqualTo(422)
+					.expectBody()
+					.jsonPath("$.type").isEqualTo("https://api.uwati.example.com/problems/validation-error")
+					.jsonPath("$.title").isEqualTo("Validation Failed")
+					.jsonPath("$.status").isEqualTo(422)
+					.jsonPath("$.errors").isArray();
 
 			assertThat(countRows("tenants")).isZero();
 		}
 
 		@Test
-		@DisplayName("rejects creation with 400 Bad Request when display name is blank")
+		@DisplayName("rejects creation with 422 Unprocessable Entity when display name is blank")
 		void rejectsBlankDisplayName() {
 			webTestClient.post()
 					.uri("/api/platform/tenants")
@@ -238,7 +244,12 @@ class CreateTenantIntegrationTests {
 							}
 							""")
 					.exchange()
-					.expectStatus().isBadRequest();
+					.expectStatus().isEqualTo(422)
+					.expectBody()
+					.jsonPath("$.type").isEqualTo("https://api.uwati.example.com/problems/validation-error")
+					.jsonPath("$.title").isEqualTo("Validation Failed")
+					.jsonPath("$.status").isEqualTo(422)
+					.jsonPath("$.errors").isArray();
 
 			assertThat(countRows("tenants")).isZero();
 		}

@@ -445,5 +445,27 @@ class FacilityAndServiceUnitIntegrationTests {
 					.exchange()
 					.expectStatus().isNotFound();
 		}
+
+		@Test
+		void returns422UnprocessableEntity_whenPayloadValidationFails() {
+			webTestClient.post()
+					.uri("/api/v1/facilities")
+					.header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenAdminA)
+					.header("X-Tenant-Id", tenantIdA)
+					.contentType(APPLICATION_JSON)
+					.bodyValue("""
+							{
+							  "code": "",
+							  "name": ""
+							}
+							""")
+					.exchange()
+					.expectStatus().isEqualTo(422)
+					.expectBody()
+					.jsonPath("$.type").isEqualTo("https://api.uwati.example.com/problems/validation-error")
+					.jsonPath("$.title").isEqualTo("Validation Failed")
+					.jsonPath("$.status").isEqualTo(422)
+					.jsonPath("$.errors").isArray();
+		}
 	}
 }

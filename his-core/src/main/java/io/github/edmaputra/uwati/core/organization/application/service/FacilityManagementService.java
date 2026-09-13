@@ -28,6 +28,15 @@ import io.github.edmaputra.uwati.domain.tenancy.application.TenantContext;
 import io.github.edmaputra.uwati.domain.tenancy.domain.TenantId;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Application service implementing inbound use cases for healthcare facility management.
+ * <p>
+ * Manages creation, detail updates, status lifecycle transitions, and lookups of facilities
+ * within tenant boundaries, publishing domain events upon modifications.
+ *
+ * @author edmaputra
+ * @since 0.0.1
+ */
 @RequiredArgsConstructor
 public class FacilityManagementService implements
 		CreateFacilityUseCase,
@@ -39,6 +48,16 @@ public class FacilityManagementService implements
 	private final FacilityRepository facilityRepository;
 	private final OrganizationEventPublisher eventPublisher;
 
+	/**
+	 * Creates a new facility within the current tenant context.
+	 *
+	 * @param command the facility creation command containing code, name, and classification
+	 * @param context the operation context containing actor and correlation metadata
+	 * @return the newly created and persisted facility entity
+	 * @throws NullPointerException if {@code command} or {@code context} is null
+	 * @throws IllegalStateException if the current tenant context is not set
+	 * @throws DuplicateFacilityCodeException if a facility with the given code already exists
+	 */
 	@Override
 	public Facility execute(CreateFacilityCommand command, OperationContext context) {
 		Objects.requireNonNull(command, "Create facility command must not be null.");
@@ -73,6 +92,16 @@ public class FacilityManagementService implements
 		return saved;
 	}
 
+	/**
+	 * Updates the details and profile of an existing facility.
+	 *
+	 * @param command the facility update command containing modified details
+	 * @param context the operation context containing actor and correlation metadata
+	 * @return the updated facility entity
+	 * @throws NullPointerException if {@code command} or {@code context} is null
+	 * @throws IllegalStateException if the current tenant context is not set
+	 * @throws FacilityNotFoundException if the facility does not exist
+	 */
 	@Override
 	public Facility execute(UpdateFacilityCommand command, OperationContext context) {
 		Objects.requireNonNull(command, "Update facility command must not be null.");
@@ -96,6 +125,16 @@ public class FacilityManagementService implements
 		return saved;
 	}
 
+	/**
+	 * Transitions the operational status of an existing facility.
+	 *
+	 * @param command the facility status change command
+	 * @param context the operation context containing actor and correlation metadata
+	 * @return the facility entity with updated status
+	 * @throws NullPointerException if {@code command} or {@code context} is null
+	 * @throws IllegalStateException if the current tenant context is not set
+	 * @throws FacilityNotFoundException if the facility does not exist
+	 */
 	@Override
 	public Facility execute(ChangeFacilityStatusCommand command, OperationContext context) {
 		Objects.requireNonNull(command, "Change facility status command must not be null.");
@@ -116,6 +155,14 @@ public class FacilityManagementService implements
 		return saved;
 	}
 
+	/**
+	 * Finds a facility by its unique identifier within the current tenant scope.
+	 *
+	 * @param id the unique facility identifier
+	 * @return an {@link Optional} containing the facility if found, or empty if not found
+	 * @throws NullPointerException if {@code id} is null
+	 * @throws IllegalStateException if the current tenant context is not set
+	 */
 	@Override
 	public Optional<Facility> findById(FacilityId id) {
 		Objects.requireNonNull(id, "Facility ID must not be null.");
@@ -123,6 +170,14 @@ public class FacilityManagementService implements
 		return facilityRepository.findById(id);
 	}
 
+	/**
+	 * Finds all facilities matching optional type and status criteria within the current tenant scope.
+	 *
+	 * @param type the optional facility type filter, or {@code null} for all types
+	 * @param status the optional facility status filter, or {@code null} for all statuses
+	 * @return list of matching facilities
+	 * @throws IllegalStateException if the current tenant context is not set
+	 */
 	@Override
 	public List<Facility> findAll(FacilityType type, FacilityStatus status) {
 		tenantContext.requireTenantId();

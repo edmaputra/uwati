@@ -11,6 +11,12 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import io.github.edmaputra.uwati.bootstrap.tenancy.ScopedValueTenantContext;
 import io.github.edmaputra.uwati.domain.tenancy.domain.TenantId;
 
+/**
+ * Unit tests verifying tenant header isolation, exception handling, and MDC lifecycle in {@link TenantContextFilter}.
+ *
+ * @author edmaputra
+ * @since 0.0.1
+ */
 class TenantContextFilterTests {
 
 	@Test
@@ -24,7 +30,11 @@ class TenantContextFilterTests {
 		});
 
 		assertThat(response.getStatus()).isEqualTo(400);
-		assertThat(response.getContentAsString()).contains("TENANT_CONTEXT_REQUIRED");
+		assertThat(response.getContentType()).isEqualTo("application/problem+json");
+		assertThat(response.getContentAsString())
+				.contains("TENANT_CONTEXT_REQUIRED")
+				.contains("https://api.uwati.example.com/problems/tenant-context-required")
+				.contains("Tenant Context Required");
 	}
 
 	@Test

@@ -13,6 +13,15 @@ import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
+/**
+ * JPA entity representing document sequence counters partitioned per tenant and facility scope.
+ * <p>
+ * Serves as an internal persistence data model in the hexagonal architecture's
+ * outbound tenancy persistence adapter, maintaining sequential document number generation state.
+ *
+ * @author edmaputra
+ * @since 0.0.1
+ */
 @Entity
 @Table(
 		name = "tenant_document_sequences",

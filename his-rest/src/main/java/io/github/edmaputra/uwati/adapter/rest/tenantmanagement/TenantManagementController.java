@@ -1,10 +1,14 @@
 package io.github.edmaputra.uwati.adapter.rest.tenantmanagement;
 
+import java.net.URI;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.http.HttpStatus;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,9 +28,14 @@ import io.github.edmaputra.uwati.domain.tenancy.application.port.in.GetTenantSet
 import io.github.edmaputra.uwati.domain.tenancy.domain.Tenant;
 import io.github.edmaputra.uwati.domain.tenancy.domain.TenantId;
 import io.github.edmaputra.uwati.domain.tenancy.domain.TenantSetting;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Controller for platform superadmin tenant lifecycle and configuration management.
+ *
+ * @author edmaputra
+ * @since 0.0.1
+ */
 @RestController
 @RequestMapping("/api/platform/tenants")
 @RequiredArgsConstructor
@@ -42,35 +51,51 @@ public class TenantManagementController {
 	private final ConfigureTenantSettingsUseCase configureTenantSettingsUseCase;
 	private final GetTenantSettingsUseCase getTenantSettingsUseCase;
 
+	/**
+	 * Provisions a new tenant organization.
+	 *
+	 * @param request validated tenant creation request
+	 * @param httpRequest HTTP servlet request
+	 * @return 201 Created with Location header and TenantResponse
+	 */
 	@PostMapping
 	public ResponseEntity<TenantResponse> createTenant(
-			@RequestBody CreateTenantRequest request,
+			@Valid @RequestBody CreateTenantRequest request,
 			HttpServletRequest httpRequest) {
-		if (request == null) {
-			throw new IllegalArgumentException("Request body must not be null.");
-		}
 		OperationContext context = resolveContext(httpRequest);
 		Tenant tenant =
 				createTenantUseCase.execute(new CreateTenantCommand(request.legalName(), request.displayName()), context);
-		return ResponseEntity.status(HttpStatus.CREATED)
+		URI location = URI.create("/api/platform/tenants/" + tenant.id().value());
+		return ResponseEntity.created(location)
 				.header(CORRELATION_ID_HEADER, context.correlationId())
 				.body(TenantResponse.from(tenant));
 	}
 
+	/**
+	 * Retrieves all configured settings for a specific tenant.
+	 *
+	 * @param tenantId target tenant ID string
+	 * @return list of tenant settings
+	 */
 	@GetMapping("/{tenantId}/settings")
 	public ResponseEntity<List<TenantSettingResponse>> getSettings(@PathVariable String tenantId) {
 		List<TenantSetting> settings = getTenantSettingsUseCase.execute(TenantId.from(tenantId));
 		return ResponseEntity.ok(settings.stream().map(TenantSettingResponse::from).toList());
 	}
 
+	/**
+	 * Configures or updates settings for a specific tenant.
+	 *
+	 * @param tenantId target tenant ID string
+	 * @param request validated settings payload
+	 * @param httpRequest HTTP servlet request
+	 * @return updated tenant settings
+	 */
 	@PutMapping("/{tenantId}/settings")
 	public ResponseEntity<List<TenantSettingResponse>> configureSettings(
 			@PathVariable String tenantId,
-			@RequestBody ConfigureTenantSettingsRequest request,
+			@Valid @RequestBody ConfigureTenantSettingsRequest request,
 			HttpServletRequest httpRequest) {
-		if (request == null || request.settings() == null) {
-			throw new IllegalArgumentException("Settings list must not be null.");
-		}
 		OperationContext context = resolveContext(httpRequest);
 		List<SettingEntry> entries = request.settings().stream()
 				.map(s -> new SettingEntry(s.key(), s.value()))
@@ -105,9 +130,34 @@ public class TenantManagementController {
 		return OperationContext.of(actor.trim(), correlationId.trim());
 	}
 
-	public record CreateTenantRequest(String legalName, String displayName) {
+	/**
+	 * Request payload for creating a new tenant.
+	 *
+	 * @param legalName the registered legal name of the organization
+	 * @param displayName the public-facing display name
+	 * @author edmaputra
+	 * @since 0.0.1
+	 */
+	public record CreateTenantRequest(
+			@NotBlank(message = "Legal name is required")
+			String legalName,
+
+			@NotBlank(message = "Display name is required")
+			String displayName) {
 	}
 
+	/**
+	 * Response representing tenant details.
+	 *
+	 * @param id tenant ID string
+	 * @param legalName registered legal name
+	 * @param displayName display name
+	 * @param status lifecycle status
+	 * @param createdAt creation timestamp
+	 * @param updatedAt last update timestamp
+	 * @author edmaputra
+	 * @since 0.0.1
+	 */
 	public record TenantResponse(
 			String id,
 			String legalName,
@@ -127,11 +177,44 @@ public class TenantManagementController {
 		}
 	}
 
-	public record ConfigureTenantSettingsRequest(List<TenantSettingItem> settings) {
-		public record TenantSettingItem(String key, String value) {
+	/**
+	 * Request payload for configuring tenant settings.
+	 *
+	 * @param settings list of setting key-value pairs
+	 * @author edmaputra
+	 * @since 0.0.1
+	 */
+	public record ConfigureTenantSettingsRequest(
+			@NotNull(message = "Settings list is required")
+			@Valid
+			List<TenantSettingItem> settings) {
+
+		/**
+		 * Individual key-value setting entry.
+		 *
+		 * @param key configuration key
+		 * @param value configuration value
+		 * @author edmaputra
+		 * @since 0.0.1
+		 */
+		public record TenantSettingItem(
+				@NotBlank(message = "Setting key is required")
+				String key,
+
+				@NotBlank(message = "Setting value is required")
+				String value) {
 		}
 	}
 
+	/**
+	 * Response representing a tenant setting.
+	 *
+	 * @param key configuration key
+	 * @param value configuration value
+	 * @param revision optimistic concurrency revision number
+	 * @author edmaputra
+	 * @since 0.0.1
+	 */
 	public record TenantSettingResponse(String key, String value, int revision) {
 		static TenantSettingResponse from(TenantSetting setting) {
 			return new TenantSettingResponse(setting.key(), setting.value(), setting.revision());

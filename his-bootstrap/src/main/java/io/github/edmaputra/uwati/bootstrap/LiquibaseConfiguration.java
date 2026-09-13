@@ -15,6 +15,9 @@ import liquibase.integration.spring.SpringLiquibase;
  * which provisions fundamental schemas, tenancy structures, audit tables, and shared database objects.
  * Also configures JPA {@link jakarta.persistence.EntityManagerFactory} to depend on all
  * {@link SpringLiquibase} instances before initializing Hibernate.
+ *
+ * @author edmaputra
+ * @since 0.0.1
  */
 @Configuration
 public class LiquibaseConfiguration {
@@ -36,6 +39,9 @@ public class LiquibaseConfiguration {
 	/**
 	 * Ensures JPA {@link jakarta.persistence.EntityManagerFactory} initialization waits for all
 	 * {@link SpringLiquibase} beans across all application modules to finish schema execution.
+	 *
+	 * @author edmaputra
+	 * @since 0.0.1
 	 */
 	@Configuration
 	static class LiquibaseEntityManagerDependencyConfiguration extends EntityManagerFactoryDependsOnPostProcessor {

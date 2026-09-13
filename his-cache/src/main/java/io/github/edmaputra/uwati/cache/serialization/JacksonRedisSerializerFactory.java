@@ -9,8 +9,12 @@ import tools.jackson.databind.jsontype.PolymorphicTypeValidator;
 /**
  * Factory for creating Jackson 3 JSON serializers for Spring Data Redis.
  * <p>
- * Configures {@link GenericJacksonJsonRedisSerializer} with polymorphic type validation
- * and Spring Cache null-value support.
+ * Part of the caching infrastructure layer in the hexagonal architecture, configuring
+ * {@link GenericJacksonJsonRedisSerializer} with polymorphic type validation
+ * and Spring Cache null-value support for distributed cache serialization.
+ *
+ * @author edmaputra
+ * @since 0.0.1
  */
 public final class JacksonRedisSerializerFactory {
 

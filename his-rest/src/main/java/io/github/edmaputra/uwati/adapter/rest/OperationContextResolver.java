@@ -6,6 +6,12 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import io.github.edmaputra.uwati.domain.tenancy.application.OperationContext;
 
+/**
+ * Utility for resolving the operational audit context from HTTP request headers.
+ *
+ * @author edmaputra
+ * @since 0.0.1
+ */
 public final class OperationContextResolver {
 
 	public static final String ACTOR_HEADER = "X-Actor";
@@ -17,6 +23,12 @@ public final class OperationContextResolver {
 	private OperationContextResolver() {
 	}
 
+	/**
+	 * Resolves the operational context from the incoming HTTP request.
+	 *
+	 * @param request the HTTP servlet request
+	 * @return resolved operation context with actor and correlation ID
+	 */
 	public static OperationContext resolve(HttpServletRequest request) {
 		String actor = request.getHeader(ACTOR_ID_HEADER);
 		if (actor == null || actor.isBlank()) {

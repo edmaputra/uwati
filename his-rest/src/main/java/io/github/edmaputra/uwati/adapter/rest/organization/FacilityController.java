@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.UUID;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,6 +32,12 @@ import io.github.edmaputra.uwati.domain.organization.port.in.UpdateFacilityUseCa
 import io.github.edmaputra.uwati.domain.tenancy.application.OperationContext;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * REST controller managing healthcare facilities under tenant scope.
+ *
+ * @author edmaputra
+ * @since 0.0.1
+ */
 @RestController
 @RequestMapping("/api/v1/facilities")
 @RequiredArgsConstructor
@@ -41,14 +48,18 @@ public class FacilityController {
 	private final ChangeFacilityStatusUseCase changeFacilityStatusUseCase;
 	private final FindFacilityUseCase findFacilityUseCase;
 
+	/**
+	 * Creates a new healthcare facility in the tenant.
+	 *
+	 * @param request validated creation request
+	 * @param httpRequest HTTP servlet request
+	 * @return 201 Created with Location header and FacilityResponse
+	 */
 	@PostMapping
 	@RequirePermission("organization:facility:create")
 	public ResponseEntity<FacilityResponse> create(
-			@RequestBody CreateFacilityRequest request,
+			@Valid @RequestBody CreateFacilityRequest request,
 			HttpServletRequest httpRequest) {
-		if (request == null) {
-			throw new IllegalArgumentException("Request body must not be null.");
-		}
 		OperationContext context = OperationContextResolver.resolve(httpRequest);
 		Facility facility = createFacilityUseCase.execute(request.toCommand(), context);
 
@@ -57,6 +68,12 @@ public class FacilityController {
 				.body(FacilityResponse.from(facility));
 	}
 
+	/**
+	 * Retrieves a facility by its unique identifier.
+	 *
+	 * @param id facility UUID
+	 * @return facility response
+	 */
 	@GetMapping("/{id}")
 	@RequirePermission("organization:facility:read")
 	public ResponseEntity<FacilityResponse> getById(@PathVariable UUID id) {
@@ -65,6 +82,13 @@ public class FacilityController {
 		return ResponseEntity.ok(FacilityResponse.from(facility));
 	}
 
+	/**
+	 * Lists facilities filtered optionally by type and status.
+	 *
+	 * @param type optional facility type filter
+	 * @param status optional facility status filter
+	 * @return list of facility responses
+	 */
 	@GetMapping
 	@RequirePermission("organization:facility:read")
 	public ResponseEntity<List<FacilityResponse>> list(
@@ -74,15 +98,20 @@ public class FacilityController {
 		return ResponseEntity.ok(facilities.stream().map(FacilityResponse::from).toList());
 	}
 
+	/**
+	 * Updates facility details.
+	 *
+	 * @param id facility UUID
+	 * @param request validated update request
+	 * @param httpRequest HTTP servlet request
+	 * @return updated facility response
+	 */
 	@PutMapping("/{id}")
 	@RequirePermission("organization:facility:update")
 	public ResponseEntity<FacilityResponse> update(
 			@PathVariable UUID id,
-			@RequestBody UpdateFacilityRequest request,
+			@Valid @RequestBody UpdateFacilityRequest request,
 			HttpServletRequest httpRequest) {
-		if (request == null) {
-			throw new IllegalArgumentException("Request body must not be null.");
-		}
 		OperationContext context = OperationContextResolver.resolve(httpRequest);
 		Facility updated = updateFacilityUseCase.execute(request.toCommand(new FacilityId(id)), context);
 
@@ -91,15 +120,20 @@ public class FacilityController {
 				.body(FacilityResponse.from(updated));
 	}
 
+	/**
+	 * Changes the operational status of a facility.
+	 *
+	 * @param id facility UUID
+	 * @param request validated status change request
+	 * @param httpRequest HTTP servlet request
+	 * @return updated facility response
+	 */
 	@PatchMapping("/{id}/status")
 	@RequirePermission("organization:facility:status")
 	public ResponseEntity<FacilityResponse> changeStatus(
 			@PathVariable UUID id,
-			@RequestBody ChangeFacilityStatusRequest request,
+			@Valid @RequestBody ChangeFacilityStatusRequest request,
 			HttpServletRequest httpRequest) {
-		if (request == null) {
-			throw new IllegalArgumentException("Request body must not be null.");
-		}
 		OperationContext context = OperationContextResolver.resolve(httpRequest);
 		Facility changed = changeFacilityStatusUseCase.execute(request.toCommand(new FacilityId(id)), context);
 

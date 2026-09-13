@@ -17,14 +17,18 @@ import org.springframework.stereotype.Component;
 import io.github.edmaputra.uwati.cache.port.DistributedLockPort;
 
 /**
- * Adapter implementing {@link DistributedLockPort} using atomic Redis commands and Lua scripting.
+ * Secondary (outbound) caching adapter implementing {@link DistributedLockPort} using atomic Redis commands and Lua scripting.
  * <p>
- * Implements safe distributed locking semantics:
+ * Resides in the caching infrastructure adapter layer of the hexagonal architecture, providing
+ * distributed mutual exclusion and concurrency coordination:
  * <ul>
  *   <li><b>Atomic Acquisition:</b> Uses {@code SETNX} with an automatic expiration lease to avoid deadlocks.</li>
  *   <li><b>Safe Release:</b> Uses an atomic Lua script to ensure a client only releases a lock if it still holds
  *       the matching ownership token (value), preventing accidental release of locks renewed by other threads.</li>
  * </ul>
+ *
+ * @author edmaputra
+ * @since 0.0.1
  */
 @Component
 public class RedisDistributedLockAdapter implements DistributedLockPort {
@@ -45,12 +49,22 @@ public class RedisDistributedLockAdapter implements DistributedLockPort {
 	 * Constructs the distributed lock adapter with the specified Redis template.
 	 *
 	 * @param redisTemplate the StringRedisTemplate for lock state
+	 * @throws NullPointerException if {@code redisTemplate} is null
 	 */
 	public RedisDistributedLockAdapter(StringRedisTemplate redisTemplate) {
 		this.redisTemplate = Objects.requireNonNull(redisTemplate, "RedisTemplate must not be null.");
 		this.unlockScript = new DefaultRedisScript<>(UNLOCK_LUA_SCRIPT, Long.class);
 	}
 
+	/**
+	 * Attempts to acquire a distributed lock atomically in Redis.
+	 *
+	 * @param lockKey the unique lock resource key
+	 * @param lockValue unique ownership identifier (e.g. UUID)
+	 * @param leaseTime maximum duration before the lock expires automatically
+	 * @return {@code true} if the lock was acquired, {@code false} otherwise
+	 * @throws NullPointerException if any parameter is null
+	 */
 	@Override
 	public boolean acquire(String lockKey, String lockValue, Duration leaseTime) {
 		Objects.requireNonNull(lockKey, "Lock key must not be null.");
@@ -68,6 +82,14 @@ public class RedisDistributedLockAdapter implements DistributedLockPort {
 		}
 	}
 
+	/**
+	 * Releases a previously acquired distributed lock if the ownership token matches.
+	 *
+	 * @param lockKey the unique lock resource key
+	 * @param lockValue the ownership identifier that acquired the lock
+	 * @return {@code true} if the lock was released, {@code false} otherwise
+	 * @throws NullPointerException if {@code lockKey} or {@code lockValue} is null
+	 */
 	@Override
 	public boolean release(String lockKey, String lockValue) {
 		Objects.requireNonNull(lockKey, "Lock key must not be null.");
@@ -86,6 +108,16 @@ public class RedisDistributedLockAdapter implements DistributedLockPort {
 		}
 	}
 
+	/**
+	 * Executes a task within a distributed lock, acquiring and releasing it automatically.
+	 *
+	 * @param <T> the result type
+	 * @param lockKey the unique lock resource key
+	 * @param leaseTime maximum lock duration
+	 * @param task the supplier to execute while holding the lock
+	 * @return an {@link Optional} containing the result, or {@link Optional#empty()} if lock could not be acquired
+	 * @throws NullPointerException if any parameter is null
+	 */
 	@Override
 	public <T> Optional<T> executeWithLock(String lockKey, Duration leaseTime, Supplier<T> task) {
 		String lockValue = UUID.randomUUID().toString();

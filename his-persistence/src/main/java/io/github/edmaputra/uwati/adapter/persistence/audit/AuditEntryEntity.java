@@ -14,6 +14,16 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+/**
+ * JPA entity representing an immutable audit log entry in the relational database.
+ * <p>
+ * Acts as the persistence data model for system audit trails in the hexagonal
+ * architecture's outbound persistence layer, capturing structured entity mutations
+ * and correlation metadata.
+ *
+ * @author edmaputra
+ * @since 0.0.1
+ */
 @Entity
 @Table(name = "audit_entries", indexes = {
 		@Index(name = "idx_audit_entries_entity", columnList = "entity_name, entity_id"),
@@ -53,6 +63,18 @@ public class AuditEntryEntity {
 	@Column(name = "changes_json", nullable = false, columnDefinition = "text")
 	private String changesJson;
 
+	/**
+	 * Constructs a new audit entry entity with captured metadata and serialized mutation diffs.
+	 *
+	 * @param tenantId optional tenant identifier associated with the audit record
+	 * @param entityName name of the audited domain entity
+	 * @param entityId unique identifier of the audited entity
+	 * @param action type of action performed (e.g. CREATE, UPDATE, STATUS_CHANGE)
+	 * @param actor identity of user or system performing the action
+	 * @param correlationId tracking identifier for distributed tracing
+	 * @param occurredAt timestamp when the event occurred
+	 * @param changesJson JSON representation of the changes captured
+	 */
 	public AuditEntryEntity(
 			UUID tenantId,
 			String entityName,

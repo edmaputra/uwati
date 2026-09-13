@@ -15,6 +15,15 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
+/**
+ * JPA entity representing tenant configuration key-value pairs stored in the relational database.
+ * <p>
+ * Serves as an internal persistence data model in the hexagonal architecture's
+ * outbound tenancy persistence adapter, storing configuration settings per tenant.
+ *
+ * @author edmaputra
+ * @since 0.0.1
+ */
 @Entity
 @Table(
 		name = "tenant_settings",
