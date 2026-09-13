@@ -9,6 +9,11 @@
       "include": {
         "file": "db/changelog/2026082301-create-common-audit-entries-table.json"
       }
+    },
+    {
+      "include": {
+        "file": "db/changelog/2026090901-create-facilities-and-service-units-tables.json"
+      }
     }
   ]
 }
