@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import io.github.edmaputra.uwati.domain.tenancy.application.OperationContext;
+import io.github.edmaputra.iam.domain.context.OperationContext;
 import io.github.edmaputra.uwati.domain.tenancy.application.port.in.ConfigureTenantSettingsCommand;
 import io.github.edmaputra.uwati.domain.tenancy.application.port.in.ConfigureTenantSettingsCommand.SettingEntry;
 import io.github.edmaputra.uwati.domain.tenancy.application.port.in.ConfigureTenantSettingsUseCase;
@@ -23,6 +23,9 @@ import lombok.RequiredArgsConstructor;
  * <p>
  * Validates setting values against domain rules, tracks previous values for audit diff calculation,
  * increments revisions, persists changes, and publishes {@link TenantSettingsUpdated} domain events.
+ *
+ * @author edmaputra
+ * @since 0.0.1
  */
 @RequiredArgsConstructor
 public class ConfigureTenantSettingsService implements ConfigureTenantSettingsUseCase {
@@ -31,6 +34,16 @@ public class ConfigureTenantSettingsService implements ConfigureTenantSettingsUs
 	private final TenantSettingRepository tenantSettingRepository;
 	private final TenantEventPublisher tenantEventPublisher;
 
+	/**
+	 * Configures or updates tenant settings according to the provided command.
+	 *
+	 * @param command the configuration command containing tenant ID and setting entries
+	 * @param context the operation context with actor and correlation details
+	 * @return the list of saved or updated tenant settings
+	 * @throws NullPointerException if {@code command} or {@code context} is null
+	 * @throws TenantNotFoundException if the target tenant does not exist
+	 * @throws io.github.edmaputra.uwati.domain.tenancy.domain.InvalidTenantSettingException if any setting key is unsupported or value fails validation
+	 */
 	@Override
 	public List<TenantSetting> execute(ConfigureTenantSettingsCommand command, OperationContext context) {
 		Objects.requireNonNull(command, "Command must not be null.");

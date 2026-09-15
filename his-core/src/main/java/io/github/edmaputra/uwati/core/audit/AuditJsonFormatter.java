@@ -15,6 +15,11 @@ import io.github.edmaputra.uwati.core.audit.AuditDiffEngine.FieldDiff;
 
 /**
  * Formats structured audit differences into clean, standard JSON strings using Jackson ObjectMapper.
+ * <p>
+ * Serializes entity field diffs and collection differences into a structured format suitable for audit logs and history tracking.
+ *
+ * @author edmaputra
+ * @since 0.0.1
  */
 public final class AuditJsonFormatter {
 
@@ -28,6 +33,7 @@ public final class AuditJsonFormatter {
 	 *
 	 * @param fieldDiffs map of field names to their old/new differences
 	 * @return formatted JSON string representation
+	 * @throws IllegalStateException if JSON serialization fails
 	 */
 	public static String formatDiff(Map<String, FieldDiff> fieldDiffs) {
 		return formatDiff(fieldDiffs, null, null, null);
@@ -40,6 +46,7 @@ public final class AuditJsonFormatter {
 	 * @param collectionName name of the collection field
 	 * @param collectionDiff structured collection differences
 	 * @return formatted JSON string representation
+	 * @throws IllegalStateException if JSON serialization fails
 	 */
 	public static <T> String formatCollectionDiff(
 			String collectionName,
@@ -55,6 +62,7 @@ public final class AuditJsonFormatter {
 	 * @param collectionDiff structured collection differences
 	 * @param elementSerializer custom serializer function for elements
 	 * @return formatted JSON string representation
+	 * @throws IllegalStateException if JSON serialization fails
 	 */
 	public static <T> String formatCollectionDiff(
 			String collectionName,
@@ -72,6 +80,7 @@ public final class AuditJsonFormatter {
 	 * @param collectionDiff collection differences (nullable)
 	 * @param elementSerializer custom element serializer (nullable)
 	 * @return formatted JSON string representation
+	 * @throws IllegalStateException if JSON serialization fails
 	 */
 	public static <T> String formatDiff(
 			Map<String, FieldDiff> fieldDiffs,

@@ -1,0 +1,326 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "2026090901-01-create-facilities-table",
+        "author": "edmaputra",
+        "changes": [
+          {
+            "createTable": {
+              "tableName": "facilities",
+              "columns": [
+                {
+                  "column": {
+                    "name": "id",
+                    "type": "UUID",
+                    "constraints": {
+                      "primaryKey": true,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "tenant_id",
+                    "type": "UUID",
+                    "constraints": {
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "code",
+                    "type": "VARCHAR(50)",
+                    "constraints": {
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "name",
+                    "type": "VARCHAR(200)",
+                    "constraints": {
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "type",
+                    "type": "VARCHAR(50)",
+                    "constraints": {
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "classification",
+                    "type": "VARCHAR(50)",
+                    "constraints": {
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "national_registry_code",
+                    "type": "VARCHAR(100)",
+                    "constraints": {
+                      "nullable": true
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "scope_node_id",
+                    "type": "UUID",
+                    "constraints": {
+                      "nullable": true
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "address",
+                    "type": "TEXT",
+                    "constraints": {
+                      "nullable": true
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "phone",
+                    "type": "VARCHAR(50)",
+                    "constraints": {
+                      "nullable": true
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "status",
+                    "type": "VARCHAR(30)",
+                    "constraints": {
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "created_at",
+                    "type": "TIMESTAMP WITH TIME ZONE",
+                    "constraints": {
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "updated_at",
+                    "type": "TIMESTAMP WITH TIME ZONE",
+                    "constraints": {
+                      "nullable": false
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "addUniqueConstraint": {
+              "tableName": "facilities",
+              "columnNames": "tenant_id, code",
+              "constraintName": "uk_facilities_tenant_code"
+            }
+          },
+          {
+            "createIndex": {
+              "tableName": "facilities",
+              "indexName": "idx_facilities_tenant_status",
+              "columns": [
+                {
+                  "column": {
+                    "name": "tenant_id"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "status"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "changeSet": {
+        "id": "2026090901-02-create-service-units-table",
+        "author": "edmaputra",
+        "changes": [
+          {
+            "createTable": {
+              "tableName": "service_units",
+              "columns": [
+                {
+                  "column": {
+                    "name": "id",
+                    "type": "UUID",
+                    "constraints": {
+                      "primaryKey": true,
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "tenant_id",
+                    "type": "UUID",
+                    "constraints": {
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "facility_id",
+                    "type": "UUID",
+                    "constraints": {
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "code",
+                    "type": "VARCHAR(50)",
+                    "constraints": {
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "name",
+                    "type": "VARCHAR(200)",
+                    "constraints": {
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "type",
+                    "type": "VARCHAR(50)",
+                    "constraints": {
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "scope_node_id",
+                    "type": "UUID",
+                    "constraints": {
+                      "nullable": true
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "status",
+                    "type": "VARCHAR(30)",
+                    "constraints": {
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "created_at",
+                    "type": "TIMESTAMP WITH TIME ZONE",
+                    "constraints": {
+                      "nullable": false
+                    }
+                  }
+                },
+                {
+                  "column": {
+                    "name": "updated_at",
+                    "type": "TIMESTAMP WITH TIME ZONE",
+                    "constraints": {
+                      "nullable": false
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "addForeignKeyConstraint": {
+              "baseTableName": "service_units",
+              "baseColumnNames": "facility_id",
+              "referencedTableName": "facilities",
+              "referencedColumnNames": "id",
+              "constraintName": "fk_service_units_facility_id",
+              "onDelete": "RESTRICT"
+            }
+          },
+          {
+            "addUniqueConstraint": {
+              "tableName": "service_units",
+              "columnNames": "tenant_id, facility_id, code",
+              "constraintName": "uk_service_units_tenant_facility_code"
+            }
+          },
+          {
+            "createIndex": {
+              "tableName": "service_units",
+              "indexName": "idx_service_units_tenant_facility",
+              "columns": [
+                {
+                  "column": {
+                    "name": "tenant_id"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "facility_id"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "createIndex": {
+              "tableName": "service_units",
+              "indexName": "idx_service_units_tenant_type_status",
+              "columns": [
+                {
+                  "column": {
+                    "name": "tenant_id"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "type"
+                  }
+                },
+                {
+                  "column": {
+                    "name": "status"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -20,8 +20,13 @@ import io.github.edmaputra.uwati.domain.tenancy.domain.TenantSetting;
 /**
  * Decorator implementing {@link TenantSettingRepository} with transparent Redis caching.
  * <p>
- * This hexagonal decorator wraps the primary JPA repository implementation ({@code JpaTenantSettingRegistry}),
- * preserving relational persistence purity while delivering sub-millisecond cached reads and deterministic cache eviction.
+ * Placed in the caching adapter layer of the hexagonal architecture as a secondary (outbound) decorator,
+ * this component wraps the primary JPA repository implementation ({@code JpaTenantSettingRegistry}).
+ * It preserves relational persistence purity while delivering sub-millisecond cached reads
+ * and deterministic cache eviction for multi-tenant settings.
+ *
+ * @author edmaputra
+ * @since 0.0.1
  */
 @Primary
 @Component
@@ -42,6 +47,7 @@ public class CachedTenantSettingRegistry implements TenantSettingRepository {
 	 *
 	 * @param delegate the underlying relational database repository
 	 * @param cacheManager the Spring cache manager
+	 * @throws NullPointerException if {@code delegate} or {@code cacheManager} is null
 	 */
 	public CachedTenantSettingRegistry(
 			@Qualifier("jpaTenantSettingRegistry") TenantSettingRepository delegate,
@@ -54,6 +60,8 @@ public class CachedTenantSettingRegistry implements TenantSettingRepository {
 	 * Immutable wrapper record for caching collections of {@link TenantSetting} with full polymorphic type metadata.
 	 *
 	 * @param settings the unmodifiable list of tenant settings
+	 * @author edmaputra
+	 * @since 0.0.1
 	 */
 	public record CachedTenantSettings(List<TenantSetting> settings) {
 		public CachedTenantSettings {
@@ -61,6 +69,13 @@ public class CachedTenantSettingRegistry implements TenantSettingRepository {
 		}
 	}
 
+	/**
+	 * Retrieves all settings for a tenant, consulting the Redis cache before delegating to the relational database.
+	 *
+	 * @param tenantId unique identifier of the tenant
+	 * @return list of configuration settings for the specified tenant
+	 * @throws NullPointerException if {@code tenantId} is null
+	 */
 	@Override
 	@SuppressWarnings("unchecked")
 	public List<TenantSetting> findAllByTenantId(TenantId tenantId) {
@@ -103,6 +118,14 @@ public class CachedTenantSettingRegistry implements TenantSettingRepository {
 		return settings;
 	}
 
+	/**
+	 * Finds a specific configuration setting by key, consulting the Redis cache before querying the database.
+	 *
+	 * @param tenantId unique identifier of the tenant
+	 * @param key configuration setting key to find
+	 * @return an {@link Optional} containing the tenant setting if found, or empty if not found
+	 * @throws NullPointerException if {@code tenantId} is null
+	 */
 	@Override
 	public Optional<TenantSetting> findByTenantIdAndKey(TenantId tenantId, String key) {
 		Objects.requireNonNull(tenantId, "Tenant ID must not be null.");
@@ -142,6 +165,13 @@ public class CachedTenantSettingRegistry implements TenantSettingRepository {
 		return setting;
 	}
 
+	/**
+	 * Persists settings via the underlying repository and invalidates cached settings for affected tenants.
+	 *
+	 * @param settings collection of tenant settings to persist or update
+	 * @return unmodifiable list of persisted tenant settings
+	 * @throws NullPointerException if {@code settings} is null
+	 */
 	@Override
 	public List<TenantSetting> saveAll(List<TenantSetting> settings) {
 		Objects.requireNonNull(settings, "Settings must not be null.");
@@ -162,6 +192,7 @@ public class CachedTenantSettingRegistry implements TenantSettingRepository {
 	 * Explicitly evicts all cached settings for the given tenant ID.
 	 *
 	 * @param tenantId the tenant ID whose cache entries should be evicted
+	 * @throws NullPointerException if {@code tenantId} is null
 	 */
 	public void evictTenantSettings(TenantId tenantId) {
 		Objects.requireNonNull(tenantId, "Tenant ID must not be null.");

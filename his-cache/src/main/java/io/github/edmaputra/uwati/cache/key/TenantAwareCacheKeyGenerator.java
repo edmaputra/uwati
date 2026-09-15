@@ -15,8 +15,12 @@ import io.github.edmaputra.uwati.domain.tenancy.domain.TenantId;
 /**
  * Spring Cache {@link KeyGenerator} that partitions cache keys by tenant ID to prevent cross-tenant leakage.
  * <p>
+ * Operates within the caching infrastructure layer of the hexagonal architecture.
  * Extracts {@link TenantId} from method arguments or falls back to the current {@link TenantContext}.
  * Formats keys as {@code tenant:<tenantId>:<subKey>} or {@code global:<subKey>} when no tenant is active.
+ *
+ * @author edmaputra
+ * @since 0.0.1
  */
 @Component("tenantAwareKeyGenerator")
 public class TenantAwareCacheKeyGenerator implements KeyGenerator {
@@ -32,6 +36,14 @@ public class TenantAwareCacheKeyGenerator implements KeyGenerator {
 		this.tenantContext = tenantContext.orElse(null);
 	}
 
+	/**
+	 * Generates a cache key namespaced by tenant ID if present in arguments or ambient context.
+	 *
+	 * @param target the target instance
+	 * @param method the method being called
+	 * @param params the method parameters
+	 * @return generated cache key string
+	 */
 	@Override
 	public Object generate(Object target, Method method, Object... params) {
 		Optional<TenantId> tenantIdOpt = extractTenantId(params);
@@ -58,6 +70,7 @@ public class TenantAwareCacheKeyGenerator implements KeyGenerator {
 	 * @param tenantId the tenant ID
 	 * @param subKey the specific cache key or query identifier
 	 * @return formatted tenant key string ({@code tenant:<tenantId>:<subKey>})
+	 * @throws NullPointerException if {@code tenantId} is null
 	 */
 	public static String formatTenantKey(TenantId tenantId, String subKey) {
 		Objects.requireNonNull(tenantId, "Tenant ID must not be null.");

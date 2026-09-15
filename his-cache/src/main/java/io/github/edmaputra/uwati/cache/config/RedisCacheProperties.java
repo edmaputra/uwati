@@ -12,7 +12,12 @@ import lombok.Setter;
 /**
  * Configuration properties for distributed caching in Uwati HIS.
  * <p>
- * Configurable under the {@code uwati.cache} prefix in application configuration files.
+ * Belongs to the caching infrastructure layer in the hexagonal architecture, binding
+ * externalized configuration under the {@code uwati.cache} prefix to control cache
+ * enablement, TTL policies, key prefixing, and per-cache expiration times.
+ *
+ * @author edmaputra
+ * @since 0.0.1
  */
 @Getter
 @Setter

@@ -33,7 +33,8 @@ import io.github.edmaputra.uwati.domain.tenancy.application.TenantContext;
 /**
  * Spring Boot Auto-Configuration for distributed Redis/Valkey caching and concurrency control.
  * <p>
- * This configuration automatically provisions:
+ * Resides in the caching infrastructure layer of the hexagonal architecture, automatically
+ * configuring beans and adapters required for distributed caching and locking:
  * <ul>
  *   <li>{@link TenantAwareCacheKeyGenerator} for tenant-isolated cache key namespacing.</li>
  *   <li>{@link ResilienceCacheErrorHandler} for non-blocking cache error fallback.</li>
@@ -41,6 +42,9 @@ import io.github.edmaputra.uwati.domain.tenancy.application.TenantContext;
  *   <li>{@link RedisTemplate} for direct Redis key-value interactions.</li>
  *   <li>{@link DistributedLockPort} backed by {@link RedisDistributedLockAdapter} for atomic locking.</li>
  * </ul>
+ *
+ * @author edmaputra
+ * @since 0.0.1
  */
 @AutoConfiguration
 @EnableCaching

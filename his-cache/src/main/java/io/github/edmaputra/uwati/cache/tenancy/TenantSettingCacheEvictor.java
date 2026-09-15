@@ -10,8 +10,14 @@ import org.springframework.stereotype.Component;
 import io.github.edmaputra.uwati.domain.tenancy.domain.event.TenantSettingsUpdated;
 
 /**
- * Event listener that listens for {@link TenantSettingsUpdated} domain events and invalidates
- * the corresponding tenant's settings cache in Redis.
+ * Inbound event listener adapter that invalidates tenant configuration caches upon updates.
+ * <p>
+ * Positioned in the caching adapter layer of the hexagonal architecture, this listener reacts
+ * to {@link TenantSettingsUpdated} domain events by evicting stale Redis cache entries
+ * via {@link CachedTenantSettingRegistry}, maintaining cache coherency across cluster nodes.
+ *
+ * @author edmaputra
+ * @since 0.0.1
  */
 @Component
 public class TenantSettingCacheEvictor {
@@ -24,6 +30,7 @@ public class TenantSettingCacheEvictor {
 	 * Constructs the cache evictor with the cached tenant setting registry decorator.
 	 *
 	 * @param cachedRegistry the cached registry decorator
+	 * @throws NullPointerException if {@code cachedRegistry} is null
 	 */
 	public TenantSettingCacheEvictor(CachedTenantSettingRegistry cachedRegistry) {
 		this.cachedRegistry = Objects.requireNonNull(cachedRegistry, "Cached registry must not be null.");

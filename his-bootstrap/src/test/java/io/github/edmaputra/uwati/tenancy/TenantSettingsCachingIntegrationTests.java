@@ -21,7 +21,7 @@ import io.github.edmaputra.uwati.bootstrap.UwatiApplication;
 import io.github.edmaputra.uwati.cache.key.TenantAwareCacheKeyGenerator;
 import io.github.edmaputra.uwati.cache.port.DistributedLockPort;
 import io.github.edmaputra.uwati.cache.tenancy.CachedTenantSettingRegistry;
-import io.github.edmaputra.uwati.domain.tenancy.application.OperationContext;
+import io.github.edmaputra.iam.domain.context.OperationContext;
 import io.github.edmaputra.uwati.domain.tenancy.application.port.in.ConfigureTenantSettingsCommand;
 import io.github.edmaputra.uwati.domain.tenancy.application.port.in.ConfigureTenantSettingsUseCase;
 import io.github.edmaputra.uwati.domain.tenancy.application.port.in.CreateTenantCommand;

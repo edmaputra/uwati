@@ -16,33 +16,84 @@ import io.github.edmaputra.uwati.domain.audit.Auditable;
 
 /**
  * Engine for computing state differences between previous and updated objects or collections.
+ * <p>
+ * Provides utilities to calculate granular field-level changes, element modifications, additions,
+ * and removals for auditable entities and collection properties.
+ *
+ * @author edmaputra
+ * @since 0.0.1
  */
 public final class AuditDiffEngine {
 
 	private AuditDiffEngine() {
 	}
 
+	/**
+	 * Represents a before-and-after difference for a single field or property value.
+	 *
+	 * @param oldValue previous value before modification
+	 * @param newValue new value after modification
+	 * @author edmaputra
+	 * @since 0.0.1
+	 */
 	public record FieldDiff(Object oldValue, Object newValue) {
 	}
 
+	/**
+	 * Captures property differences for an identifiable element within a collection.
+	 *
+	 * @param key unique identifier representing the element within the collection
+	 * @param fields unmodifiable map of field names to their respective field differences
+	 * @author edmaputra
+	 * @since 0.0.1
+	 */
 	public record ElementDiff(String key, Map<String, FieldDiff> fields) {
+		/**
+		 * Compact constructor enforcing key presence and unmodifiable field map.
+		 *
+		 * @param key unique identifier of the modified element
+		 * @param fields map of field differences for the element
+		 * @throws NullPointerException if {@code key} is null
+		 */
 		public ElementDiff {
 			Objects.requireNonNull(key, "Element diff key must not be null.");
 			fields = fields != null ? Collections.unmodifiableMap(new LinkedHashMap<>(fields)) : Map.of();
 		}
 	}
 
+	/**
+	 * Represents the cumulative changes between two collections, including additions, removals, and element alterations.
+	 *
+	 * @param <T> the type of items within the collection
+	 * @param added immutable list of items present in the new collection but absent in the old
+	 * @param removed immutable list of items present in the old collection but absent in the new
+	 * @param changed immutable list of element differences for items present in both collections but modified
+	 * @author edmaputra
+	 * @since 0.0.1
+	 */
 	public record CollectionDiff<T>(
 			List<T> added,
 			List<T> removed,
 			List<ElementDiff> changed) {
 
+		/**
+		 * Compact constructor ensuring collections are immutable and non-null.
+		 *
+		 * @param added list of newly added items
+		 * @param removed list of removed items
+		 * @param changed list of modified element differences
+		 */
 		public CollectionDiff {
 			added = added != null ? List.copyOf(added) : List.of();
 			removed = removed != null ? List.copyOf(removed) : List.of();
 			changed = changed != null ? List.copyOf(changed) : List.of();
 		}
 
+		/**
+		 * Checks whether this collection diff contains any additions, removals, or element modifications.
+		 *
+		 * @return {@code true} if any changes exist; {@code false} otherwise
+		 */
 		public boolean hasChanges() {
 			return !added.isEmpty() || !removed.isEmpty() || !changed.isEmpty();
 		}
@@ -50,6 +101,11 @@ public final class AuditDiffEngine {
 
 	/**
 	 * Computes differences between two {@link Auditable} models by comparing their declared auditable fields.
+	 *
+	 * @param <T> the entity type extending {@link Auditable}
+	 * @param oldEntity original entity state before change
+	 * @param newEntity updated entity state after change
+	 * @return unmodifiable map of field names to their corresponding differences
 	 */
 	public static <T extends Auditable> Map<String, FieldDiff> diff(T oldEntity, T newEntity) {
 		Map<String, ?> oldFields = oldEntity != null ? oldEntity.auditableFields() : null;
@@ -59,6 +115,10 @@ public final class AuditDiffEngine {
 
 	/**
 	 * Computes differences between two maps of property fields with deterministic alphabetical key ordering.
+	 *
+	 * @param oldFields previous field map
+	 * @param newFields new field map
+	 * @return unmodifiable map of property names to field differences
 	 */
 	public static Map<String, FieldDiff> diffFields(Map<String, ?> oldFields, Map<String, ?> newFields) {
 		Map<String, FieldDiff> diffs = new LinkedHashMap<>();
@@ -82,6 +142,14 @@ public final class AuditDiffEngine {
 
 	/**
 	 * Computes differences for a collection of identifiable {@link Auditable} elements.
+	 *
+	 * @param <T> element type extending {@link Auditable}
+	 * @param <K> key identifier type
+	 * @param oldElements previous collection of elements
+	 * @param newElements new collection of elements
+	 * @param keyExtractor function to extract unique keys from elements
+	 * @return structured collection differences
+	 * @throws NullPointerException if {@code keyExtractor} is null
 	 */
 	public static <T extends Auditable, K> CollectionDiff<T> diffKeyedCollection(
 			Collection<T> oldElements,
@@ -92,6 +160,15 @@ public final class AuditDiffEngine {
 
 	/**
 	 * Computes differences for a collection of identifiable (keyed) elements with a custom element differ.
+	 *
+	 * @param <T> element type
+	 * @param <K> key identifier type
+	 * @param oldElements previous collection of elements
+	 * @param newElements new collection of elements
+	 * @param keyExtractor function to extract unique keys from elements
+	 * @param elementFieldDiffer function to compute field differences between matching old and new elements
+	 * @return structured collection differences
+	 * @throws NullPointerException if {@code keyExtractor} is null
 	 */
 	public static <T, K> CollectionDiff<T> diffKeyedCollection(
 			Collection<T> oldElements,
@@ -157,6 +234,11 @@ public final class AuditDiffEngine {
 
 	/**
 	 * Computes differences for simple primitive collections (lists of strings, enums, numbers).
+	 *
+	 * @param <T> item type
+	 * @param oldElements previous collection of elements
+	 * @param newElements new collection of elements
+	 * @return structured collection differences containing added and removed elements
 	 */
 	public static <T> CollectionDiff<T> diffPrimitiveCollection(Collection<T> oldElements, Collection<T> newElements) {
 		Set<T> oldSet = oldElements != null ? new TreeSet<>(oldElements) : Set.of();

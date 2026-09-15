@@ -18,6 +18,16 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
+/**
+ * JPA entity mapping tenant configuration and metadata to the relational database table.
+ * <p>
+ * Serves as an internal persistence data model in the hexagonal architecture's
+ * outbound persistence adapter, isolating relational database schema concerns
+ * from the {@link io.github.edmaputra.uwati.domain.tenancy.domain.Tenant} domain model.
+ *
+ * @author edmaputra
+ * @since 0.0.1
+ */
 @Entity
 @Table(
 		name = "tenants",

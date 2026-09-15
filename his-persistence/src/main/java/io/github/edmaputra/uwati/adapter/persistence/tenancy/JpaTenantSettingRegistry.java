@@ -12,12 +12,28 @@ import io.github.edmaputra.uwati.domain.tenancy.domain.TenantId;
 import io.github.edmaputra.uwati.domain.tenancy.domain.TenantSetting;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Secondary (outbound) persistence adapter implementing {@link TenantSettingRepository} using Spring Data JPA.
+ * <p>
+ * Bridges domain-driven tenant setting port interfaces to relational database persistence in the
+ * hexagonal architecture. Handles querying and bulk upserting of tenant configuration parameters.
+ *
+ * @author edmaputra
+ * @since 0.0.1
+ */
 @Component
 @RequiredArgsConstructor
 public class JpaTenantSettingRegistry implements TenantSettingRepository {
 
 	private final TenantSettingJpaRepository tenantSettings;
 
+	/**
+	 * Retrieves all configuration settings defined for a tenant.
+	 *
+	 * @param tenantId unique identifier of the tenant
+	 * @return list of configuration settings for the specified tenant
+	 * @throws NullPointerException if {@code tenantId} is null
+	 */
 	@Override
 	public List<TenantSetting> findAllByTenantId(TenantId tenantId) {
 		Objects.requireNonNull(tenantId, "Tenant ID must not be null.");
@@ -27,6 +43,14 @@ public class JpaTenantSettingRegistry implements TenantSettingRepository {
 				.toList();
 	}
 
+	/**
+	 * Finds a specific configuration setting by key for a tenant.
+	 *
+	 * @param tenantId unique identifier of the tenant
+	 * @param key configuration key to find
+	 * @return an {@link Optional} containing the tenant setting if found, or empty if not found or blank
+	 * @throws NullPointerException if {@code tenantId} is null
+	 */
 	@Override
 	public Optional<TenantSetting> findByTenantIdAndKey(TenantId tenantId, String key) {
 		Objects.requireNonNull(tenantId, "Tenant ID must not be null.");
@@ -37,6 +61,13 @@ public class JpaTenantSettingRegistry implements TenantSettingRepository {
 				.map(this::toDomain);
 	}
 
+	/**
+	 * Persists or updates a collection of tenant configuration settings.
+	 *
+	 * @param settings collection of tenant settings to persist or update
+	 * @return unmodifiable list of persisted tenant settings
+	 * @throws NullPointerException if {@code settings} is null
+	 */
 	@Override
 	public List<TenantSetting> saveAll(List<TenantSetting> settings) {
 		Objects.requireNonNull(settings, "Settings must not be null.");

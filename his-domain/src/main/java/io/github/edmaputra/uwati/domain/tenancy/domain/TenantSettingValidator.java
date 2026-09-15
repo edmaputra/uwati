@@ -8,8 +8,11 @@ import java.util.regex.Pattern;
 
 /**
  * Domain validator ensuring tenant configuration settings conform to format, ISO standards, and supported keys.
+ * <p>
+ * Enforces validation rules for tenant settings in the core domain layer of the Hexagonal Architecture.
  *
  * @author edmaputra
+ * @since 0.0.1
  */
 public final class TenantSettingValidator {
 

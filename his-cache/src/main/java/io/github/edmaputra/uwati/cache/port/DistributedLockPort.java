@@ -5,7 +5,13 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 /**
- * Outbound port interface for acquiring and releasing distributed locks across cluster nodes.
+ * Secondary (outbound) port interface for acquiring and releasing distributed locks across cluster nodes.
+ * <p>
+ * Defined in the caching/infrastructure layer of the hexagonal architecture to provide
+ * distributed concurrency control abstractions decoupled from concrete locking implementations.
+ *
+ * @author edmaputra
+ * @since 0.0.1
  */
 public interface DistributedLockPort {
 

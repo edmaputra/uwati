@@ -10,7 +10,14 @@ import io.github.edmaputra.uwati.domain.tenancy.domain.event.TenantCreated;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Seeds default configuration (settings and document sequences) after a tenant is created.
+ * Transactional event listener that provisions default settings and document sequence counters for new tenants.
+ * <p>
+ * Operates as an inbound event handler adapter in the hexagonal architecture, responding
+ * to {@link TenantCreated} domain events before transaction commit by seeding standard
+ * system configurations and sequence generators into relational persistence.
+ *
+ * @author edmaputra
+ * @since 0.0.1
  */
 @Component
 @RequiredArgsConstructor
@@ -21,6 +28,11 @@ public class TenantDefaultsProvisioner {
 	private final TenantSettingJpaRepository tenantSettings;
 	private final TenantDocumentSequenceJpaRepository tenantDocumentSequences;
 
+	/**
+	 * Seeds initial configuration settings and document numbering sequences upon tenant creation.
+	 *
+	 * @param event domain event containing newly created tenant metadata
+	 */
 	@TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
 	public void onTenantCreated(TenantCreated event) {
 		var tenantId = event.tenant().id().value();
