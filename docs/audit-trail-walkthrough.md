@@ -56,7 +56,7 @@ The audit trail follows clean/hexagonal architecture principles across modules:
 | Module | Component | Responsibility |
 |---|---|---|
 | `his-domain` | `Auditable` | Interface implemented by models to declare which fields are monitored for audit. |
-| `his-domain` | `OperationContext` | Cross-cutting value object carrying `actor` and `correlationId`. |
+| `his-domain` | `OperationContext` | Cross-cutting value object from `ed-iam-core` carrying `actor`, `actorType`, optional `tenantId`, and `correlationId`. |
 | `his-domain` | `AuditEntry` | Domain representation of an immutable audit record. |
 | `his-domain` | Domain Events | Carry `actor`, `correlationId`, and snapshot/previous/new states. |
 | `his-core` | `AuditDiffEngine` | Compares `Auditable` object states, field maps, and keyed/primitive collections. |
@@ -123,17 +123,19 @@ public record TenantSetting(
 
 ## Context Propagation: Explicit `OperationContext`
 
-Rather than relying on implicit ambient contexts (such as thread-locals or experimental scoped values), use cases accept an explicit `OperationContext`:
+Rather than relying on implicit ambient contexts (such as thread-locals or experimental scoped values), use cases accept an explicit `OperationContext` from `ed-iam-core`:
 
 ```java
-public record OperationContext(String actor, String correlationId) {
-    public static OperationContext of(String actor, String correlationId) {
-        return new OperationContext(actor, correlationId);
-    }
+public record OperationContext(
+        String actor,
+        ActorType actorType,
+        TenantId tenantId,
+        String correlationId) {
 
-    public static OperationContext system() {
-        return new OperationContext("system", null);
-    }
+    public static OperationContext of(String actor, ActorType actorType, UUID tenantId, String correlationId) { ... }
+    public static OperationContext user(String actor, UUID tenantId, String correlationId) { ... }
+    public static OperationContext machine(String actor, UUID tenantId, String correlationId) { ... }
+    public static OperationContext system() { ... }
 }
 ```
 
@@ -153,9 +155,11 @@ public interface ConfigureTenantSettingsUseCase {
 
 ### REST Header Resolution
 
-The REST layer resolves actor and correlation identifiers from incoming HTTP headers:
+The REST layer resolves actor, actor type, optional tenant, and correlation identifiers from incoming HTTP headers:
 
 - **Actor resolution order**: `X-Actor-Id` → `X-Actor` → `X-User-Id` → Default: `"system"`.
+- **Actor Type resolution**: `X-Actor-Type` (`USER`, `SYSTEM`, `MACHINE`) → Inferred from actor (defaults to `SYSTEM` if actor is `"system"`, otherwise `USER`).
+- **Tenant ID resolution**: `X-Tenant-Id` → `X-Tenant-ID` → `null` (for platform-wide actions).
 - **Correlation ID resolution order**: `X-Correlation-Id` → `X-Request-Id` → Generated `UUID.randomUUID()`.
 - **Response Header**: `X-Correlation-Id` is echoed back on every response.
 

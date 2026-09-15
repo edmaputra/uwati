@@ -18,7 +18,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import io.github.edmaputra.uwati.domain.tenancy.application.OperationContext;
+import io.github.edmaputra.iam.domain.context.OperationContext;
+import io.github.edmaputra.uwati.adapter.rest.OperationContextResolver;
 import io.github.edmaputra.uwati.domain.tenancy.application.port.in.ConfigureTenantSettingsCommand;
 import io.github.edmaputra.uwati.domain.tenancy.application.port.in.ConfigureTenantSettingsCommand.SettingEntry;
 import io.github.edmaputra.uwati.domain.tenancy.application.port.in.ConfigureTenantSettingsUseCase;
@@ -108,26 +109,7 @@ public class TenantManagementController {
 	}
 
 	private OperationContext resolveContext(HttpServletRequest request) {
-		String actor = request.getHeader(ACTOR_ID_HEADER);
-		if (actor == null || actor.isBlank()) {
-			actor = request.getHeader(ACTOR_HEADER);
-		}
-		if (actor == null || actor.isBlank()) {
-			actor = request.getHeader(USER_ID_HEADER);
-		}
-		if (actor == null || actor.isBlank()) {
-			actor = "system";
-		}
-
-		String correlationId = request.getHeader(CORRELATION_ID_HEADER);
-		if (correlationId == null || correlationId.isBlank()) {
-			correlationId = request.getHeader(REQUEST_ID_HEADER);
-		}
-		if (correlationId == null || correlationId.isBlank()) {
-			correlationId = UUID.randomUUID().toString();
-		}
-
-		return OperationContext.of(actor.trim(), correlationId.trim());
+		return OperationContextResolver.resolve(request);
 	}
 
 	/**

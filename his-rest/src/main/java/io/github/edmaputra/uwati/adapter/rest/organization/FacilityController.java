@@ -29,7 +29,7 @@ import io.github.edmaputra.uwati.domain.organization.port.in.ChangeFacilityStatu
 import io.github.edmaputra.uwati.domain.organization.port.in.CreateFacilityUseCase;
 import io.github.edmaputra.uwati.domain.organization.port.in.FindFacilityUseCase;
 import io.github.edmaputra.uwati.domain.organization.port.in.UpdateFacilityUseCase;
-import io.github.edmaputra.uwati.domain.tenancy.application.OperationContext;
+import io.github.edmaputra.iam.domain.context.OperationContext;
 import lombok.RequiredArgsConstructor;
 
 /**

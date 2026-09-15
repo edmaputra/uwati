@@ -135,7 +135,7 @@ Uwati HIS is structured under strict architectural boundaries to guarantee modul
   - Set and collection diffing tracking granular `added`, `removed`, and `changed` elements.
   - Exclusion of transient/technical timestamps to keep audit trails focused on business state.
 - **Context & Traceability**:
-  - `OperationContext` carrying initiating `actor` and `correlationId` (propagated via HTTP header `X-Correlation-Id`).
+  - `OperationContext` from `ed-iam-core` carrying initiating `actor`, `actorType` (`USER`, `SYSTEM`, `MACHINE`), optional `tenantId`, and `correlationId` (propagated via HTTP header `X-Correlation-Id`).
 - **Append-Only Persistence**:
   - Dedicated `audit_entries` table partitioned by `tenant_id` and indexed for forensic queries.
 
@@ -193,7 +193,7 @@ Uwati HIS is structured under strict architectural boundaries to guarantee modul
 - **Effective Access Resolution**:
   - `EffectiveAccessResolver` computing effective roles and permissions combining direct user assignments, group inheritance, and downward hierarchical scope inheritance.
 - **Modularized Starter Extraction**:
-  - Decoupled from internal module into published standalone `ed-iam-starter` (0.1.0) dependency auto-configured in `his-bootstrap`, featuring declarative `@RequirePermission` authorization.
+  - Decoupled from internal module into published standalone `ed-iam-starter` (0.2.0) dependency auto-configured in `his-bootstrap`, featuring declarative `@RequirePermission` authorization and enhanced `OperationContext` propagation.
 
 > Walkthrough reference: [iam-walkthrough.md](iam-walkthrough.md)
 

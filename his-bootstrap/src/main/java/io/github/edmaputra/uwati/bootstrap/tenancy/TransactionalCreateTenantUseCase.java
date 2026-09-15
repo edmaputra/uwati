@@ -4,7 +4,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import io.github.edmaputra.uwati.core.tenancy.application.service.CreateTenantService;
-import io.github.edmaputra.uwati.domain.tenancy.application.OperationContext;
+import io.github.edmaputra.iam.domain.context.OperationContext;
 import io.github.edmaputra.uwati.domain.tenancy.application.port.in.CreateTenantCommand;
 import io.github.edmaputra.uwati.domain.tenancy.application.port.in.CreateTenantUseCase;
 import io.github.edmaputra.uwati.domain.tenancy.application.port.out.TenantEventPublisher;

@@ -16,6 +16,7 @@
 	<description>Multi-tenant Hospital Information System backend</description>
 	<properties>
 		<java.version>25</java.version>
+		<ed-iam.version>0.2.0</ed-iam.version>
 	</properties>
 	<modules>
 		<module>his-domain</module>

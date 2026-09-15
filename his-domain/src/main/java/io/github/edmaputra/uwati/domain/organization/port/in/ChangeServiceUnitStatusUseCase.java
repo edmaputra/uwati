@@ -1,7 +1,7 @@
 package io.github.edmaputra.uwati.domain.organization.port.in;
 
 import io.github.edmaputra.uwati.domain.organization.ServiceUnit;
-import io.github.edmaputra.uwati.domain.tenancy.application.OperationContext;
+import io.github.edmaputra.iam.domain.context.OperationContext;
 
 /**
  * Inbound port interface defining the use case for transitioning a service unit's operational status.

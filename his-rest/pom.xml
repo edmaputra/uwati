@@ -19,7 +19,7 @@
 		<dependency>
 			<groupId>io.github.edmaputra</groupId>
 			<artifactId>ed-iam-core</artifactId>
-			<version>0.1.0</version>
+			<version>${ed-iam.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -37,6 +37,11 @@
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
 			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 </project>

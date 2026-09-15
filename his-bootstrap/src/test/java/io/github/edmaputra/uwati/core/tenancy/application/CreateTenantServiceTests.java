@@ -12,7 +12,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 import io.github.edmaputra.uwati.core.tenancy.application.service.CreateTenantService;
-import io.github.edmaputra.uwati.domain.tenancy.application.OperationContext;
+import io.github.edmaputra.iam.domain.context.OperationContext;
 import io.github.edmaputra.uwati.domain.tenancy.application.port.in.CreateTenantCommand;
 import io.github.edmaputra.uwati.domain.tenancy.application.port.out.TenantEventPublisher;
 import io.github.edmaputra.uwati.domain.tenancy.application.port.out.TenantRepository;

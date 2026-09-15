@@ -23,7 +23,7 @@ import io.github.edmaputra.uwati.domain.organization.port.in.UpdateFacilityComma
 import io.github.edmaputra.uwati.domain.organization.port.in.UpdateFacilityUseCase;
 import io.github.edmaputra.uwati.domain.organization.port.out.FacilityRepository;
 import io.github.edmaputra.uwati.domain.organization.port.out.OrganizationEventPublisher;
-import io.github.edmaputra.uwati.domain.tenancy.application.OperationContext;
+import io.github.edmaputra.iam.domain.context.OperationContext;
 import io.github.edmaputra.uwati.domain.tenancy.application.TenantContext;
 import io.github.edmaputra.uwati.domain.tenancy.domain.TenantId;
 import lombok.RequiredArgsConstructor;

@@ -30,7 +30,7 @@ import io.github.edmaputra.uwati.domain.organization.port.in.ChangeServiceUnitSt
 import io.github.edmaputra.uwati.domain.organization.port.in.CreateServiceUnitUseCase;
 import io.github.edmaputra.uwati.domain.organization.port.in.FindServiceUnitUseCase;
 import io.github.edmaputra.uwati.domain.organization.port.in.UpdateServiceUnitUseCase;
-import io.github.edmaputra.uwati.domain.tenancy.application.OperationContext;
+import io.github.edmaputra.iam.domain.context.OperationContext;
 import lombok.RequiredArgsConstructor;
 
 /**

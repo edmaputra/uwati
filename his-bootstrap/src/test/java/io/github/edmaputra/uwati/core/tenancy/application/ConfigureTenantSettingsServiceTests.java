@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
 
 import io.github.edmaputra.uwati.core.tenancy.application.service.ConfigureTenantSettingsService;
 import io.github.edmaputra.uwati.core.tenancy.application.service.GetTenantSettingsService;
-import io.github.edmaputra.uwati.domain.tenancy.application.OperationContext;
+import io.github.edmaputra.iam.domain.context.OperationContext;
 import io.github.edmaputra.uwati.domain.tenancy.application.port.in.ConfigureTenantSettingsCommand;
 import io.github.edmaputra.uwati.domain.tenancy.application.port.in.ConfigureTenantSettingsCommand.SettingEntry;
 import io.github.edmaputra.uwati.domain.tenancy.application.port.out.TenantEventPublisher;
