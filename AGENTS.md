@@ -17,7 +17,8 @@
 ## Key Commands
 - Build: `./mvnw clean package`
 - Unit Tests: `./mvnw test`
-- Verification / ArchUnit: `./mvnw verify`
+- Verification / ArchUnit / JaCoCo: `./mvnw clean verify`
+- Coverage Summary: `python3 .agents/scripts/coverage/generate-jacoco-summary.py --output target/coverage-summary.md`
 
 ## Agent Guidelines
 - Check `.agents/project-structure.json` for immediate directory mapping.
@@ -25,3 +26,5 @@
 - Strict rule: NEVER import Spring, JPA, or Web dependencies inside `his-domain/`.
 - Strict rule: Controllers in `his-rest/` MUST ONLY interact with `*UseCase` inbound ports, never repositories directly.
 - Strict rule: JPA entities must remain internal to `his-persistence/` and never leak into `his-domain/`.
+- Strict rule: Maintain a minimum of **80% line coverage** across core business and domain modules (`his-domain/`, `his-core/`). Enforced via CI.
+
