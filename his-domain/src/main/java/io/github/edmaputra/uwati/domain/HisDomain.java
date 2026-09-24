@@ -4,6 +4,7 @@ package io.github.edmaputra.uwati.domain;
  * The bounded domains that make up the Hospital Information System.
  *
  * @author edmaputra
+ * @since 0.0.1
  */
 public enum HisDomain {
 

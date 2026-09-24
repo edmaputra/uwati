@@ -21,6 +21,12 @@ import io.github.edmaputra.uwati.domain.tenancy.domain.TenantStatus;
 import io.github.edmaputra.uwati.domain.tenancy.domain.event.TenantCreated;
 import io.github.edmaputra.uwati.domain.tenancy.domain.event.TenantSettingsUpdated;
 
+/**
+ * Unit tests verifying event-driven audit entry creation and JSON diff persistence in {@link AuditTrailEventListener}.
+ *
+ * @author edmaputra
+ * @since 0.0.1
+ */
 @DisplayName("AuditTrailEventListener Unit Tests")
 class AuditTrailEventListenerTests {
 

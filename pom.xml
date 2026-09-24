@@ -16,7 +16,8 @@
 	<description>Multi-tenant Hospital Information System backend</description>
 	<properties>
 		<java.version>25</java.version>
-		<ed-iam.version>0.2.0</ed-iam.version>
+		<ed-iam.version>0.3.0</ed-iam.version>
+		<archunit.version>1.4.0</archunit.version>
 		<jacoco.version>0.8.15</jacoco.version>
 	</properties>
 	<modules>
@@ -27,6 +28,16 @@
 		<module>his-cache</module>
 		<module>his-bootstrap</module>
 	</modules>
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>com.tngtech.archunit</groupId>
+				<artifactId>archunit-junit5</artifactId>
+				<version>${archunit.version}</version>
+				<scope>test</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 	<build>
 		<pluginManagement>
 			<plugins>

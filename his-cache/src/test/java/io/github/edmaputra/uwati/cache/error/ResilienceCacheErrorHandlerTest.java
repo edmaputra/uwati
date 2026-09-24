@@ -10,6 +10,9 @@ import static org.mockito.Mockito.when;
 
 /**
  * Unit tests verifying that ResilienceCacheErrorHandler suppresses cache runtime exceptions.
+ *
+ * @author edmaputra
+ * @since 0.0.1
  */
 class ResilienceCacheErrorHandlerTest {
 

@@ -10,6 +10,9 @@ import org.testcontainers.containers.PostgreSQLContainer;
 /**
  * Spring Boot test configuration defining reusable Testcontainers singleton instances
  * for PostgreSQL 17 and Valkey 9.1.1.
+ *
+ * @author edmaputra
+ * @since 0.0.1
  */
 @TestConfiguration(proxyBeanMethods = false)
 public class TestcontainersConfiguration {

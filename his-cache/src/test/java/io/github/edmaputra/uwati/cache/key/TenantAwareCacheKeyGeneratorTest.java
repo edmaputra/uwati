@@ -16,6 +16,9 @@ import static org.mockito.Mockito.when;
 
 /**
  * Unit tests verifying tenant key generation and namespace partitioning rules.
+ *
+ * @author edmaputra
+ * @since 0.0.1
  */
 class TenantAwareCacheKeyGeneratorTest {
 

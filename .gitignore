@@ -38,3 +38,8 @@ build/
 project-structure.json
 .project-structure.json
 .agents/project-structure.json
+
+# OS metadata
+.DS_Store
+Thumbs.db
+

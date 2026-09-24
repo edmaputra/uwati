@@ -7,6 +7,7 @@ import java.util.Map;
  * specific fields should be monitored and recorded in the audit trail.
  *
  * @author edmaputra
+ * @since 0.0.1
  */
 public interface Auditable {
 

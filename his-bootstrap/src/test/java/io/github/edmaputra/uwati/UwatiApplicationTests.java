@@ -9,6 +9,9 @@ import io.github.edmaputra.uwati.test.RequiresDocker;
 
 /**
  * Integration test verifying that the complete Spring Boot application context loads successfully.
+ *
+ * @author edmaputra
+ * @since 0.0.1
  */
 @RequiresDocker
 @Import(TestcontainersConfiguration.class)

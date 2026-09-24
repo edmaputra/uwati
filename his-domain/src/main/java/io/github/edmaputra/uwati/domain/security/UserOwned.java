@@ -6,6 +6,7 @@ import java.util.UUID;
  * Marks a domain entity or aggregate as owned by a specific individual user (e.g. private draft, doctor's personal notes).
  *
  * @author edmaputra
+ * @since 0.0.1
  */
 public interface UserOwned {
 

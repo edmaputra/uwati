@@ -23,6 +23,12 @@ import io.github.edmaputra.uwati.domain.tenancy.domain.TenantStatus;
 import io.github.edmaputra.uwati.domain.tenancy.domain.event.TenantCreated;
 import io.github.edmaputra.uwati.domain.tenancy.domain.event.TenantSettingsUpdated;
 
+/**
+ * Unit tests verifying tenant provisioning, state transitions, and event emission in {@link CreateTenantService}.
+ *
+ * @author edmaputra
+ * @since 0.0.1
+ */
 class CreateTenantServiceTests {
 
 	private static final OperationContext CONTEXT = OperationContext.of("creator-user", "trace-create-001");

@@ -6,6 +6,12 @@ import org.junit.jupiter.api.Test;
 
 import io.github.edmaputra.uwati.domain.tenancy.domain.TenantId;
 
+/**
+ * Unit tests verifying nested ScopedValue scoping and restore semantics in {@link ScopedValueTenantContext}.
+ *
+ * @author edmaputra
+ * @since 0.0.1
+ */
 class ScopedValueTenantContextTests {
 
 	@Test

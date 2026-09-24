@@ -12,6 +12,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
  * <p>
  * Evaluated by {@link DockerAvailableCondition}. If Docker is not available on the host machine,
  * the annotated test class or method is automatically skipped.
+ *
+ * @author edmaputra
+ * @since 0.0.1
  */
 @Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)

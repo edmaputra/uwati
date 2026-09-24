@@ -37,6 +37,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Integration tests verifying multi-tenant Valkey caching, tenant key isolation,
  * domain event-driven cache eviction, and distributed lock acquisition against Testcontainers.
+ *
+ * @author edmaputra
+ * @since 0.0.1
  */
 @RequiresDocker
 @Import(TestcontainersConfiguration.class)

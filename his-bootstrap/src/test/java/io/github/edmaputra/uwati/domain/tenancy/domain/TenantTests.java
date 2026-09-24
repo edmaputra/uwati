@@ -8,6 +8,12 @@ import java.time.Instant;
 
 import org.junit.jupiter.api.Test;
 
+/**
+ * Unit tests verifying {@link Tenant} domain entity invariants, state transitions, and validation rules.
+ *
+ * @author edmaputra
+ * @since 0.0.1
+ */
 class TenantTests {
 
 	private static final Instant CREATED_AT = Instant.parse("2026-08-16T10:00:00Z");
