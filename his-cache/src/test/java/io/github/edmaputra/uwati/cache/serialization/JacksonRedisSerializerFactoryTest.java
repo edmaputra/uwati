@@ -13,6 +13,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Unit tests verifying Jackson 3 Redis serialization and deserialization of domain records and arrays.
+ *
+ * @author edmaputra
+ * @since 0.0.1
  */
 class JacksonRedisSerializerFactoryTest {
 

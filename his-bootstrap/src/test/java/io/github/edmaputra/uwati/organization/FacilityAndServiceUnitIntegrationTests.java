@@ -31,6 +31,13 @@ import io.github.edmaputra.uwati.TestcontainersConfiguration;
 import io.github.edmaputra.uwati.bootstrap.UwatiApplication;
 import io.github.edmaputra.uwati.test.RequiresDocker;
 
+/**
+ * Live HTTP integration tests for facility and service unit management REST APIs,
+ * validating multi-tenant isolation, authorization, and audit entries.
+ *
+ * @author edmaputra
+ * @since 0.0.1
+ */
 @RequiresDocker
 @Import(TestcontainersConfiguration.class)
 @SpringBootTest(classes = UwatiApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)

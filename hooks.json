@@ -1,0 +1,11 @@
+{
+  "project-structure-scanner": {
+    "enabled": true,
+    "PreInvocation": [
+      {
+        "type": "command",
+        "command": "./.agents/scripts/ensure-structure.sh"
+      }
+    ]
+  }
+}

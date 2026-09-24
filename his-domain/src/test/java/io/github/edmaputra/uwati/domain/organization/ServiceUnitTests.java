@@ -12,6 +12,12 @@ import io.github.edmaputra.uwati.domain.tenancy.domain.TenantId;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+/**
+ * Unit tests verifying {@link ServiceUnit} domain entity business invariants and state transitions.
+ *
+ * @author edmaputra
+ * @since 0.0.1
+ */
 class ServiceUnitTests {
 
 	private final TenantId tenantId = TenantId.generate();

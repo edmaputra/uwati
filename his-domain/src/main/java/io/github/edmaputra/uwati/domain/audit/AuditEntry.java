@@ -9,6 +9,7 @@ import io.github.edmaputra.uwati.domain.tenancy.domain.TenantId;
  * Domain model representing an immutable audit log entry.
  *
  * @author edmaputra
+ * @since 0.0.1
  */
 public record AuditEntry(
 		Long id,

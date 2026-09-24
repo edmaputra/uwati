@@ -12,6 +12,12 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+/**
+ * Unit tests verifying {@link UuidV7} generation, version, timestamp monotonicity, and invariants.
+ *
+ * @author edmaputra
+ * @since 0.0.1
+ */
 class UuidV7Test {
 
 	@Test

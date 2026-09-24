@@ -16,6 +16,9 @@ import static org.mockito.Mockito.verify;
 
 /**
  * Unit tests verifying that TenantSettingCacheEvictor evicts cached entries upon receiving TenantSettingsUpdated events.
+ *
+ * @author edmaputra
+ * @since 0.0.1
  */
 class TenantSettingCacheEvictorTest {
 

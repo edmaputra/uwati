@@ -32,6 +32,9 @@ import io.github.edmaputra.uwati.test.RequiresDocker;
 /**
  * Integration tests for tenant settings configuration and retrieval REST APIs,
  * validating validation rules, audit difference generation, and optimistic concurrency.
+ *
+ * @author edmaputra
+ * @since 0.0.1
  */
 @RequiresDocker
 @Import(TestcontainersConfiguration.class)

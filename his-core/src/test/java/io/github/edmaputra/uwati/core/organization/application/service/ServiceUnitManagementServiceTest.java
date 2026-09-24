@@ -41,6 +41,12 @@ import io.github.edmaputra.uwati.domain.tenancy.domain.TenantId;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+/**
+ * Unit tests verifying {@link ServiceUnitManagementService} use-case orchestration and business rules.
+ *
+ * @author edmaputra
+ * @since 0.0.1
+ */
 class ServiceUnitManagementServiceTest {
 
 	private final TenantId tenantId = TenantId.generate();

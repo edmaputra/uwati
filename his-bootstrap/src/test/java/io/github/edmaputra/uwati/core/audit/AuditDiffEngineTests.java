@@ -14,6 +14,12 @@ import io.github.edmaputra.uwati.core.audit.AuditDiffEngine.CollectionDiff;
 import io.github.edmaputra.uwati.core.audit.AuditDiffEngine.FieldDiff;
 import io.github.edmaputra.uwati.domain.audit.Auditable;
 
+/**
+ * Unit tests verifying state diff computation and JSON serialization in {@link AuditDiffEngine}.
+ *
+ * @author edmaputra
+ * @since 0.0.1
+ */
 @DisplayName("AuditDiffEngine & AuditJsonFormatter Unit Tests")
 class AuditDiffEngineTests {
 

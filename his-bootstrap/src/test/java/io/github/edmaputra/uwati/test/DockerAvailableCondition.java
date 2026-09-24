@@ -10,6 +10,9 @@ import org.testcontainers.DockerClientFactory;
  * <p>
  * If Docker is unavailable, tests annotated with {@link RequiresDocker} are gracefully skipped
  * rather than failing the build.
+ *
+ * @author edmaputra
+ * @since 0.0.1
  */
 public class DockerAvailableCondition implements ExecutionCondition {
 

@@ -32,6 +32,9 @@ import io.github.edmaputra.uwati.test.RequiresDocker;
 /**
  * Integration tests for tenant creation REST API endpoints, verifying database transactions,
  * audit entry creation, default settings provisioning, and JSON response payloads.
+ *
+ * @author edmaputra
+ * @since 0.0.1
  */
 @RequiresDocker
 @Import(TestcontainersConfiguration.class)

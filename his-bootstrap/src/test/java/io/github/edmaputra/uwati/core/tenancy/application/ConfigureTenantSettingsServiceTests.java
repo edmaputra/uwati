@@ -30,6 +30,12 @@ import io.github.edmaputra.uwati.domain.tenancy.domain.TenantStatus;
 import io.github.edmaputra.uwati.domain.tenancy.domain.event.TenantCreated;
 import io.github.edmaputra.uwati.domain.tenancy.domain.event.TenantSettingsUpdated;
 
+/**
+ * Unit tests verifying tenant settings configuration, validation, and domain event publication.
+ *
+ * @author edmaputra
+ * @since 0.0.1
+ */
 @DisplayName("ConfigureTenantSettingsService Unit Tests")
 class ConfigureTenantSettingsServiceTests {
 
