@@ -10,15 +10,18 @@
 	</parent>
 	<groupId>io.github.edmaputra</groupId>
 	<artifactId>uwati</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>${revision}</version>
 	<packaging>pom</packaging>
 	<name>Uwati HIS</name>
 	<description>Multi-tenant Hospital Information System backend</description>
 	<properties>
+		<revision>0.0.1-SNAPSHOT</revision>
 		<java.version>25</java.version>
 		<ed-iam.version>0.3.0</ed-iam.version>
 		<archunit.version>1.4.0</archunit.version>
 		<jacoco.version>0.8.15</jacoco.version>
+		<springdoc.version>2.8.5</springdoc.version>
+		<flatten-maven-plugin.version>1.7.0</flatten-maven-plugin.version>
 	</properties>
 	<modules>
 		<module>his-domain</module>
@@ -30,6 +33,11 @@
 	</modules>
 	<dependencyManagement>
 		<dependencies>
+			<dependency>
+				<groupId>org.springdoc</groupId>
+				<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+				<version>${springdoc.version}</version>
+			</dependency>
 			<dependency>
 				<groupId>com.tngtech.archunit</groupId>
 				<artifactId>archunit-junit5</artifactId>
@@ -61,6 +69,31 @@
 			</plugins>
 		</pluginManagement>
 		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>flatten-maven-plugin</artifactId>
+				<version>${flatten-maven-plugin.version}</version>
+				<configuration>
+					<updatePomFile>true</updatePomFile>
+					<flattenMode>resolveCiFriendliesOnly</flattenMode>
+				</configuration>
+				<executions>
+					<execution>
+						<id>flatten</id>
+						<phase>process-resources</phase>
+						<goals>
+							<goal>flatten</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>flatten.clean</id>
+						<phase>clean</phase>
+						<goals>
+							<goal>clean</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 			<plugin>
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>

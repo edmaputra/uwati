@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>io.github.edmaputra</groupId>
 		<artifactId>uwati</artifactId>
-		<version>0.0.1-SNAPSHOT</version>
+		<version>${revision}</version>
 	</parent>
 	<artifactId>his-persistence</artifactId>
 	<name>Uwati HIS Persistence</name>
